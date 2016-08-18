@@ -5,6 +5,8 @@ Useful ESP8266 C Environment. Intended to be included as sub-modules in derivate
 ## List of projects using esp82xx
 
  - [Colorchord](https://github.com/cnlohr/colorchord)
+ - [esp8266ws2812i2c](https://github.com/cnlohr/esp8266ws2812i2s)
+ - [espusb](https://github.com/cnlohr/espusb)
 
 ## Notes
 
