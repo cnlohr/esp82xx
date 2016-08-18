@@ -1,0 +1,32 @@
+###############################################################################
+# Toolchain Options
+###############################################################################
+
+GCC_FOLDER = $(ESP_ROOT)/xtensa-lx106-elf
+ESPTOOL_PY = $(ESP_ROOT)/esptool/esptool.py
+SDK        = $(ESP_ROOT)/sdk
+
+XTLIB        = $(SDK)/lib
+XTGCCLIB     = $(GCC_FOLDER)/lib/gcc/xtensa-lx106-elf/$(ESP_GCC_VERS)/libgcc.a
+FOLDERPREFIX = $(GCC_FOLDER)/bin
+PREFIX       = $(FOLDERPREFIX)/xtensa-lx106-elf-
+CC           = $(PREFIX)gcc
+LD           = $(PREFIX)ld
+AR           = $(PREFIX)ar
+CP           = cp
+
+###############################################################################
+# Derived Options
+###############################################################################
+
+OPTS += -DWEB_PORT=$(WEB_PORT) -DCOM_PORT=$(COM_PORT) -DBACKEND_PORT=$(BACKEND_PORT) $(EXTRAOPTS)
+ESP_ROOT := $(shell echo "$$ESP_ROOT")
+ifeq ($(strip $(ESP_ROOT)),)
+    $(warning Warning: No shell variable 'ESP_ROOT', using '$(SDK_DEFAULT)')
+    ESP_ROOT := $(SDK_DEFAULT)
+endif
+VERSION := $(shell git describe --abbrev=5 --dirty=-dev --always --tags)
+VERSSTR := "Version: $(VERSION) - Build $(shell date) with $(OPTS)"
+PROJECT_NAME := $(notdir $(shell git rev-parse --show-toplevel))
+PROJECT_URL := $(subst .com:,.com/,$(subst .git,,$(subst git@,https://,$(shell git config --get remote.origin.url))))
+
