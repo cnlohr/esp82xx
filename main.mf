@@ -1,0 +1,108 @@
+define USAGE
+Usage: make [command] [VARIABLES]
+
+burn ..... Write firmware to chip using a regular serial port
+burnweb .. Write data for the Web-GUI to chip using a regular serial
+           port
+netburn .. Same as 'burn' but transfer firmware over the network rather
+           than the serial port (if supported by the existing firmware
+           on the chip)
+netweb ... Same as 'burnweb' but transfer data over network if supported
+           by firmware currently on the chip
+getips ... Get a list with IPs of esp82xxs connected to your network
+
+More commands: all, clean, purge
+endef
+.PHONY : all clean cleanall netburn burnweb burn $(BIN_TARGET) netweb getips help
+uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
+
+FW_FILE1 = image.elf-0x00000.bin
+FW_FILE2 = image.elf-0x40000.bin
+TARGET = image.elf
+
+SRCS =  esp82xx/fwsrc/uart.c \
+	esp82xx/fwsrc/mystuff.c \
+	esp82xx/fwsrc/flash_rewriter.c \
+	esp82xx/fwsrc/http.c \
+	esp82xx/fwsrc/commonservices.c \
+	esp82xx/fwsrc/http_custom.c \
+	esp82xx/fwsrc/mdns.c \
+	esp82xx/fwsrc/mfs.c \
+	user/custom_commands.c \
+	user/user_main.c
+
+LIBS = main lwip ssl upgrade net80211 wpa phy lwip pp crypto
+INCL = $(SDK)/include esp82xx/include .
+
+CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)'
+
+LDFLAGS_CORE = -Wl,--relax -Wl,--gc-sections -nostdlib -L$(XTLIB) \
+	-L$(XTGCCLIB) $(addprefix $(SDK)/lib/lib,$(addsuffix .a,$(LIBS))) \
+	$(XTGCCLIB) -T $(SDK)/ld/eagle.app.v6.ld
+#	-flto -Wl,--relax -Wl,--gc-sections
+
+LINKFLAGS = $(LDFLAGS_CORE) -B$(XTLIB)
+
+BIN_TARGET = $(PROJECT_NAME)-$(VERSION)-binaries.zip
+
+##########################################################################RULES
+
+help :
+	$(info $(value USAGE))
+	@true
+
+all : $(FW_FILE1) $(FW_FILE2)
+
+$(FW_FILE1) $(FW_FILE2) : $(TARGET)
+	$(ESPTOOL_PY) elf2image $(TARGET)
+
+$(TARGET) : $(SRCS) Makefile
+	$(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
+#$^
+#nm -S -n $(TARGET_OUT) > image.map
+#$(PREFIX)objdump -S $@ > image.lst
+
+ifeq ($(CHIP), 8285)
+burn : $(FW_FILE1) $(FW_FILE2)
+	($(ESPTOOL_PY) --port $(PORT) write_flash -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
+else ifeq ($(CHIP), 8266)
+burn : $(FW_FILE1) $(FW_FILE2)
+	($(ESPTOOL_PY) --port $(PORT) write_flash 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
+else
+	$(error Error: Unknown chip '$(CHIP)')
+endif
+
+burnweb :
+	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) page.mpfs
+	($(ESPTOOL_PY) --port $(PORT) write_flash 0x10000 web/page.mpfs)||(true)
+#If you have space, MFS should live at 0x100000. It can also live at
+#0x10000. But, then it is limited to 180kB. You might need to do this if
+# you have a 512kB ESP variant.
+
+netburn : $(FW_FILE1) $(FW_FILE2)
+	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) execute_reflash
+	web/execute_reflash $(IP) $(FW_FILE1) $(FW_FILE2)
+
+netweb :
+	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) push
+
+$(BIN_TARGET): $(FW_FILE1) $(FW_FILE2)
+	@cd web \
+	 && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) page.mpfs \
+	 && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) execute_reflash \
+	 && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) pushtodev \
+	 && cd ..
+	zip $@ $(FW_FILE1) $(FW_FILE2) web/execute_reflash web/mfsmaker web/pushtodev web/page.mpfs
+
+getips:
+	$(info Detecting possible IPs for ESP82XX modules...)
+	$(info Needs 'nmap' and takes some time especiallay if none are connected)
+	sudo nmap -sP 192.168.0.0/24 | grep -iP "espressif|esp" -B2 | grep -oP "(\d{1,3}\.){3,3}\d\d{1,3}"
+
+clean :
+	$(RM) $(patsubst %.c,%.o,$(SRCS)) $(TARGET) image.map image.lst
+
+purge : clean
+	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean
+	$(RM) $(FW_FILE1) $(FW_FILE2) $(BIN_TARGET)
+

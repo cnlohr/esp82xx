@@ -1,0 +1,11 @@
+include user.cfg
+include esp82xx/common.mf
+include esp82xx/main.mf
+
+# Example for a custom rule.
+# Most of the build is handled in main.mf
+.PHONY : showvars
+showvars: 
+	$(foreach v, $(.VARIABLES), $(info $(v) = $($(v))))
+	true
+
