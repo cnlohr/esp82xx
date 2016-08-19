@@ -2,9 +2,11 @@
 # Toolchain Options
 ###############################################################################
 
+#Note: user.cfg can override these.
+
 GCC_FOLDER = $(ESP_ROOT)/xtensa-lx106-elf
 ESPTOOL_PY = $(ESP_ROOT)/esptool/esptool.py
-SDK        = $(ESP_ROOT)/sdk
+SDK        ?= $(ESP_ROOT)/sdk
 
 XTLIB        = $(SDK)/lib
 XTGCCLIB     = $(GCC_FOLDER)/lib/gcc/xtensa-lx106-elf/$(ESP_GCC_VERS)/libgcc.a
