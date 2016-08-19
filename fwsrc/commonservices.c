@@ -39,6 +39,7 @@ static int  BrowseSearchCount = 0; //Number of times to search for other ESPs wh
 static uint32_t BrowseRespond = 0;
 static uint16_t BrowseRespondPort = 0;
 static uint32_t thisfromip;
+static uint16_t thisfromport;
 static uint8_t alivecnt = 0;
 
 int ets_str2macaddr(void *, void *);
@@ -118,6 +119,7 @@ static void ICACHE_FLASH_ATTR EmitWhoAmINow( )
 	pUdpServer->proto.udp->remote_port = BrowseRespondPort;
 	espconn_sent( (struct espconn *)pUdpServer, etsend, ets_strlen( etsend ) );
 	BrowseRespond = 0;
+	printf( "Emitting WhoAmI\n" );
 }
 
 
@@ -147,6 +149,10 @@ CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char 
 	NixNewline( srv );  NixNewline( nam );  NixNewline( des );
 	int fromip = thisfromip;
 
+	remot_info * ri = 0;
+	espconn_get_connection_info( pUdpServer, &ri, 0);
+	if( !ri ) return 0;
+
 	switch( pusrdata[1] ) {
 		case 'q': case 'Q': //Probe
 			//Make sure it's either a wildcard, to our service or to us.
@@ -157,7 +163,7 @@ CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char 
 			if( BrowseRespond ) EmitWhoAmINow();
 
 			BrowseRespond = fromip;
-			BrowseRespondPort = pUdpServer->proto.udp->remote_port;
+			BrowseRespondPort = thisfromport;
 		break;
 
 		//Response
@@ -691,6 +697,7 @@ void ICACHE_FLASH_ATTR issue_command_udp(void *arg, char *pusrdata, unsigned sho
 	espconn_get_connection_info( rc, &ri, 0);
 
 	thisfromip = IP4_to_uint32(ri->remote_ip);
+	thisfromport = ri->remote_port;
 
 	int r = issue_command( retbuf, 1300, pusrdata, len );
 

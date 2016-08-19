@@ -1,6 +1,9 @@
 define USAGE
 Usage: make [command] [VARIABLES]
 
+all....... Build the binaries
+debug..... Build a .map and .lst file.  Useful for seeing what's going on
+           behind the scenes.
 burn ..... Write firmware to chip using a regular serial port
 burnweb .. Write data for the Web-GUI to chip using a regular serial
            port
@@ -19,6 +22,7 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 FW_FILE1 = image.elf-0x00000.bin
 FW_FILE2 = image.elf-0x40000.bin
 TARGET = image.elf
+
 
 SRCS =  esp82xx/fwsrc/uart.c \
 	esp82xx/fwsrc/mystuff.c \
@@ -58,9 +62,10 @@ $(FW_FILE1) $(FW_FILE2) : $(TARGET)
 
 $(TARGET) : $(SRCS) Makefile
 	$(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
-#$^
-#nm -S -n $(TARGET_OUT) > image.map
-#$(PREFIX)objdump -S $@ > image.lst
+
+debug : $(TARGET)
+	nm -S -n $(TARGET) > image.map
+	$(PREFIX)objdump -S $(TARGET) > image.lst
 
 ifeq ($(CHIP), 8285)
 burn : $(FW_FILE1) $(FW_FILE2)
