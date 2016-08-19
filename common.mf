@@ -6,7 +6,7 @@
 
 GCC_FOLDER = $(ESP_ROOT)/xtensa-lx106-elf
 ESPTOOL_PY = $(ESP_ROOT)/esptool/esptool.py
-SDK        ?= $(ESP_ROOT)/sdk
+SDK        = $(ESP_ROOT)/sdk
 
 XTLIB        = $(SDK)/lib
 XTGCCLIB     = $(GCC_FOLDER)/lib/gcc/xtensa-lx106-elf/$(ESP_GCC_VERS)/libgcc.a
@@ -21,6 +21,7 @@ CP           = cp
 # Derived Options
 ###############################################################################
 
+SDK_DEFAULT = $(HOME)/esp8266/esp-open-sdk
 OPTS += -DWEB_PORT=$(WEB_PORT) -DCOM_PORT=$(COM_PORT) -DBACKEND_PORT=$(BACKEND_PORT) $(EXTRAOPTS)
 ESP_ROOT := $(shell echo "$$ESP_ROOT")
 ifeq ($(strip $(ESP_ROOT)),)
