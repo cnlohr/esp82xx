@@ -12,7 +12,7 @@ pushtodev : pushtodev.c
 execute_reflash : execute_reflash.c md5.c
 
 mfsmaker pushtodev execute_reflash : 
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) -lusb-1.0
 
 page.mpfs : mfsmaker $(wildcard page/*) Makefile
 	$(RM) -r tmp
