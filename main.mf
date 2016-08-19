@@ -1,6 +1,7 @@
 define USAGE
 Usage: make [command] [VARIABLES]
 
+binaries.. Build the binaries $(BIN_TARGET)
 burn ..... Write firmware to chip using a regular serial port
 burnweb .. Write data for the Web-GUI to chip using a regular serial
            port
@@ -19,6 +20,7 @@ uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 FW_FILE1 = image.elf-0x00000.bin
 FW_FILE2 = image.elf-0x40000.bin
 TARGET = image.elf
+
 
 SRCS =  esp82xx/fwsrc/uart.c \
 	esp82xx/fwsrc/mystuff.c \
