@@ -297,6 +297,7 @@ int main(int argc, char**argv)
 		int r;
 		use_usb = 1;
 		printf( "Connecting by USB\n" );
+		fprintf( stderr, "WARNING: USB BURNING IS EXPERIMENTAL AND LIKELY TO CHANGE\n" );
 		if( libusb_init(NULL) < 0 )
 		{
 			fprintf( stderr, "Error: Could not initialize libUSB\n" );
