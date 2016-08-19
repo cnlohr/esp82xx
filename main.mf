@@ -54,7 +54,7 @@ help :
 all : $(FW_FILE1) $(FW_FILE2)
 
 $(FW_FILE1) $(FW_FILE2) : $(TARGET)
-	$(ESPTOOL_PY) elf2image $(TARGET)
+	PATH=$(PATH):$(FOLDERPREFIX) $(ESPTOOL_PY) elf2image $(TARGET)
 
 $(TARGET) : $(SRCS) Makefile
 	$(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
@@ -64,20 +64,20 @@ $(TARGET) : $(SRCS) Makefile
 
 ifeq ($(CHIP), 8285)
 burn : $(FW_FILE1) $(FW_FILE2)
-	($(ESPTOOL_PY) --port $(PORT) write_flash -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
 else ifeq ($(CHIP), 8266)
 burn : $(FW_FILE1) $(FW_FILE2)
-	($(ESPTOOL_PY) --port $(PORT) write_flash 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
 else
 	$(error Error: Unknown chip '$(CHIP)')
 endif
 
 burnweb :
-	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) page.mpfs
-	($(ESPTOOL_PY) --port $(PORT) write_flash 0x10000 web/page.mpfs)||(true)
+	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs  #Always rebuild page.mpfs
+	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) write_flash 0x10000 web/page.mpfs)||(true)
 #If you have space, MFS should live at 0x100000. It can also live at
 #0x10000. But, then it is limited to 180kB. You might need to do this if
-# you have a 512kB ESP variant.
+# you have a 512kB, or 1M ESP variant.
 
 netburn : $(FW_FILE1) $(FW_FILE2)
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) execute_reflash
