@@ -13,20 +13,25 @@ Useful ESP8266 C Environment. Intended to be included as sub-modules in derivate
  - Do not forget to use the `--recursive` option when cloning a porject with submodules like this
 
  - Cope with submodules updates:
+
     - Changes in the submodule:
 
+        ```
         cd esp82xx
         # Make changes
         git commit -m 'Your Message'
         git push
+        ```
 
     - Then bump the version in the main project root folder:
 
+        ```
         cd ..
         git submodule updates
         git add esp82xx
         git commit -m 'Bumped submodule version'
         git push
+        ```
 
  - Outline to make a new project:
 
