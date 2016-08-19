@@ -111,3 +111,6 @@ purge : clean
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean
 	$(RM) $(FW_FILE1) $(FW_FILE2) $(BIN_TARGET)
 
+bump_submodule :
+	cd esp82xx; git pull origin master; cd ..
+
