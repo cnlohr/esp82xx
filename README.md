@@ -2,6 +2,14 @@
 
 Useful ESP8266 C Environment. Intended to be included as sub-modules in derivate projects.
 
+## Usage
+
+ - `user.cfg` specifies a few configuration variables. Most notably the location of the Espressif SDK for building the firmware. You can edit `DEFAULT_SDK` there to reflect your specific path or **even better** define a shell variable `export ESP_ROOT=/path/to/sdk` in your `.bashrc`, `.profile` or where-ever. You can also pass the location as an argument to make:
+
+   ```
+   make burn ESP_ROOT=path/to/sdk
+   ```
+
 ## List of projects using esp82xx
 
  - [esp82XX-basic](https://github.com/con-f-use/esp82XX-basic)
@@ -55,3 +63,8 @@ Useful ESP8266 C Environment. Intended to be included as sub-modules in derivate
     After that, the github web-interface will allow you to make a release out of the new tag and include the binary file.
     To make the zip file invoke `make projectname-version-binaries.tgz` (Tab-autocomplete is your friend).
 
+### To do
+
+ - Include libraries for usb, ws2812s and ethernet
+
+ - Expand this readme
