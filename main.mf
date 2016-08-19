@@ -1,7 +1,9 @@
 define USAGE
 Usage: make [command] [VARIABLES]
 
-binaries.. Build the binaries $(BIN_TARGET)
+all....... Build the binaries
+debug..... Build a .map and .lst file.  Useful for seeing what's going on
+           behind the scenes.
 burn ..... Write firmware to chip using a regular serial port
 burnweb .. Write data for the Web-GUI to chip using a regular serial
            port
@@ -60,9 +62,10 @@ $(FW_FILE1) $(FW_FILE2) : $(TARGET)
 
 $(TARGET) : $(SRCS) Makefile
 	$(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
-#$^
-#nm -S -n $(TARGET_OUT) > image.map
-#$(PREFIX)objdump -S $@ > image.lst
+
+debug : $(TARGET)
+	nm -S -n $(TARGET) > image.map
+	$(PREFIX)objdump -S $(TARGET) > image.lst
 
 ifeq ($(CHIP), 8285)
 burn : $(FW_FILE1) $(FW_FILE2)
@@ -102,7 +105,7 @@ getips:
 	sudo nmap -sP 192.168.0.0/24 | grep -iP "espressif|esp" -B2 | grep -oP "(\d{1,3}\.){3,3}\d\d{1,3}"
 
 clean :
-	$(RM) $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(SRCS))) $(TARGET) image.map image.lst
+	$(RM) $(patsubst %.c,%.o,$(SRCS)) $(TARGET) image.map image.lst
 
 purge : clean
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean
