@@ -79,7 +79,7 @@ endif
 
 burnweb :
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs  #Always rebuild page.mpfs
-	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) write_flash 0x10000 web/page.mpfs)||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) write_flash $(PAGE_OFFSET) web/page.mpfs)||(true)
 #If you have space, MFS should live at 0x100000. It can also live at
 #0x10000. But, then it is limited to 180kB. You might need to do this if
 # you have a 512kB, or 1M ESP variant.
