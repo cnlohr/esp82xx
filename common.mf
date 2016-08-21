@@ -2,6 +2,8 @@
 # Toolchain Options
 ###############################################################################
 
+#Note: user.cfg can override these.
+
 GCC_FOLDER = $(ESP_ROOT)/xtensa-lx106-elf
 ESPTOOL_PY = $(ESP_ROOT)/esptool/esptool.py
 SDK        = $(ESP_ROOT)/sdk
@@ -19,6 +21,7 @@ CP           = cp
 # Derived Options
 ###############################################################################
 
+SDK_DEFAULT = $(HOME)/esp8266/esp-open-sdk
 OPTS += -DWEB_PORT=$(WEB_PORT) -DCOM_PORT=$(COM_PORT) -DBACKEND_PORT=$(BACKEND_PORT) $(EXTRAOPTS)
 ESP_ROOT := $(shell echo "$$ESP_ROOT")
 ifeq ($(strip $(DOCKER)), yes)

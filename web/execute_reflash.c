@@ -3,49 +3,119 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
 #include <stdio.h>
-#include <unistd.h>
 #include <sys/time.h>
 #include <sys/poll.h>
 #include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
+#include <libusb-1.0/libusb.h>
 #include "common.h"
 #include "md5.h"
+
+struct libusb_device_handle *devh = NULL;
+
 
 #define BLOCK_SIZE 65536
 #define SECTOR_SIZE 4096
 #define PADDING 1024
 
+int sendsize_max = PADDING;
+int use_usb = 0;
+
 int sockfd;
-	struct sockaddr_in servaddr,cliaddr;
+struct sockaddr_in servaddr,cliaddr;
+
+int SendData( uint8_t * buffer, int len )
+{
+	if( use_usb )
+	{
+		int tries = 0;
+		int r1;
+retry:
+		r1 = libusb_control_transfer( devh,
+			0x00,    //reqtype  (0x80 = Device->PC, 0x00 = PC->Device)
+			0xA6,    //request
+			0x0100,  //wValue
+			0x0000,  //wIndex
+			buffer, 
+			len,     //wLength  (more like max length)
+			100 );
+		if( r1 != len )
+		{
+			printf( "X" ); fflush( stdout );
+			tries++;
+			if( tries < 10 )
+				goto retry;
+		}
+		return r1;
+		//printf( "((Sent: %d/%d   %c%c))", r1, len, buffer[0], buffer[1] );
+	}
+	else
+	{
+		return sendto( sockfd, buffer, len, MSG_NOSIGNAL, (struct sockaddr *)&servaddr,sizeof(servaddr));
+	}
+}
+
 
 int PushMatch( const char * match )
 {
-	struct timeval tva, tvb;
-	gettimeofday( &tva, 0 );
-	gettimeofday( &tvb, 0 );
-	while( tvb.tv_sec - tva.tv_sec < 3 )
+	if( use_usb )
 	{
-		struct pollfd ufds;
-		ufds.fd = sockfd;
-		ufds.events = POLLIN;
-		int rv = poll(&ufds, 1, 100);
-		if( rv > 0 )
+		char recvline[10000];
+		int tries = 0;
+		for( tries = 0; tries < 10; tries++ )
 		{
-			char recvline[10000];
-			int n=recvfrom(sockfd,recvline,10000,0,NULL,NULL);
-//			printf( "%s === %s\n", recvline, match );
-			if( strncmp( recvline, match, strlen( match ) ) == 0 )
+			usleep( 500 );
+
+			int r2 = libusb_control_transfer( devh,
+				0x80,    //reqtype  (0x80 = in, 0x00 = out)
+				0xA7,    //request
+				0x0100,  //wValue
+				0x0000,  //wIndex
+				recvline, //wLength  (more like max length)
+				128,
+				100 );
+
+			if( r2 < 0 ) continue;
+
+			recvline[r2] = 0;
+
+			if( strncmp( recvline, match, strlen( match ) ) == 0 ) //XXX? Should this be memcmp?
 			{
-				printf( "Ok - " ); fflush( stdout );
 				return 0;
 			}
+
+			usleep( 1000 );
 		}
-		gettimeofday( &tvb, 0 );
+		return 1;
 	}
-	return 1;
+	else
+	{
+		struct timeval tva, tvb;
+		gettimeofday( &tva, 0 );
+		gettimeofday( &tvb, 0 );
+		while( tvb.tv_sec - tva.tv_sec < 3 )
+		{
+			struct pollfd ufds;
+			ufds.fd = sockfd;
+			ufds.events = POLLIN;
+			int rv = poll(&ufds, 1, 100);
+			if( rv > 0 )
+			{
+				char recvline[10000];
+				int n=recvfrom(sockfd,recvline,10000,0,NULL,NULL);
+	//			printf( "%s === %s\n", recvline, match );
+				if( strncmp( recvline, match, strlen( match ) ) == 0 )
+				{
+					printf( "Ok - " ); fflush( stdout );
+					return 0;
+				}
+			}
+			gettimeofday( &tvb, 0 );
+		}
+		return 1;
+	}
 }
 
 uint32_t Push( uint32_t offset, const char * file )
@@ -70,17 +140,18 @@ uint32_t Push( uint32_t offset, const char * file )
 
 	int devo = 0;
 	int lastblock = -1;
-
-	while( !feof( f ) )
+	int keep_padding = 0;
+	int retdevo = 0;
+	while( keep_padding || !feof( f ) )
 	{
 		int tries;
 		int thissuccess;
 		char buffer[PADDING];
 		char bufferout[2000];
 
-		int reads = fread( buffer, 1, PADDING, f );
+		int reads = fread( buffer, 1, sendsize_max, f );
 		int sendplace = offset + devo;
-		int sendsize = PADDING;//reads;
+		int sendsize = sendsize_max;
 		int block = sendplace / BLOCK_SIZE;
 
 		memset( buffer + reads, 0, sendsize-reads );
@@ -94,10 +165,11 @@ uint32_t Push( uint32_t offset, const char * file )
 			for( tries = 0; tries < 10; tries++ )
 			{
 				char match[75];
-				printf( "Erase: %d\n", block );
-				sendto( sockfd, se, sel, MSG_NOSIGNAL, (struct sockaddr *)&servaddr,sizeof(servaddr));
+				//printf( "Erase: %d\n", block );
+				printf( "B" ); fflush( stdout );
+				SendData(  se, sel );
+				usleep(130000); //Sleep a while when erasing blocks.
 				sprintf( match, "FB%d", block );
-
 				if( PushMatch(match) == 0 ) { thissuccess = 1; break; }
 				printf( "Retry.\n" );
 			}
@@ -112,15 +184,17 @@ uint32_t Push( uint32_t offset, const char * file )
 
 		
 		int r = sprintf( bufferout, "FW%d\t%d\t", sendplace, sendsize );
-		memcpy( bufferout + r, buffer, sendsize );
+		//printf( "FW: %d\n", sendplace );
+		memcpy( bufferout + r, buffer, sendsize ); 
 
-		printf( "bufferout: %d %d\n", sendplace, sendsize );
+		//printf( "bufferout: %d %d\n", sendplace, sendsize );
+		printf( "." ); fflush( stdout );
 
 		thissuccess = 0;
 		for( tries = 0; tries < 10; tries++ )
 		{
 			char match[75];
-			sendto( sockfd, bufferout, sendsize + r, MSG_NOSIGNAL, (struct sockaddr *)&servaddr,sizeof(servaddr));
+			SendData( bufferout, sendsize + r );
 			sprintf( match, "FW%d", sendplace );
 
 			if( PushMatch(match) == 0 ) { thissuccess = 1; break; }
@@ -131,11 +205,27 @@ uint32_t Push( uint32_t offset, const char * file )
 			fprintf( stderr, "Error: Timeout in communications.\n" );
 			exit( -6 );
 		}
+
 		if( reads != 0 )
+		{
 			devo += sendsize;
+			retdevo = devo;
+		}
+
+		//Tricky: If we are using a smaller sendsize than the pad size, keep padding with 0's.
+		if( PADDING!=sendsize && (devo & (PADDING-1)) && feof( f ) )
+		{
+			keep_padding = 1;
+			if( reads == 0 )
+				devo += sendsize;
+		}
+		else
+		{
+			keep_padding = 0;
+		}
 	}
 
-	return devo;
+	return retdevo;
 }
 
 void ComputeMD5WithKey( char * md5retText, const char * filename, const char * key )
@@ -152,7 +242,7 @@ void ComputeMD5WithKey( char * md5retText, const char * filename, const char * k
 	fseek( f, 0, SEEK_END );
 	int l = ftell( f );
 printf("MD5 Size: %d\n", l );
-	int padl = ((l-1) / PADDING)*PADDING+PADDING;
+	int padl = ((l-1) / sendsize_max)*sendsize_max+sendsize_max;
 printf("MD5 Pad: %d\n", padl );
 	fseek( f, 0, SEEK_SET );
 	uint8_t data[padl];
@@ -201,12 +291,42 @@ int main(int argc, char**argv)
 
 
 
-	sockfd=socket(AF_INET,SOCK_DGRAM,0);
+	if( strcmp( argv[1], "USB" ) == 0 )
+	{
+		int r;
+		use_usb = 1;
+		printf( "Connecting by USB\n" );
+		fprintf( stderr, "WARNING: USB BURNING IS EXPERIMENTAL AND LIKELY TO CHANGE\n" );
+		if( libusb_init(NULL) < 0 )
+		{
+			fprintf( stderr, "Error: Could not initialize libUSB\n" );
+			return -1;
+		}
 
-	bzero(&servaddr,sizeof(servaddr));
-	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr=inet_addr(argv[1]);
-	servaddr.sin_port=htons(BACKEND_PORT);
+
+		devh = libusb_open_device_with_vid_pid( NULL, 0xabcd, 0x8266 );
+		if( !devh )
+		{
+			fprintf( stderr,  "Error: Cannot find USB device.\n" );
+			return -1;
+		}
+
+		libusb_detach_kernel_driver( devh, 0 ); //Mouse?
+		libusb_detach_kernel_driver( devh, 1 ); //Keyboard?
+
+		printf( "Connected.\n" );
+		//USB is attached
+		sendsize_max = 128;
+	}
+	else
+	{
+		sockfd=socket(AF_INET,SOCK_DGRAM,0);
+
+		bzero(&servaddr,sizeof(servaddr));
+		servaddr.sin_family = AF_INET;
+		servaddr.sin_addr.s_addr=inet_addr(argv[1]);
+		servaddr.sin_port=htons(7878);
+	}
 
 	uint32_t fs1 = Push( 0x080000, file1 );
 	uint32_t fs2 = Push( 0x0c0000, file2 );
@@ -243,9 +363,9 @@ int main(int argc, char**argv)
 		md5_f2 );
 
 	printf( "Issuing: %s\n", cmd );
-	sendto( sockfd, cmd, strlen(cmd), MSG_NOSIGNAL, (struct sockaddr *)&servaddr,sizeof(servaddr));
+	SendData( cmd, strlen(cmd) );
 	usleep(10000);
-	sendto( sockfd, cmd, strlen(cmd), MSG_NOSIGNAL, (struct sockaddr *)&servaddr,sizeof(servaddr));
+	SendData( cmd, strlen(cmd) );
 
 	struct pollfd ufds;
 	ufds.fd = sockfd;

@@ -1,6 +1,9 @@
 define USAGE
 Usage: make [command] [VARIABLES]
 
+all....... Build the binaries
+debug..... Build a .map and .lst file.  Useful for seeing what's going on
+           behind the scenes.
 burn ..... Write firmware to chip using a regular serial port
 burnweb .. Write data for the Web-GUI to chip using a regular serial
            port
@@ -27,6 +30,7 @@ endif
 FW_FILE1 = $(DOCKER_PREFIX)image.elf-0x00000.bin
 FW_FILE2 = $(DOCKER_PREFIX)image.elf-0x40000.bin
 TARGET = $(DOCKER_PREFIX)image.elf
+
 
 SRCS =  esp82xx/fwsrc/uart.c \
 	esp82xx/fwsrc/mystuff.c \
@@ -80,29 +84,30 @@ all : $(FW_FILE1) $(FW_FILE2)
 $(FW_FILE1) $(FW_FILE2) : $(TARGET)
 	$(DOCKCROSS) $(ESPTOOL_PY) elf2image $(TARGET)
 
+PATH=$(PATH):$(FOLDERPREFIX) $(ESPTOOL_PY) elf2image $(TARGET)
 $(TARGET) : Makefile
 	$(DOCKCROSS) $(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
-#$^
-#nm -S -n $(TARGET_OUT) > image.map
-#$(PREFIX)objdump -S $@ > image.lst
 
+debug : $(TARGET)
+	nm -S -n $(TARGET) > image.map
+	$(PREFIX)objdump -S $(TARGET) > image.lst
 
 ifeq ($(CHIP), 8285)
 burn : $(FW_FILE1) $(FW_FILE2)
-	($(ESPTOOL_PY) --port $(PORT) write_flash -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
 else ifeq ($(CHIP), 8266)
 burn : $(FW_FILE1) $(FW_FILE2)
-	($(ESPTOOL_PY) --port $(PORT) write_flash 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
 else
 	$(error Error: Unknown chip '$(CHIP)')
 endif
 
 burnweb :
-	@cd web && $(DOCKCROSS) $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) page.mpfs
-	($(ESPTOOL_PY) --port $(PORT) write_flash 0x10000 web/page.mpfs)||(true)
+	@cd web && $(DOCKCROSS) $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs #Always rebuild page.mpfs
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(PAGE_OFFSET) web/page.mpfs)||(true)
 #If you have space, MFS should live at 0x100000. It can also live at
 #0x10000. But, then it is limited to 180kB. You might need to do this if
-# you have a 512kB ESP variant.
+# you have a 512kB, or 1M ESP variant.
 
 netburn : $(FW_FILE1) $(FW_FILE2)
 	@cd web && $(DOCKCROSS) $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) execute_reflash
@@ -125,9 +130,12 @@ getips:
 	sudo nmap -sP 192.168.0.0/24 | grep -iP "espressif|esp" -B2 | grep -oP "(\d{1,3}\.){3,3}\d\d{1,3}"
 
 clean :
-	$(RM) $(patsubst %.c,%.o,$(SRCS)) $(TARGET) image.map image.lst
+	$(RM) $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(SRCS))) $(TARGET) image.map image.lst
 
 purge : clean
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean
 	$(RM) $(FW_FILE1) $(FW_FILE2) $(BIN_TARGET)
+
+bump_submodule :
+	cd esp82xx; git pull origin master; cd ..
 
