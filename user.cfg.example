@@ -4,7 +4,7 @@
 
 CHIP  = 8266
 IP    = 192.168.4.1     # does not actually set the IP in firmware
-PORT  = /dev/cu.usbserial-FTYKHBJT    # could also be, i.e: /dev/ttyACM0 or /dev/cu.usbserial-xxxxxxxx
+PORT  = /dev/ttyUSB0    # could also be, i.e: /dev/ttyACM0 or /dev/cu.usbserial-xxxxxxxx
 WEB_PORT     = 80
 COM_PORT     = 7777
 BACKEND_PORT = 7878
@@ -13,10 +13,9 @@ PAGE_OFFSET  = 65536     # 1048576
 SDK_DEFAULT  = $(HOME)/esp8266/esp-open-sdk
 ESP_GCC_VERS = 4.8.5
 
-DOCKER = yes
+DOCKER = no
 DOCKER_SDK_DEFAULT = /home/espbuild/esp-open-sdk
 DOCKER_PREFIX = /work/
-DOCKER_USB_PORT = $(DOCKER_PREFIX)/ftdi_serial
 DOCKCROSS = $(HOME)/bin/dockcross-xtensa
 
 OPTS += -DICACHE_FLASH
@@ -28,4 +27,3 @@ PAGE_TITLE = esp82xx-basic
 PAGE_SCRIPT =
 PAGE_HEADING = Welcome to the basic Web-GUI
 PAGE_INFO = This is the basic web interface for esp82xx-series chips
-
