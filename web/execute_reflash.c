@@ -312,13 +312,9 @@ int main(int argc, char**argv)
 			return -1;
 		}
 
-		libusb_detach_kernel_driver( devh, 0 );
+		libusb_detach_kernel_driver( devh, 0 ); //Mouse?
+		libusb_detach_kernel_driver( devh, 1 ); //Keyboard?
 
-		if( (r=libusb_claim_interface(devh, 0)) < 0 )
-		{
-			fprintf(stderr, "usb_claim_interface error %d\n", r);
-			return -1;
-		}
 		printf( "Connected.\n" );
 		//USB is attached
 		sendsize_max = 128;
