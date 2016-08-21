@@ -48,11 +48,11 @@ Useful ESP8266 C Environment. Intended to be included as sub-modules in derivate
         git init project_name
         cd project_name
         git submodule add git@github.com:cnlohr/esp82xx.git
-        cp esp28xx/user.cfg.example user.cfg
-        cp esp28xx/Makefile.example Makefile
+        cp esp82xx/user.cfg.example user.cfg
+        cp esp82xx/Makefile.example Makefile
         mkdir -p web/page
         mkdir user
-        ln -s esp28xx/web/Makefile web/
+        ln -s esp82xx/web/Makefile web/
 
     Then link, edit and copy to your heart's content. See [esp82XX-basic](https://github.com/con-f-use/esp82XX-basic) for a minimal example.
 
