@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <stdint.h>
+#include "common.h"
 
 #define SPI_FLASH_SEC_SIZE 4096
 #define MFS_STARTFLASHSECTOR  0x100

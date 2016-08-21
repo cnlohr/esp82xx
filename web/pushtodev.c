@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
+#include "common.h"
 
 #define sector_SIZE 4096
 int sockfd;

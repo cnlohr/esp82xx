@@ -11,11 +11,13 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
+#include "common.h"
 #include "md5.h"
 
 #define BLOCK_SIZE 65536
 #define SECTOR_SIZE 4096
 #define PADDING 1024
+
 int sockfd;
 	struct sockaddr_in servaddr,cliaddr;
 

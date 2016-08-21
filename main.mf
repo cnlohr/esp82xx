@@ -16,9 +16,17 @@ endef
 .PHONY : all clean cleanall netburn burnweb burn $(BIN_TARGET) netweb getips help
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
-FW_FILE1 = image.elf-0x00000.bin
-FW_FILE2 = image.elf-0x40000.bin
-TARGET = image.elf
+ifneq ($(strip $(DOCKER)), yes)
+	DOCKCROSS=""
+	DOCKER_PREFIX=""
+else
+	MAKE=make
+  $(warning Warning: Docker cannot flash via in-docker esptool.py (yet), see: http://bit.ly/2b9qFY2)
+endif
+
+FW_FILE1 = $(DOCKER_PREFIX)image.elf-0x00000.bin
+FW_FILE2 = $(DOCKER_PREFIX)image.elf-0x40000.bin
+TARGET = $(DOCKER_PREFIX)image.elf
 
 SRCS =  esp82xx/fwsrc/uart.c \
 	esp82xx/fwsrc/mystuff.c \
@@ -32,7 +40,22 @@ SRCS =  esp82xx/fwsrc/uart.c \
 	user/user_main.c
 
 LIBS = main lwip ssl upgrade net80211 wpa phy lwip pp crypto
-INCL = $(SDK)/include esp82xx/include .
+
+ifeq ($(strip $(DOCKER)), yes)
+	INCL = $(SDK)/include $(DOCKER_PREFIX)/esp82xx/include $(DOCKER_PREFIX)
+	SRCS =  $(DOCKER_PREFIX)/esp82xx/fwsrc/uart.c \
+	$(DOCKER_PREFIX)/esp82xx/fwsrc/mystuff.c \
+	$(DOCKER_PREFIX)/esp82xx/fwsrc/flash_rewriter.c \
+	$(DOCKER_PREFIX)/esp82xx/fwsrc/http.c \
+	$(DOCKER_PREFIX)/esp82xx/fwsrc/commonservices.c \
+	$(DOCKER_PREFIX)/esp82xx/fwsrc/http_custom.c \
+	$(DOCKER_PREFIX)/esp82xx/fwsrc/mdns.c \
+	$(DOCKER_PREFIX)/esp82xx/fwsrc/mfs.c \
+	$(DOCKER_PREFIX)/user/custom_commands.c \
+	$(DOCKER_PREFIX)/user/user_main.c
+else
+	INCL = $(SDK)/include esp82xx/include .
+endif
 
 CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)'
 
@@ -45,6 +68,7 @@ LINKFLAGS = $(LDFLAGS_CORE) -B$(XTLIB)
 
 BIN_TARGET = $(PROJECT_NAME)-$(VERSION)-binaries.zip
 
+
 ##########################################################################RULES
 
 help :
@@ -54,13 +78,14 @@ help :
 all : $(FW_FILE1) $(FW_FILE2)
 
 $(FW_FILE1) $(FW_FILE2) : $(TARGET)
-	$(ESPTOOL_PY) elf2image $(TARGET)
+	$(DOCKCROSS) $(ESPTOOL_PY) elf2image $(TARGET)
 
-$(TARGET) : $(SRCS) Makefile
-	$(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
+$(TARGET) : Makefile
+	$(DOCKCROSS) $(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
 #$^
 #nm -S -n $(TARGET_OUT) > image.map
 #$(PREFIX)objdump -S $@ > image.lst
+
 
 ifeq ($(CHIP), 8285)
 burn : $(FW_FILE1) $(FW_FILE2)
@@ -73,18 +98,18 @@ else
 endif
 
 burnweb :
-	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) page.mpfs
+	@cd web && $(DOCKCROSS) $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) page.mpfs
 	($(ESPTOOL_PY) --port $(PORT) write_flash 0x10000 web/page.mpfs)||(true)
 #If you have space, MFS should live at 0x100000. It can also live at
 #0x10000. But, then it is limited to 180kB. You might need to do this if
 # you have a 512kB ESP variant.
 
 netburn : $(FW_FILE1) $(FW_FILE2)
-	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) execute_reflash
-	web/execute_reflash $(IP) $(FW_FILE1) $(FW_FILE2)
+	@cd web && $(DOCKCROSS) $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) execute_reflash
+	$(DOCKCROSS) web/execute_reflash $(IP) $(FW_FILE1) $(FW_FILE2)
 
 netweb :
-	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) push
+	@cd web && $(DOCKCROSS) $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) push
 
 $(BIN_TARGET): $(FW_FILE1) $(FW_FILE2)
 	@cd web \
@@ -96,7 +121,7 @@ $(BIN_TARGET): $(FW_FILE1) $(FW_FILE2)
 
 getips:
 	$(info Detecting possible IPs for ESP82XX modules...)
-	$(info Needs 'nmap' and takes some time especiallay if none are connected)
+	$(info Needs 'nmap' and takes some time especially if none are connected)
 	sudo nmap -sP 192.168.0.0/24 | grep -iP "espressif|esp" -B2 | grep -oP "(\d{1,3}\.){3,3}\d\d{1,3}"
 
 clean :
