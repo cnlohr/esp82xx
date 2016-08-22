@@ -49,6 +49,11 @@ LINKFLAGS = $(LDFLAGS_CORE) -B$(XTLIB)
 
 BIN_TARGET = $(PROJECT_NAME)-$(VERSION)-binaries.zip
 
+ifneq (,$(findstring -DDEBUG,$(OPTS)))
+$(warning Debug is enabled!)
+FLASH_WRITE_FLAGS += --verify
+endif
+
 ##########################################################################RULES
 
 help :
@@ -69,10 +74,10 @@ debug : $(TARGET)
 
 ifeq ($(CHIP), 8285)
 burn : $(FW_FILE1) $(FW_FILE2)
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
 else ifeq ($(CHIP), 8266)
 burn : $(FW_FILE1) $(FW_FILE2)
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
 else
 	$(error Error: Unknown chip '$(CHIP)')
 endif
@@ -105,7 +110,7 @@ getips:
 	sudo nmap -sP 192.168.0.0/24 | grep -iP "espressif|esp" -B2 | grep -oP "(\d{1,3}\.){3,3}\d\d{1,3}"
 
 clean :
-	$(RM) $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(SRCS))) $(TARGET) image.map image.lst
+	$(RM) $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(SRCS))) $(TARGET) image.map image.lst $(CLEAN_EXTRA)
 
 purge : clean
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean
