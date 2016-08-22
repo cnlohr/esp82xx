@@ -103,6 +103,7 @@ Cope with submodules in top-level projects updates:
     git commit -m 'Your Message'
     git push
     ```
+    p.s. make sure you're in the 'dev' branch.  You can check that with ```git branch``` If you're not, make sure to ```git checkout dev``` first, BEFORE you make your changes.
 
  - Then bump the version in the main project root folder:
 

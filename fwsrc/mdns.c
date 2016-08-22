@@ -6,7 +6,7 @@
 #include "ets_sys.h"
 #include "osapi.h"
 #include "espconn.h"
-#include "mystuff.h"
+#include "esp82xx.h"
 #include "ip_addr.h"
 
 #define MDNS_BRD 0xfb0000e0

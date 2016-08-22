@@ -12,7 +12,7 @@
 #include "osapi.h"
 #include "espconn.h"
 #include "mfs.h"
-#include "mystuff.h"
+#include "esp82xx.h"
 
 #define HTTP_SERVER_TIMEOUT 500
 #define HTTP_CONNECTIONS 8

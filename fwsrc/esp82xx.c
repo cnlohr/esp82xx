@@ -2,7 +2,7 @@
 //Copyright 2015 <>< Charles Lohr Under the MIT/x11 License, NewBSD License or
 // ColorChord License.  You Choose.
 
-#include "mystuff.h"
+#include "esp82xx.h"
 #include <c_types.h>
 #include <mem.h>
 

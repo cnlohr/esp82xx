@@ -9,7 +9,7 @@
 #include "ets_sys.h"
 #include "osapi.h"
 #include "espconn.h"
-#include "mystuff.h"
+#include "esp82xx.h"
 #include "ip_addr.h"
 #include "http.h"
 #include "spi_flash.h"

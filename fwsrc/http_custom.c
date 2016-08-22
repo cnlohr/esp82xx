@@ -2,7 +2,7 @@
 // ColorChord License.  You Choose.
 
 #include "http.h"
-#include "mystuff.h"
+#include "esp82xx.h"
 #include "commonservices.h"
 
 static ICACHE_FLASH_ATTR void huge()

@@ -6,7 +6,7 @@
 #include <c_types.h>
 #include <esp8266_rom.h>
 #include <stdio.h>
-#include "mystuff.h"
+#include "esp82xx.h"
 
 #define SRCSIZE 4096
 //#define BLKSIZE 65536
