@@ -65,7 +65,7 @@ void ICACHE_FLASH_ATTR SafeMD5Update( MD5_CTX * md5ctx, uint8_t*from, uint32_t s
 
 char * ICACHE_FLASH_ATTR strdup( const char * src );
 char * ICACHE_FLASH_ATTR strdupcaselower( const char * src );
-
+char * ICACHE_FLASH_ATTR ParamCaptureAndAdvance( char ** data );
 
 uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
 
@@ -77,5 +77,6 @@ uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
 #define PIN_DIR_INPUT ( *((uint32_t*)0x60000314) )
 #define PIN_IN        ( *((volatile uint32_t*)0x60000318) )
 #define _BV(x) ((1)<<(x))
+
 
 #endif

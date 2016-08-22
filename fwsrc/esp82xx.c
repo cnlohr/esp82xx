@@ -257,3 +257,15 @@ uint32_t ICACHE_FLASH_ATTR GetCurrentIP( )
 		return 0;
 }
 
+char * ICACHE_FLASH_ATTR ParamCaptureAndAdvance( char ** data )
+{
+	if( !data ) return 0;       //If some just passed us bogus info.
+	if( *data == 0 ) return 0;  //If the string to start with was null
+	if( **data == 0 ) return 0; //If we got to the end of the string.
+	char * ret = *data;
+	while( **data != 0 && **data != 9 ) (*data)++;
+	**data = 0;
+	(*data)++;
+	return ret;
+}
+
