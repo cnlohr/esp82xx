@@ -103,7 +103,9 @@ Cope with submodules in top-level projects updates:
     git commit -m 'Your Message'
     git push
     ```
-    p.s. make sure you're in the 'dev' branch.  You can check that with ```git branch``` If you're not, make sure to ```git checkout dev``` first, BEFORE you make your changes.
+    p.s. make sure you're in the 'dev' branch.  You can check that with ```git branch``` If you're not, make sure to ```git checkout dev``` first, BEFORE you make your changes. 
+
+    When committing, commit to dev branch.  When you're ready to push, first make sure 'master' is up to date... ```git push origin dev:master``` then to push to master, use this: ```git push origin dev:master```
 
  - Then bump the version in the main project root folder:
 
