@@ -79,7 +79,7 @@ This section should mostly concern developers and contributors to this project.
 
 If you make small incremental changes and/or experimental ones, push to the `dev` branch rahter than to origin/master:
 
-   git push origin dev
+    git push origin dev
 
 You can merge or squash-merge them into `master` once they have been tested and enough changes accumulate.
 
@@ -128,4 +128,3 @@ To make the zip file invoke `make projectname-version-binaries.tgz` (Tab-autocom
 
  - Include libraries for usb, ws2812s and ethernet
 
- - Expand this readme
