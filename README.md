@@ -20,7 +20,7 @@ or create your own
     # ... link or copy more files depending on how much you want to change ...
 
 After you have the basic file structure in place, you should edit `user.cfg` in the top level.
-**Do not** edit files in `./esp82xx`. 
+**Do not** edit files in `./esp82xx`.
 You should rather copy them to top-level directories and edit/include the copies where necessary.
 The basic Makefile for the firmware is `./esp82xx/main.mf`.
 Most things can be achieved by including it and changing some make variables like this:
@@ -28,26 +28,25 @@ Most things can be achieved by including it and changing some make variables lik
     include esp82xx/main.mf
 
     SRCS += more_sources.c # Add your project specific sources
-    ....
 
-The file  `user.cfg` specifies the most important configuration variables. 
-Most notably the location of the Espressif SDK for building the firmware. 
-You will need a working copy of that. 
+The file  `user.cfg` specifies the most important configuration variables.
+Most notably the location of the Espressif SDK for building the firmware.
+You will need a working copy of that.
 We recommend the excellent [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk) by @pfalcon to download and install all necessary tools.
 Here is a shell script to [download and build](https://gist.github.com/con-f-use/d086ca941c2c80fbde6d8996b8a50761) a version known to work.
 Some versions of the SDK are somewhat problematic, e.g. with SDK versions greater than 1.5.2, Espressif changed the IRAM management, so some projects began to hit size restrictions and would not compile.
 
-You can edit `DEFAULT_SDK` in user.cfg to reflect your specific SDK path or **even better** define a shell variable `export ESP_ROOT=/path/to/sdk` in your `.bashrc`, `.profile` or what-ever is used in your shell. 
+You can edit `DEFAULT_SDK` in user.cfg to reflect your specific SDK path or **even better** define a shell variable `export ESP_ROOT=/path/to/sdk` in your `.bashrc`, `.profile` or what-ever is used in your shell.
 You can also pass the location as an argument to make:
 
-   make all ESP_ROOT=path/to/sdk
+    make all ESP_ROOT=path/to/sdk
 
 If you did everything correctly, flashing your esp should work.
 Just connect it to an USB to serial adaptor that uses 3.3V (you will fry your ESP with higer voltages) and place it in programming mode.
 Then you can run
 
-   make burn
-   make burnweb
+    make burn
+    make burnweb
 
 and your ESP is good to go.
 It should create its own WiFi Access Point called `ESPXXXX` or similar, where `XXXX` is some number.
@@ -74,36 +73,56 @@ There is also a make-target called `getips` and the ESP will print its connectio
 
 ## Notes
 
- - Do not forget to use the `--recursive` option when cloning a porject with submodules like this
+This section should mostly concern developers and contributors to this project.
 
- - Cope with submodules updates:
+#### Branches
 
-    - Changes in the submodule:
+If you make small incremental changes and/or experimental ones, push to the `dev` branch rahter than to origin/master:
 
-        ```
-        cd esp82xx
-        # Make changes
-        git commit -m 'Your Message'
-        git push
-        ```
+   git push origin dev
 
-    - Then bump the version in the main project root folder:
+You can merge or squash-merge them into `master` once they have been tested and enough changes accumulate.
 
-        ```
-        cd esp82xx
-        git pull
-        cd ..
-        git add esp82xx
-        git commit -m 'Bumped submodule version'
-        git push
-        ```
+    # ... Make changes in dev ...
+    # ... test them and be sure they should go into master ...
+    git checkout master
+    git merge --squash dev
+    git commit
 
- - You should **not** include binaries in the project repository itself.
-    There is a make target that builds the binaries and creates a `.zip` file. Included that in the release.
-    To make a release, just tag a commit with `git tag -a 'v1.3.3.7' -m 'Your release caption'` and push the tag with `git push --tags`.
+It might be good to create feature brances to develop individual features and merge them to dev and then from there to master or a hotfix branch for important quick-fixes.
 
-    After that, the github web-interface will allow you to make a release out of the new tag and include the binary file.
-    To make the zip file invoke `make projectname-version-binaries.tgz` (Tab-autocomplete is your friend).
+#### Submodule Updates
+
+Cope with submodules in top-level projects updates:
+
+ - Changes in the submodule:
+
+    ```
+    cd esp82xx
+    # Make changes
+    git commit -m 'Your Message'
+    git push
+    ```
+
+ - Then bump the version in the main project root folder:
+
+    ```
+    cd esp82xx
+    git pull
+    cd ..
+    git add esp82xx
+    git commit -m 'Bumped submodule version'
+    git push
+    ```
+
+#### Include Binaries
+
+You should **not** include binaries in the project repository itself.
+There is a make target that builds the binaries and creates a `.zip` file. Included that in the release.
+To make a release, just tag a commit with `git tag -a 'v1.3.3.7' -m 'Your release caption'` and push the tag with `git push --tags`.
+
+After that, the github web-interface will allow you to make a release out of the new tag and include the binary file.
+To make the zip file invoke `make projectname-version-binaries.tgz` (Tab-autocomplete is your friend).
 
 ### To do
 
