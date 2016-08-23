@@ -2,8 +2,8 @@
 //Copyright 2015 <>< Charles Lohr Under the MIT/x11 License, NewBSD License or
 // ColorChord License.  You Choose.
 
-#ifndef _MYSTUFF_H
-#define _MYSTUFF_H
+#ifndef _ESP82XXUTIL_H
+#define _ESP82XXUTIL_H
 
 
 #include <mem.h>
@@ -11,6 +11,8 @@
 #include <user_interface.h>
 #include <ets_sys.h>
 #include <espconn.h>
+#include <c_types.h>
+#include <stdio.h>
 #include <esp8266_rom.h>
 
 
@@ -34,7 +36,8 @@ extern const char * enctypes[6];// = { "open", "wep", "wpa", "wpa2", "wpa_wpa2",
 char tohex1( uint8_t i );
 int8_t fromhex1( char c ); //returns -1 if not hex char.
 
-int32  my_atoi( const char * in );
+int32  safe_atoi( const char * in ); //If valid number, paramcount increments
+
 void  Uint32To10Str( char * out, uint32 dat );
 
 void  NixNewline( char * str ); //If there's a newline at the end of this string, make it null.
@@ -54,8 +57,6 @@ void PushBlob( const uint8 * buffer, int len );
 #define START_PACK {generic_ptr=generic_buffer;}
 #define PACK_LENGTH (generic_ptr-&generic_buffer[0]}
 
-int ICACHE_FLASH_ATTR  ColonsToInts( const char * str, int32_t * vals, int max_quantity );
-
 //As much as it pains me, we shouldn't be using the esp8266's base64_encode() function
 //as it does stuff with dynamic memory.
 void ICACHE_FLASH_ATTR my_base64_encode(const unsigned char *data, size_t input_length, uint8_t * encoded_data );
@@ -66,6 +67,16 @@ void ICACHE_FLASH_ATTR SafeMD5Update( MD5_CTX * md5ctx, uint8_t*from, uint32_t s
 char * ICACHE_FLASH_ATTR strdup( const char * src );
 char * ICACHE_FLASH_ATTR strdupcaselower( const char * src );
 
+//data: Give pointer to tab-deliminated string.
+//returns pointer to *data
+//Searches for a \t in *data.  Once found, sets to 0, advances dat to next.
+//I.e. this pops tabs off the beginning of a string efficiently.
+//These are used in the flash re-writer and cannot be ICACHE_FLASH_ATTR'd out.
+//WARNING: These functions are NOT threadsafe.
+extern char * parameters;
+extern uint8_t paramcount;
+char *  ParamCaptureAndAdvance( ); //Increments intcount if good.
+int32_t ParamCaptureAndAdvanceInt( ); //Do the same, but we're looking for an integer.
 
 uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
 
@@ -77,5 +88,9 @@ uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
 #define PIN_DIR_INPUT ( *((uint32_t*)0x60000314) )
 #define PIN_IN        ( *((volatile uint32_t*)0x60000318) )
 #define _BV(x) ((1)<<(x))
+
+
+//For newer SDKs
+const unsigned char * ICACHE_FLASH_ATTR memchr(const unsigned char *s, int c, size_t n);
 
 #endif

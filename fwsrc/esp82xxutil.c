@@ -2,7 +2,7 @@
 //Copyright 2015 <>< Charles Lohr Under the MIT/x11 License, NewBSD License or
 // ColorChord License.  You Choose.
 
-#include "esp82xx.h"
+#include "esp82xxutil.h"
 #include <c_types.h>
 #include <mem.h>
 
@@ -11,33 +11,42 @@ const char * enctypes[6] = { "open", "wep", "wpa", "wpa2", "wpa_wpa2", 0 };
 char generic_print_buffer[384];
 char generic_buffer[1500] __attribute__((aligned (32)));
 char * generic_ptr;
+char * parameters;
+uint8_t  paramcount;
 
-int32 my_atoi( const char * in )
+int32 safe_atoi( const char * in )
 {
 	int positive = 1; //1 if negative.
 	int hit = 0;
 	int val = 0;
+
 	while( *in && hit < 11 	)
 	{
 		if( *in == '-' )
 		{
-			if( positive == -1 ) return val*positive;
+			if( positive == -1 )
+			{
+				//Two negatives aren't okay.
+				return val*positive;
+			}
 			positive = -1;
 		} else if( *in >= '0' && *in <= '9' )
 		{
 			val *= 10;
 			val += *in - '0';
 			hit++;
-		} else if (!hit && ( *in == ' ' || *in == '\t' ) )
+		} else if (!hit && ( *in == ' ' || *in == '\t' || *in == '\n' ) )
 		{
-			//okay
+			//okay before we hit a number.
 		} else
 		{
-			//bad.
+			//We already hit a number, now we hit something else.  Gotta bail.
+			if( hit ) paramcount++;
 			return val*positive;
 		}
 		in++;
 	}
+	if( hit ) paramcount++;
 	return val*positive;
 }
 
@@ -143,21 +152,6 @@ const char * ICACHE_FLASH_ATTR  my_strchr( const char * st, char c )
 	return st;
 }
 
-int ICACHE_FLASH_ATTR  ColonsToInts( const char * str, int32_t * vals, int max_quantity )
-{
-	int i;
-	for( i = 0; i < max_quantity; i++ )
-	{
-		const char * colon = my_strchr( str, ':' );
-		vals[i] = my_atoi( str );
-		if( !colon ) break;
-		str = colon+1;
-	}
-	return i+1;
-}
-
-
-
 
 
 
@@ -255,5 +249,42 @@ uint32_t ICACHE_FLASH_ATTR GetCurrentIP( )
 		return sta_ip.ip.addr;
 	else
 		return 0;
+}
+
+char * ParamCaptureAndAdvance( )
+{
+	if( parameters == 0 ) return 0;  //If the string to start with was null
+	if( *parameters == 0 ) return 0; //If we got to the end of the string.
+	paramcount++;
+	char * ret = parameters;
+	while( *parameters != 0 && *parameters != 9 ) parameters++;
+	if( *parameters )
+	{
+		*parameters = 0;
+		parameters++;
+	}
+	return ret;
+}
+
+int32_t    ParamCaptureAndAdvanceInt( )
+{
+	char * r = ParamCaptureAndAdvance( );
+	if( !r )
+		return 0;
+	else
+	{
+		paramcount--; //Back out value from ParamCaptureAndAdvance.
+		return safe_atoi( r );
+	}
+}
+
+const ICACHE_FLASH_ATTR unsigned char *memchr(const unsigned char *s, int c, size_t n)
+{
+	int i;
+	for( i = 0; i < n; i++, s++ )
+	{
+		if( *s == c ) return s;
+	}
+	return 0;
 }
 

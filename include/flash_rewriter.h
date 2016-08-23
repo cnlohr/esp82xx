@@ -4,6 +4,8 @@
 #ifndef _FLASH_REWRITER_H
 #define _FLASH_REWRITER_H
 
+#include "esp82xxutil.h"
+
 //Unusual, but guarentees that the code resides in IRAM.
 /*
 Usage:
@@ -14,7 +16,6 @@ Usage:
 	Note: this will modify the text in "command"
 */
 
-
-extern int (*GlobalRewriteFlash)( char * command, int commandlen );
+int ICACHE_FLASH_ATTR FlashRwriter( char * command, int commandlen );
 
 #endif

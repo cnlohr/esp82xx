@@ -6,7 +6,7 @@
 #include <c_types.h>
 #include <esp8266_rom.h>
 #include <stdio.h>
-#include "esp82xx.h"
+#include "esp82xxutil.h"
 
 #define SRCSIZE 4096
 //#define BLKSIZE 65536
@@ -17,7 +17,7 @@ static int keylen = 0;
 #define Kets_sprintf ets_sprintf
 #define Kuart0_sendStr uart0_sendStr
 
-void HEX16Convert( char * out, uint8_t * in )
+void ICACHE_FLASH_ATTR HEX16Convert( char * out, uint8_t * in )
 {
 	int i;
 	for( i = 0; i < 16; i++ )
@@ -26,11 +26,52 @@ void HEX16Convert( char * out, uint8_t * in )
 	}
 }
 
-static int MyRewriteFlash( char * command, int commandlen )
+//Must reside in iram.
+static void FinalFlashRewrite( uint32_t from1, uint32_t to1, uint32_t size1, uint32_t from2, uint32_t to2, uint32_t size2 )
+{
+	int i;
+	int j;
+	int ipl = (size1/SRCSIZE)+1;
+	int	p = to1/SRCSIZE;
+	for( i = 0; i < ipl; i++ )
+	{
+		SPIEraseSector( p++ );
+		uart_tx_one_char( '.' );
+
+		SPIWrite( to1, (uint32_t*)(0x40200000 + from1), SRCSIZE );
+		to1 += SRCSIZE;
+		from1 += SRCSIZE;
+	}
+
+	uart_tx_one_char( 'B' );
+
+	ipl = (size2/SRCSIZE)+1;
+	p = to2/SRCSIZE;
+	for( i = 0; i < ipl; i++ )
+	{
+		SPIEraseSector( p++ );
+		uart_tx_one_char( '.' );
+		SPIWrite( to2, (uint32_t*)(0x40200000 + from2), SRCSIZE );
+		to2 += SRCSIZE;
+		from2 += SRCSIZE;
+	}
+
+	uart_tx_one_char( 'C' );
+
+
+	void(*rebootme)() = (void(*)())0x40000080;
+	rebootme();
+}
+
+void (*LocalFlashRewrite)( uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t ) = FinalFlashRewrite;
+
+
+
+int ICACHE_FLASH_ATTR FlashRewriter( char * command, int commandlen )
 {
 	MD5_CTX md5ctx;
 	char  __attribute__ ((aligned (32))) buffer[512];
-	char * colons[8];
+	parameters = command;
 	int i, ipl = 0;
 	int p;
 	//[from_address]\t[to_address]\t[size]\t[MD5(key+data)]\t[from_address]\t[to_address]\t[size]\t[MD5(key+data)]
@@ -40,35 +81,22 @@ static int MyRewriteFlash( char * command, int commandlen )
 
 	ets_wdt_disable();
 
-	colons[ipl++] = &command[0];
-	for( i = 0; i < commandlen; i++ )
-	{
-		if( command[i] == 0 ) break;
-		if( command[i] == '\t' )
-		{
-			if( ipl >= 8 ) break;
-			command[i] = 0;
-			colons[ipl++] = &command[i+1];
-		}
-	}
-	if( ipl != 8 )
-	{
-		return 1;
-	}
-	uint32_t from1 = my_atoi( colons[0] );
-	uint32_t to1 =   my_atoi( colons[1] );
-	int32_t  size1 = my_atoi( colons[2] );
-	char *   md51  = colons[3];
+	paramcount = 0;
+
+	uint32_t from1 = ParamCaptureAndAdvanceInt();
+	uint32_t to1 =   ParamCaptureAndAdvanceInt();
+	int32_t  size1 = ParamCaptureAndAdvanceInt();
+	char *   md51  = ParamCaptureAndAdvance();
 	char     md5h1raw[48];
 	char     md5h1[48];
-	uint32_t from2 = my_atoi( colons[4] );
-	uint32_t to2 =   my_atoi( colons[5] );
-	int32_t  size2 = my_atoi( colons[6] );
-	char *   md52  = colons[7];
+	uint32_t from2 = ParamCaptureAndAdvanceInt();
+	uint32_t to2 =   ParamCaptureAndAdvanceInt();
+	int32_t  size2 = ParamCaptureAndAdvanceInt();
+	char *   md52  = ParamCaptureAndAdvance();
 	char     md5h2raw[48];
 	char     md5h2[48];
 
-	if( from1 == 0 || from2 == 0 || size1 == 0 )
+	if( from1 == 0 || from2 == 0 || size1 == 0 || paramcount != 8 )
 	{
 		return 2;
 	}
@@ -160,7 +188,6 @@ static int MyRewriteFlash( char * command, int commandlen )
 			debug( "File 1 MD5 mismatch: %s - "
 				   "Expected: %s (F1MD5 MM)",
 				   md5h1, md51                  );
-			Kuart0_sendStr(  );
 			return 4;
 		}
 	}
@@ -207,6 +234,8 @@ static int MyRewriteFlash( char * command, int commandlen )
 
 	//Everything checked out... Need to move the flashes.
 
+	//TODO: Disable wifi.s
+
 	ets_delay_us( 1000 );
 
 	//Disable all interrupts.
@@ -214,69 +243,13 @@ static int MyRewriteFlash( char * command, int commandlen )
 
 	uart_tx_one_char( 'A' );
 
-	int j;
-	ipl = (size1/SRCSIZE)+1;
-	p = to1/SRCSIZE;
-	for( i = 0; i < ipl; i++ )
-	{
-		SPIEraseSector( p++ );
-		uart_tx_one_char( '.' );
+	LocalFlashRewrite( from1, to1, size1, from2, to2, size2 );
 
-		SPIWrite( to1, (uint32_t*)(0x40200000 + from1), SRCSIZE );
-		to1 += SRCSIZE;
-		from1 += SRCSIZE;
-	}
-
-	uart_tx_one_char( 'B' );
-
-	ipl = (size2/SRCSIZE)+1;
-	p = to2/SRCSIZE;
-	for( i = 0; i < ipl; i++ )
-	{
-		SPIEraseSector( p++ );
-		uart_tx_one_char( '.' );
-		SPIWrite( to2, (uint32_t*)(0x40200000 + from2), SRCSIZE );
-		to2 += SRCSIZE;
-		from2 += SRCSIZE;
-	}
-
-	uart_tx_one_char( 'C' );
-
-
-	void(*rebootme)() = (void(*)())0x40000080;
-	rebootme();
-
+	return 0; //Will never get here.
 
 //	 system_upgrade_reboot();
 //	software_reset(); //Doesn't seem to boot back in.
 
-
-	//Destinations are erased.  Copy over the other part.
-//	for( i = 0; i < ; i++ )
-
-	/*Things I know:
-		flashchip->chip_size = 0x01000000;
-		SPIEraseSector( 1000000/4096 );
-        SPIWrite( 1000000, &t, 4 ); <<This looks right.
-		SPIRead( 1000000, &t, 4 ); <<Will read if we just wrote, but not from cache.
-
-		uint32_t * v = (uint32_t*)(0x40200000 + 1000000); //This will read, but from cache.
-
-//Looks like you can copy this way...
-//		SPIWrite( 1000004, 0x40200000 + 1000000, 4 );
-
-  */
-
-/*
-	MD5Init( &c );
-	MD5Update( &c, "apple", 5 );
-	MD5Final( hash, &c );*/
-
-
-	//Once we hit this stage we cannot do too much, otherwise we'll cause major crashing.
-
-
 }
 
 
-int (*GlobalRewriteFlash)( char * command, int commandlen ) = MyRewriteFlash;

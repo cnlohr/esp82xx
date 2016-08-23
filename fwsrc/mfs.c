@@ -1,7 +1,7 @@
 //Copyright 2015 <>< Charles Lohr Under the MIT/x11 License, NewBSD License or
 // ColorChord License.  You Choose.
 
-#include "esp82xx.h"
+#include "esp82xxutil.h"
 #include "mfs.h"
 #include "spi_flash.h"
 #include "ets_sys.h"

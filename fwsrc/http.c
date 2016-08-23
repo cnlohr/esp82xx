@@ -2,7 +2,7 @@
 // ColorChord License.  You Choose.
 
 #include "http.h"
-#include "esp82xx.h"
+#include "esp82xxutil.h"
 #include "esp8266_rom.h"
 
 #define HTDEBUG( x... ) printf( x )
@@ -172,12 +172,12 @@ static void DoHTTP( uint8_t timed )
 	}
 }
 
-void HTTPTick( uint8_t timed )
+void ICACHE_FLASH_ATTR HTTPTick( uint8_t timed )
 {
 	uint8_t i;
 	for( i = 0; i < HTTP_CONNECTIONS; i++ )
 	{
-		if( curhttp ) { printf( "Unexpected Race Condition\n" );}
+		if( curhttp ) { printf( "XXUER\n" );} //Unexpected Race Condition
 		curhttp = &HTTPConnections[i];
 		DoHTTP( timed );
 		curhttp = 0;
