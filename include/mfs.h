@@ -8,7 +8,7 @@
 
 #include "mem.h"
 #include "c_types.h"
-#include "esp82xx.h"
+#include "esp82xxutil.h"
 
 //SPI_FLASH_SEC_SIZE      4096
 

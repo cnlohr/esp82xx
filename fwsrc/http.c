@@ -2,7 +2,7 @@
 // ColorChord License.  You Choose.
 
 #include "http.h"
-#include "esp82xx.h"
+#include "esp82xxutil.h"
 #include "esp8266_rom.h"
 
 #define HTDEBUG( x... ) printf( x )
