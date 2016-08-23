@@ -2,8 +2,8 @@
 //Copyright 2015 <>< Charles Lohr Under the MIT/x11 License, NewBSD License or
 // ColorChord License.  You Choose.
 
-#ifndef _MYSTUFF_H
-#define _MYSTUFF_H
+#ifndef _ESP82XXUTIL_H
+#define _ESP82XXUTIL_H
 
 
 #include <mem.h>
@@ -11,6 +11,8 @@
 #include <user_interface.h>
 #include <ets_sys.h>
 #include <espconn.h>
+#include <c_types.h>
+#include <stdio.h>
 #include <esp8266_rom.h>
 
 

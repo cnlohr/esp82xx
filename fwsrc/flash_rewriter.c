@@ -17,7 +17,7 @@ static int keylen = 0;
 #define Kets_sprintf ets_sprintf
 #define Kuart0_sendStr uart0_sendStr
 
-void HEX16Convert( char * out, uint8_t * in )
+void ICACHE_FLASH_ATTR HEX16Convert( char * out, uint8_t * in )
 {
 	int i;
 	for( i = 0; i < 16; i++ )
@@ -26,7 +26,48 @@ void HEX16Convert( char * out, uint8_t * in )
 	}
 }
 
-static int MyRewriteFlash( char * command, int commandlen )
+//Must reside in iram.
+static void FinalFlashRewrite( uint32_t from1, uint32_t to1, uint32_t size1, uint32_t from2, uint32_t to2, uint32_t size2 )
+{
+	int i;
+	int j;
+	int ipl = (size1/SRCSIZE)+1;
+	int	p = to1/SRCSIZE;
+	for( i = 0; i < ipl; i++ )
+	{
+		SPIEraseSector( p++ );
+		uart_tx_one_char( '.' );
+
+		SPIWrite( to1, (uint32_t*)(0x40200000 + from1), SRCSIZE );
+		to1 += SRCSIZE;
+		from1 += SRCSIZE;
+	}
+
+	uart_tx_one_char( 'B' );
+
+	ipl = (size2/SRCSIZE)+1;
+	p = to2/SRCSIZE;
+	for( i = 0; i < ipl; i++ )
+	{
+		SPIEraseSector( p++ );
+		uart_tx_one_char( '.' );
+		SPIWrite( to2, (uint32_t*)(0x40200000 + from2), SRCSIZE );
+		to2 += SRCSIZE;
+		from2 += SRCSIZE;
+	}
+
+	uart_tx_one_char( 'C' );
+
+
+	void(*rebootme)() = (void(*)())0x40000080;
+	rebootme();
+}
+
+void (*LocalFlashRewrite)( uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t ) = FinalFlashRewrite;
+
+
+
+int ICACHE_FLASH_ATTR FlashRewriter( char * command, int commandlen )
 {
 	MD5_CTX md5ctx;
 	char  __attribute__ ((aligned (32))) buffer[512];
@@ -193,6 +234,8 @@ static int MyRewriteFlash( char * command, int commandlen )
 
 	//Everything checked out... Need to move the flashes.
 
+	//TODO: Disable wifi.s
+
 	ets_delay_us( 1000 );
 
 	//Disable all interrupts.
@@ -200,69 +243,13 @@ static int MyRewriteFlash( char * command, int commandlen )
 
 	uart_tx_one_char( 'A' );
 
-	int j;
-	ipl = (size1/SRCSIZE)+1;
-	p = to1/SRCSIZE;
-	for( i = 0; i < ipl; i++ )
-	{
-		SPIEraseSector( p++ );
-		uart_tx_one_char( '.' );
+	LocalFlashRewrite( from1, to1, size1, from2, to2, size2 );
 
-		SPIWrite( to1, (uint32_t*)(0x40200000 + from1), SRCSIZE );
-		to1 += SRCSIZE;
-		from1 += SRCSIZE;
-	}
-
-	uart_tx_one_char( 'B' );
-
-	ipl = (size2/SRCSIZE)+1;
-	p = to2/SRCSIZE;
-	for( i = 0; i < ipl; i++ )
-	{
-		SPIEraseSector( p++ );
-		uart_tx_one_char( '.' );
-		SPIWrite( to2, (uint32_t*)(0x40200000 + from2), SRCSIZE );
-		to2 += SRCSIZE;
-		from2 += SRCSIZE;
-	}
-
-	uart_tx_one_char( 'C' );
-
-
-	void(*rebootme)() = (void(*)())0x40000080;
-	rebootme();
-
+	return 0; //Will never get here.
 
 //	 system_upgrade_reboot();
 //	software_reset(); //Doesn't seem to boot back in.
 
-
-	//Destinations are erased.  Copy over the other part.
-//	for( i = 0; i < ; i++ )
-
-	/*Things I know:
-		flashchip->chip_size = 0x01000000;
-		SPIEraseSector( 1000000/4096 );
-        SPIWrite( 1000000, &t, 4 ); <<This looks right.
-		SPIRead( 1000000, &t, 4 ); <<Will read if we just wrote, but not from cache.
-
-		uint32_t * v = (uint32_t*)(0x40200000 + 1000000); //This will read, but from cache.
-
-//Looks like you can copy this way...
-//		SPIWrite( 1000004, 0x40200000 + 1000000, 4 );
-
-  */
-
-/*
-	MD5Init( &c );
-	MD5Update( &c, "apple", 5 );
-	MD5Final( hash, &c );*/
-
-
-	//Once we hit this stage we cannot do too much, otherwise we'll cause major crashing.
-
-
 }
 
 
-int (*GlobalRewriteFlash)( char * command, int commandlen ) = MyRewriteFlash;

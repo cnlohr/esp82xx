@@ -534,7 +534,7 @@ CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned shor
 			//Tricky: fix up the pointer business.  The flash rewriter expects it all contiguous.
 			*(parameters-1) = '\t';
 
-			int r = (*GlobalRewriteFlash)( &pusrdata[2], len-2 );
+			int r = FlashRewriter( &pusrdata[2], len-2 );
 			buffprint( "!FM%d\r\n", r );
 		} break;
 

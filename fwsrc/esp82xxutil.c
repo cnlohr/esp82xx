@@ -266,7 +266,7 @@ char * ParamCaptureAndAdvance( )
 	return ret;
 }
 
-int    ParamCaptureAndAdvanceInt( )
+int32_t    ParamCaptureAndAdvanceInt( )
 {
 	char * r = ParamCaptureAndAdvance( );
 	if( !r )

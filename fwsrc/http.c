@@ -172,12 +172,12 @@ static void DoHTTP( uint8_t timed )
 	}
 }
 
-void HTTPTick( uint8_t timed )
+void ICACHE_FLASH_ATTR HTTPTick( uint8_t timed )
 {
 	uint8_t i;
 	for( i = 0; i < HTTP_CONNECTIONS; i++ )
 	{
-		if( curhttp ) { printf( "Unexpected Race Condition\n" );}
+		if( curhttp ) { printf( "XXUER\n" );} //Unexpected Race Condition
 		curhttp = &HTTPConnections[i];
 		DoHTTP( timed );
 		curhttp = 0;
