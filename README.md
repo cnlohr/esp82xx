@@ -1,6 +1,22 @@
 # esp82xx
 
-Useful ESP8266 C Environment. Intended to be included as sub-modules in derivate projects.
+Useful ESP8266 C Environment. 
+Includes useful libraries and some basic functionality such as a Web-GUI, flashing firmware and web-data over network and basic GPIO functions.
+Intended to be included as sub-module in derivate projects.
+
+- [Usage](#usage)
+    - [Create File Structure](#create-file-structure)
+    - [Specify SDK](#specify-sdk)
+    - [Burn Firmware](#burn-firmware)
+    - [Connect to your Module](#connect-to-your-module)
+- [List of projects using esp82xx](#list-of-projects-using-esp82xx)
+- [Notes](#notes)
+    - [Branches](#branches)
+    - [Submodule Updates](#submodule-updates)
+    - [Include Binaries](#include-binaries)
+- [ToDo](#todo)
+
+<!-- toc generated with https://gist.github.com/ttscoff/c56fa651974ae6d86eee -->
 
 ## Usage
 
@@ -53,7 +69,7 @@ You can also pass the location as an argument to make:
 
     make all ESP_ROOT=path/to/sdk
 
-### Burning Firmware
+### Burn Firmware
 
 If you did everything correctly, flashing your esp should work.
 Just connect it to an USB to serial adaptor that uses 3.3V (you will fry your ESP with higer voltages) and place it in programming mode.
@@ -72,7 +88,7 @@ There are make targets to burn firmware and page data as well:
 
 To find out the IP, see below.
 
-### Connecting to your Module
+### Connect to your Module
 
 The ESP will print its connection info, including its current IP to the serial interface after reset/power-on.
 
@@ -80,7 +96,7 @@ You can [connect to the ESP](http://cn8266.local) in your browser:
 
     http://cn8266.local
 
-There is also a make-target called `getips` that scans for ESP modules and lists their IPs. 
+There is also a make-target called `getips` that scans for ESP modules and lists their IPs.
 This is basically a port-scan, that takes long (especially if no ESP is connected) and uses external tools.
 
 The default IP of the ESP, when it operates as it's own access point, is **192.168.1.4**.
