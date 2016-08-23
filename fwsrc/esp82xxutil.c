@@ -91,7 +91,7 @@ int8_t fromhex1( char c )
 		return -1;
 }
 
-void  NixNewline( char * str )
+void  ICACHE_FLASH_ATTR NixNewline( char * str )
 {
 	if( !str ) return;
 	int sl = ets_strlen( str );
