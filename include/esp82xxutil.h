@@ -40,7 +40,7 @@ int32  safe_atoi( const char * in ); //If valid number, paramcount increments
 
 void  Uint32To10Str( char * out, uint32 dat );
 
-void  NixNewline( char * str ); //If there's a newline at the end of this string, make it null.
+void ICACHE_FLASH_ATTR  NixNewline( char * str ); //If there's a newline at the end of this string, make it null.
 
 //For holding TX packet buffers
 extern char generic_buffer[1500];
@@ -75,8 +75,8 @@ char * ICACHE_FLASH_ATTR strdupcaselower( const char * src );
 //WARNING: These functions are NOT threadsafe.
 extern char * parameters;
 extern uint8_t paramcount;
-char *  ParamCaptureAndAdvance( ); //Increments intcount if good.
-int32_t ParamCaptureAndAdvanceInt( ); //Do the same, but we're looking for an integer.
+char *  ICACHE_FLASH_ATTR ParamCaptureAndAdvance( ); //Increments intcount if good.
+int32_t ICACHE_FLASH_ATTR ParamCaptureAndAdvanceInt( ); //Do the same, but we're looking for an integer.
 
 uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
 
