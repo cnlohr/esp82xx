@@ -4,7 +4,7 @@ Useful ESP8266 C Environment. Intended to be included as sub-modules in derivate
 
 ## Usage
 
-#### Create File Structure
+### Create File Structure
 
 First, check out a project that uses esp82xx
 
@@ -38,7 +38,7 @@ We recommend the excellent [esp-open-sdk](https://github.com/pfalcon/esp-open-sd
 Here is a shell script to [download and build](https://gist.github.com/con-f-use/d086ca941c2c80fbde6d8996b8a50761) a version known to work.
 Some versions of the SDK are somewhat problematic, e.g. with SDK versions greater than 1.5.2, Espressif changed the IRAM management, so some projects began to hit size restrictions and would not compile.
 
-#### Specify SDK
+### Specify SDK
 
 There are many ways to [let Make know where your SDK is](https://github.com/cnlohr/esp82xx/issues/19#issuecomment-241756095) located.
 You can edit `DEFAULT_SDK` in `./user.cfg` to reflect your specific SDK path or **even better** define a shell variable.
@@ -53,7 +53,7 @@ You can also pass the location as an argument to make:
 
     make all ESP_ROOT=path/to/sdk
 
-#### Burning Firmware
+### Burning Firmware
 
 If you did everything correctly, flashing your esp should work.
 Just connect it to an USB to serial adaptor that uses 3.3V (you will fry your ESP with higer voltages) and place it in programming mode.
@@ -72,7 +72,7 @@ There are make targets to burn firmware and page data as well:
 
 To find out the IP, see below.
 
-#### Connecting to your Module
+### Connecting to your Module
 
 The ESP will print its connection info, including its current IP to the serial interface after reset/power-on.
 
@@ -99,7 +99,7 @@ Most WiFi routers have an option in their Web-GUI to list all IPs, that their DH
 
 This section should mostly concern developers and contributors to this project.
 
-#### Branches
+### Branches
 
 If you make small incremental changes and/or experimental ones, push to the `dev` branch rahter than to origin/master:
 
@@ -115,7 +115,7 @@ You can merge or squash-merge them into `master` once they have been tested and 
 
 It might be good to create feature brances to develop individual features and merge them to dev and then from there to master or a hotfix branch for important quick-fixes.
 
-#### Submodule Updates
+### Submodule Updates
 
 Cope with submodules in top-level projects updates:
 
@@ -143,7 +143,7 @@ Cope with submodules in top-level projects updates:
     git push
     ```
 
-#### Include Binaries
+### Include Binaries
 
 You should **not** include binaries in the project repository itself.
 There is a make target that builds the binaries and creates a `.zip` file. Included that in the release.
@@ -152,7 +152,7 @@ To make a release, just tag a commit with `git tag -a 'v1.3.3.7' -m 'Your releas
 After that, the github web-interface will allow you to make a release out of the new tag and include the binary file.
 To make the zip file invoke `make projectname-version-binaries.tgz` (Tab-autocomplete is your friend).
 
-### To do
+## ToDo
 
- - Include libraries for usb, ws2812s and ethernet
+ - Include libraries for usb, ws2812s and ethernet as soon as they are stable
 
