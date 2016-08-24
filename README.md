@@ -107,7 +107,7 @@ Most WiFi routers have an option in their Web-GUI to list all IPs, that their DH
 
  - [esp82XX-basic](https://github.com/con-f-use/esp82XX-basic)
  - [Colorchord](https://github.com/cnlohr/colorchord)
- - [esp8266ws2812i2c](https://github.com/cnlohr/esp8266ws2812i2s)
+ - [esp8266ws8212i2c](https://github.com/cnlohr/esp8266ws8212i2s)
  - [espusb](https://github.com/cnlohr/espusb)
  - Migration of others in progress
 
@@ -192,4 +192,4 @@ Then type `make burn` as usual and it will:
 
  - Include libraries for usb, ws2812s and ethernet as soon as they are stable
  - Switch to a more convenient, flexible and optimized docker image: https://hub.docker.com/r/vowstar/esp8266/
-
+ - Include libraries for usb, ws8212s and ethernet as soon as they are stable

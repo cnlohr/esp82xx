@@ -42,6 +42,8 @@ define outside_docker
   ifeq ($(strip $(DOCKER)), yes)
     $(warning Warning: Docker cannot flash via in-docker esptool.py (yet) due to USB issues, see: http://bit.ly/2b9qFY2)
     $(eval ESPTOOL_PY:=$(shell which esptool.py))
+    $(eval FW_FILE1:= image.elf-0x00000.bin)
+    $(eval FW_FILE2:= image.elf-0x40000.bin)
   endif
 endef
 
