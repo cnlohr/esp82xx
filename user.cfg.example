@@ -17,7 +17,6 @@ ESP_GCC_VERS = 4.8.5
 DOCKER = no
 DOCKER_PREFIX = /work/
 DOCKER_SDK_DEFAULT = /home/espbuild/esp-open-sdk
-DOCKER_ESPTOOL_PY = $(DOCKER_SDK_DEFAULT)/esptool/esptool.py
 DOCKCROSS = $(HOME)/bin/dockcross-xtensa
 
 OPTS += -DICACHE_FLASH

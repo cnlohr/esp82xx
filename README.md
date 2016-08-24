@@ -191,4 +191,5 @@ Then type `make burn` as usual and it will:
 ## ToDo
 
  - Include libraries for usb, ws2812s and ethernet as soon as they are stable
+ - Switch to a more convenient, flexible and optimized docker image: https://hub.docker.com/r/vowstar/esp8266/
 
