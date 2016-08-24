@@ -2,7 +2,7 @@
 // ColorChord License.  You Choose.
 
 #include "http.h"
-#include "mystuff.h"
+#include "esp82xxutil.h"
 #include "commonservices.h"
 
 static ICACHE_FLASH_ATTR void huge()
@@ -16,7 +16,7 @@ static ICACHE_FLASH_ATTR void huge()
 		PushByte( i );
 	} while( ++i ); //Tricky:  this will roll-over to 0, and thus only execute 256 times.
 
-	EndTCPWrite( curhttp->socket );
+	END_TCP_WRITE( curhttp->socket );
 }
 
 
@@ -27,7 +27,7 @@ static ICACHE_FLASH_ATTR void echo()
 
 	START_PACK;
 	PushBlob( mydat, len );
-	EndTCPWrite( curhttp->socket );
+	END_TCP_WRITE( curhttp->socket );
 
 	curhttp->state = HTTP_WAIT_CLOSE;
 }
@@ -42,7 +42,7 @@ static ICACHE_FLASH_ATTR void issue()
 	{
 		START_PACK;
 		PushBlob( buf, r );
-		EndTCPWrite( curhttp->socket );
+		END_TCP_WRITE( curhttp->socket );
 	}
 	curhttp->state = HTTP_WAIT_CLOSE;
 }

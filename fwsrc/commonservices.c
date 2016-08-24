@@ -9,7 +9,7 @@
 #include "ets_sys.h"
 #include "osapi.h"
 #include "espconn.h"
-#include "mystuff.h"
+#include "esp82xxutil.h"
 #include "ip_addr.h"
 #include "http.h"
 #include "spi_flash.h"
@@ -66,28 +66,51 @@ struct totalscan_t
 	int8_t rssi;
 	uint8_t channel;
 	uint8_t encryption;
-} totalscan[MAX_STATIONS];
+};
+
+struct totalscan_t ** scanarray;
+
 int scanplace = 0;
+
+static void ICACHE_FLASH_ATTR free_scan_array()
+{
+	if( !scanarray ) return;
+	int i;
+	for( i = 0; i < MAX_STATIONS; i++ )
+	{
+		if( scanarray[i] ) os_free( scanarray[i] );
+	}
+	os_free( scanarray );
+	scanarray = 0;
+}
+
 static void ICACHE_FLASH_ATTR scandone(void *arg, STATUS status)
 {
+	free_scan_array();
+	scanarray = (struct totalscan_t **)os_malloc( sizeof(struct totalscan_t *) * MAX_STATIONS ); 
+
 	scaninfo *c = arg;
 	struct bss_info *inf;
 
 	if( need_to_switch_opmode == 1 )
 		need_to_switch_opmode = 2;
 
-	if (!c->pbss) {  scanplace = -1;  return;  }
+	if( !c->pbss ) { scanplace = -1;  return;  }
+	scanplace = 0;
+
+	printf( "ISCAN\n" );
 
 	STAILQ_FOREACH(inf, c->pbss, next) {
+		struct totalscan_t * t = scanarray[scanplace++] = (struct totalscan_t *)os_malloc( sizeof(struct totalscan_t) );
+
 		printf( "%s\n", inf->ssid );
-		ets_memcpy( totalscan[scanplace].name, inf->ssid, 32 );
-		ets_sprintf( totalscan[scanplace].mac, MACSTR, MAC2STR( inf->bssid ) );
-		totalscan[scanplace].rssi = inf->rssi;
-		totalscan[scanplace].channel = inf->channel;
-		totalscan[scanplace].encryption = inf->authmode;
+		ets_memcpy( t->name, inf->ssid, 32 );
+		ets_sprintf( t->mac, MACSTR, MAC2STR( inf->bssid ) );
+		t->rssi = inf->rssi;
+		t->channel = inf->channel;
+		t->encryption = inf->authmode;
 		inf = (struct bss_info *) &inf->next;
-		scanplace++;
-		if( scanplace == MAX_STATIONS ) break;
+		if( scanplace == MAX_STATIONS - 1 ) break;
 	}
 }
 
@@ -140,12 +163,10 @@ static void ICACHE_FLASH_ATTR EmitBrowseNow( )
 CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char * buffend)
 {
 	if( len <= 1 ) return -1;
+	char * srv = ParamCaptureAndAdvance();
+	char * nam = ParamCaptureAndAdvance();
+	char * des = ParamCaptureAndAdvance();
 
-	char * srv = len>2 ? &pusrdata[2] : 0;
-	char * nam = srv ? (char *)ets_strstr( (char*)(srv+1), "\t" ) : 0;
-	char * des = nam ? (char *)ets_strstr( (char*)(nam+1), "\t" ) : 0;
-	if( nam ) { *nam = 0; nam++; }
-	if( des ) { *des = 0; des++; } //Properly null terminate, and advance beyond the \t.
 	NixNewline( srv );  NixNewline( nam );  NixNewline( des );
 	int fromip = thisfromip;
 
@@ -242,7 +263,7 @@ CMD_RET_TYPE cmd_GPIO(char * buffer, char *pusrdata, char * buffend)
 		PERIPHS_IO_MUX_MTDI_U, PERIPHS_IO_MUX_MTCK_U, PERIPHS_IO_MUX_MTMS_U, PERIPHS_IO_MUX_MTDO_U
 	};
 
-	int nr = my_atoi( &pusrdata[2] );
+	int nr = ParamCaptureAndAdvanceInt();
 
 	if( AFMapper[nr] == 1 ) {
 		buffprint( "!G%c%d\n", pusrdata[1], nr );
@@ -252,19 +273,19 @@ CMD_RET_TYPE cmd_GPIO(char * buffer, char *pusrdata, char * buffend)
 
 	switch( pusrdata[1] ) {
 		case '0':
-		case '1':
+		case '1':  //Turn "on" or "off"
 			GPIO_OUTPUT_SET(GPIO_ID_PIN(nr), pusrdata[1]-'0' );
 			buffprint( "G%c%d", pusrdata[1], nr );
 			g_gpiooutputmask |= (1<<nr);
 		break;
 
-		case 'i': case 'I':
+		case 'i': case 'I': //Make Input
 			GPIO_DIS_OUTPUT(GPIO_ID_PIN(nr));
 			buffprint( "GI%d\n", nr );
 			g_gpiooutputmask &= ~(1<<nr);
 		break;
 
-		case 'f': case 'F': {
+		case 'f': case 'F': {  //Toggle
 			int on = GPIO_INPUT_GET( GPIO_ID_PIN(nr) );
 			on = !on;
 			GPIO_OUTPUT_SET(GPIO_ID_PIN(nr), on );
@@ -308,27 +329,29 @@ CMD_RET_TYPE cmd_Info(char * buffer, int retsize, char * pusrdata, char * buffen
 
 		//Name
 		case 'n': case 'N':
+		{
+			char * dn = ParamCaptureAndAdvance();
 			for( i = 0; i < sizeof( SETTINGS.DeviceName )-1; i++ ) {
-				char ci = pusrdata[i+2];
+				char ci = *(dn++);
 				if( ci >= 33 && ci <= 'z' )
 					SETTINGS.DeviceName[i] = ci;
-				else break;
 			}
 			SETTINGS.DeviceName[i] = 0;
 			buffprint( "\r\n" );
 			return buffend - buffer;
-		break;
-
+		}
 		//Description
 		case 'd': case 'D':
+		{
+			char * dn = ParamCaptureAndAdvance();
 			for( i = 0; i < sizeof( SETTINGS.DeviceDescription )-1; i++ ) {
-				char ci = pusrdata[i+2];
+				char ci = *(dn++);
 				if( ci >= 32 && ci <= 'z' )
 					SETTINGS.DeviceDescription[i] = ci;
-				else break;
 			}
 			SETTINGS.DeviceDescription[i] = 0;
 			buffprint( "\r\n" );
+		}
 		break;
 
 		// General Info
@@ -351,52 +374,46 @@ CMD_RET_TYPE cmd_Info(char * buffer, int retsize, char * pusrdata, char * buffen
 
 CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend)
 {
-	int c1l = 0, c2l = 0;
-	char * colon  = (char *) ets_strstr( (char*)&pusrdata[2], "\t" );
-	char * colon2 = colon  ? (char *)ets_strstr( (char*)(colon +1), "\t" ) : 0;
-	char * colon3 = colon2 ? (char *)ets_strstr( (char*)(colon2+1), "\t" ) : 0;
-	char * colon4 = colon3 ? (char *)ets_strstr( (char*)(colon3+1), "\t" ) : 0;
-	char * extra = colon2;
+	int aplen = 0, passlen = 0;
+	parameters++; //Assume "tab" after command.
+	char * apname = ParamCaptureAndAdvance();
+	char * password = ParamCaptureAndAdvance();
+	char * encr = ParamCaptureAndAdvance(); //Encryption
+	char * bssid = ParamCaptureAndAdvance();
+
+	if( apname ) { aplen = ets_strlen( apname ); }
+	if( password ) { passlen = ets_strlen( password ); }
+
 
 	char mac[6] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 	int bssid_set = 0;
-	if( colon  ) { *colon  = 0; colon++ ; }
-	if( colon2 ) { *colon2 = 0; colon2++; }
-	if( colon3 ) { *colon3 = 0; colon3++; }
-	if( colon4 ) { *colon4 = 0; colon4++; }
 
-	if( colon  ) { c1l = ets_strlen( colon  ); }
-	if( colon2 ) { c2l = ets_strlen( colon2 ); }
-	if( colon3 ) {
-		bssid_set = ets_str2macaddr( mac, colon3 )?1:0;
+	if( bssid ) {
+		bssid_set = ets_str2macaddr( mac, bssid )?1:0;
 		#define is_edge(x) ((x)==0x00 || (x)==0xff)
 		if( is_edge(mac[0]) && is_edge(mac[1]) && is_edge(mac[2]) &&
 			is_edge(mac[3]) && is_edge(mac[4]) && is_edge(mac[5])    )
 			bssid_set = 0;
 	}
 
-	if( extra )
-	    for( ; *extra; extra++ )
-		    if( *extra < 32 ) {  *extra = 0;  break;  }
-
 	switch (pusrdata[1]) {
 		case '1': //Station mode
 		case '2': //AP Mode
-			if( colon && colon2 ) {
-				if( c1l > 31 ) c1l = 31;
-				if( c2l > 63 ) c2l = 63;
+			if( apname && password ) {
+				if( aplen > 31 ) aplen = 31;
+				if( passlen > 63 ) passlen = 63;
 
-				printf( "Switching to: \"%s\"/\"%s\" (%d/%d). BSSID_SET: %d [%c]\n", colon, colon2, c1l, c2l, bssid_set, pusrdata[1] );
+				printf( "Switching to: \"%s\"/\"%s\" (%d/%d). BSSID_SET: %d [%c]\n", apname, password, aplen, passlen, bssid_set, pusrdata[1] );
 
 				if( pusrdata[1] == '1' ) {
 					struct station_config stationConf;
 					wifi_station_get_config(&stationConf);
 
-					os_memcpy(&stationConf.ssid, colon, c1l);
-					os_memcpy(&stationConf.password, colon2, c2l);
+					os_memcpy(&stationConf.ssid, apname, aplen);
+					os_memcpy(&stationConf.password, password, passlen);
 
-					stationConf.ssid[c1l] = 0;
-					stationConf.password[c2l] = 0;
+					stationConf.ssid[aplen] = 0;
+					stationConf.password[passlen] = 0;
 					stationConf.bssid_set = bssid_set;
 					os_memcpy( stationConf.bssid, mac, 6 );
 
@@ -421,20 +438,20 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 
 					wifi_get_macaddr(SOFTAP_IF, macaddr);
 
-					os_memcpy( &config.ssid, colon, c1l );
-					os_memcpy( &config.password, colon2, c2l );
-					config.ssid_len = c1l;
+					os_memcpy( &config.ssid, apname, aplen );
+					os_memcpy( &config.password, password, passlen );
+					config.ssid_len = aplen;
     				#if 0 //We don't support encryption.
 					config.ssid[c1l] = 0;  config.password[c2l] = 0;   config.authmode = 0;
-					if( colon3 ) {
+					if( encr ) {
 						int k;
 						for( k = 0; enctypes[k]; k++ )
-							if( strcmp( colon3, enctypes[k] ) == 0 )
+							if( strcmp( encr, enctypes[k] ) == 0 )
 								config.authmode = k;
 					}
     				#endif
 
-					int chan = (colon4) ? my_atoi(colon4) : config.channel;
+					int chan = (bssid) ? safe_atoi(bssid) : config.channel;
 					if( chan == 0 || chan > 13 ) chan = 1;
 					config.channel = chan;
 
@@ -488,7 +505,6 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 		case 'S': case 's': {
 			int r;   struct scan_config sc;
 
-			scanplace = 0;
 			sc.ssid = 0;  sc.bssid = 0;  sc.channel = 0;  sc.show_hidden = 1;
 
 			EnterCritical();
@@ -505,11 +521,20 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 
 		case 'R': case 'r': {
 			int i;
-			buffprint( "WR%d\n", scanplace );
-			for( i = 0; i < scanplace && buffend - buffer < retsize - 64; i++ ) {
-				buffprint( "#%s\t%s\t%d\t%d\t%s\n",
-					totalscan[i].name, totalscan[i].mac, totalscan[i].rssi, totalscan[i].channel, enctypes[totalscan[i].encryption] );
+			if( !scanarray )
+			{
+				buffprint( "!WR" );
 			}
+			else
+			{
+				buffprint( "WR%d\n", scanplace );
+				for( i = 0; i < scanplace && buffend - buffer < retsize - 64; i++ ) {
+					buffprint( "#%s\t%s\t%d\t%d\t%s\n",
+						scanarray[i]->name, scanarray[i]->mac, scanarray[i]->rssi, scanarray[i]->channel, enctypes[scanarray[i]->encryption] );
+				}
+				free_scan_array();
+			}
+
 		} break;
 	}
 	return buffend - buffer;
@@ -518,8 +543,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 
 CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned short len, char * buffend) {
 	flashchip->chip_size = 0x01000000;
-	const char * colon = (const char *) ets_strstr( (char*)&(pusrdata[2]), "\t" );
-	int nr = my_atoi( &pusrdata[2] );
+	int nr = ParamCaptureAndAdvanceInt();
 
 	switch (pusrdata[1]) {
 		//(FE#\n) <- # = sector.
@@ -538,102 +562,96 @@ CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned shor
 
 		//Execute the flash re-writer
 		case 'm': case 'M': {
-			int r = (*GlobalRewriteFlash)( &pusrdata[2], len-2 );
+			//Tricky: fix up the pointer business.  The flash rewriter expects it all contiguous.
+			*(parameters-1) = '\t';
+
+			int r = FlashRewriter( &pusrdata[2], len-2 );
 			buffprint( "!FM%d\r\n", r );
 		} break;
 
 		//Flash Write (FW#\n) <- # = byte pos.  Reads until end-of-packet.
 		case 'w': case 'W':
-			if( colon ) {
-				colon++;
-				const char * colon2 = (const char *) ets_strstr( (char*)colon, "\t" );
-				if( colon2 && nr >= 65536) {
-                    debug( "FW%d\r\n", nr );
-					colon2++;
-					int datlen = (int)len - (colon2 - pusrdata);
-					ets_memcpy( buffer, colon2, datlen );
+		{
+			int datlen = ParamCaptureAndAdvanceInt();
+			if( parameters && nr >= 65536 && datlen > 0 ) {
+                debug( "FW%d\r\n", nr );
+				ets_memcpy( buffer, parameters, datlen );
 
-					EnterCritical();
-					spi_flash_write( nr, (uint32*)buffer, (datlen/4)*4 );
-					ExitCritical();
+				EnterCritical();
+				spi_flash_write( nr, (uint32*)buffer, (datlen/4)*4 );
+				ExitCritical();
 
-                    #ifdef VERIFY_FLASH_WRITE
-                    #define VFW_SIZE 128
-                    int jj;
-                    uint8_t  __attribute__ ((aligned (32))) buf[VFW_SIZE];
-                    for(jj=0; jj<datlen; jj+=VFW_SIZE) {
-                        spi_flash_read( nr+jj, (uint32*)buf, VFW_SIZE );
-                        if( ets_memcmp( buf, buffer+jj, jj+VFW_SIZE>datlen ? datlen%VFW_SIZE : VFW_SIZE ) != 0 ) goto failw;
-                    }
-                    #endif
+                #ifdef VERIFY_FLASH_WRITE
+                #define VFW_SIZE 128
+                int jj;
+                uint8_t  __attribute__ ((aligned (32))) buf[VFW_SIZE];
+                for(jj=0; jj<datlen; jj+=VFW_SIZE) {
+                    spi_flash_read( nr+jj, (uint32*)buf, VFW_SIZE );
+                    if( ets_memcmp( buf, buffer+jj, jj+VFW_SIZE>datlen ? datlen%VFW_SIZE : VFW_SIZE ) != 0 ) goto failw;
+                }
+                #endif
 
-					buffprint( "FW%d\r\n", nr );
-					break;
-				}
+				buffprint( "FW%d\r\n", nr );
+				break;
 			}
             failw:
                 buffprint( "!FW\r\n" );
+		}
 		break;
 
 		//Flash Write Hex (FX#\t#\tDATTAAAAA) <- a = byte pos. b = length (in hex-pairs). Generally used for web-browser.
 		case 'x': case 'X':
-			if( colon ) {
-				int i;   int siz = 0;
-				colon++;
-				char * colon2 = (char *) ets_strstr( (char*)colon, "\t" );
-				if( colon2 ) {
-					*colon2 = 0;
-					siz = my_atoi( colon );
+		{
+			int siz = ParamCaptureAndAdvanceInt();
+			char * colon2 = ParamCaptureAndAdvance();
+			int i;
+			//nr = place to write.
+			//siz = size to write.
+			//colon2 = data start.
+			if( colon2 && (nr >= FLASH_PROTECTION_BOUNDARY || ( nr >= 0x10000 && nr < 0x30000 ) ) ) {
+				colon2++;
+                debug( "FX%d\t%d", nr, siz );
+				int datlen = ((int)len - (colon2 - pusrdata))/2;
+				if( datlen > siz ) datlen = siz;
+
+				for( i = 0; i < datlen; i++ ) {
+					int8_t r1, r2;
+					r1 = r2 = fromhex1( *(colon2++) );
+					if( r1 == -1 || r2 == -1 ) goto failfx;
+					buffend[i] = (r1 << 4) | r2;
 				}
-				//nr = place to write.
-				//siz = size to write.
-				//colon2 = data start.
-				if( colon2 && (nr >= FLASH_PROTECTION_BOUNDARY || ( nr >= 0x10000 && nr < 0x30000 ) ) ) {
-					colon2++;
-                    debug( "FX%d\t%d", nr, siz );
-					int datlen = ((int)len - (colon2 - pusrdata))/2;
-					if( datlen > siz ) datlen = siz;
 
-					for( i = 0; i < datlen; i++ ) {
-						int8_t r1, r2;
-						r1 = r2 = fromhex1( *(colon2++) );
-						if( r1 == -1 || r2 == -1 ) goto failfx;
-						buffend[i] = (r1 << 4) | r2;
-					}
+				//ets_memcpy( buffer, colon2, datlen );
 
-					//ets_memcpy( buffer, colon2, datlen );
+				EnterCritical();
+				spi_flash_write( nr, (uint32*)buffend, (datlen/4)*4 );
+				ExitCritical();
 
-					EnterCritical();
-					spi_flash_write( nr, (uint32*)buffend, (datlen/4)*4 );
-					ExitCritical();
+                #ifdef VERIFY_FLASH_WRITE
+                // uint8_t  __attribute__ ((aligned (32))) buf[1300];
+                // spi_flash_read( nr, (uint32*)buf, (datlen/4)*4 );
+                // if( ets_memcmp( buf, buffer, (datlen/4)*4 ) != 0 ) break;
+                // Rather do it in chunks, to avoid allocationg huge buf
+                #define VFW_SIZE 128
+                int jj;
+                uint8_t  __attribute__ ((aligned (32))) buf[VFW_SIZE];
+                for(jj=0; jj<datlen; jj+=VFW_SIZE) {
+                    spi_flash_read( nr+jj, (uint32*)buf, VFW_SIZE );
+                    if( ets_memcmp( buf, buffer+jj, jj+VFW_SIZE>datlen ? datlen%VFW_SIZE : VFW_SIZE ) != 0 ) goto failfx;
+                }
+                #endif
 
-                    #ifdef VERIFY_FLASH_WRITE
-                    // uint8_t  __attribute__ ((aligned (32))) buf[1300];
-                    // spi_flash_read( nr, (uint32*)buf, (datlen/4)*4 );
-                    // if( ets_memcmp( buf, buffer, (datlen/4)*4 ) != 0 ) break;
-                    // Rather do it in chunks, to avoid allocationg huge buf
-                    #define VFW_SIZE 128
-                    int jj;
-                    uint8_t  __attribute__ ((aligned (32))) buf[VFW_SIZE];
-                    for(jj=0; jj<datlen; jj+=VFW_SIZE) {
-                        spi_flash_read( nr+jj, (uint32*)buf, VFW_SIZE );
-                        if( ets_memcmp( buf, buffer+jj, jj+VFW_SIZE>datlen ? datlen%VFW_SIZE : VFW_SIZE ) != 0 ) goto failfx;
-                    }
-                    #endif
-
-					buffprint( "FX%d\t%d\r\n", nr, siz );
-					break;
-				}
+				buffprint( "FX%d\t%d\r\n", nr, siz );
+				break;
 			}
 		    failfx:
 				buffprint( "!FX\r\n" );
-		break;
-
-		//Flash Read (FR#\n) <- # = sector.
+			break;
+		}
+		//Flash Read (FR#\t#) <- # = sector, #2 = size
 		case 'r': case 'R':
-			if( colon ) {
-				colon++;
-				int datlen = my_atoi( colon );
+			if( paramcount ) {
+				int datlen = ParamCaptureAndAdvanceInt();
 				datlen = (datlen/4)*4; //Must be multiple of 4 bytes
 				if( datlen <= 1280 ) {
 					buffprint( "FR%08d\t%04d\t", nr, datlen ); //Caution: This string must be a multiple of 4 bytes.
@@ -653,6 +671,8 @@ CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned shor
 
 int ICACHE_FLASH_ATTR issue_command(char * buffer, int retsize, char *pusrdata, unsigned short len)
 {
+	parameters = pusrdata+2; //Except "Echo" which takes 1
+	paramcount = 0;
 	char * buffend = buffer;
 	pusrdata[len] = 0;
 
@@ -679,6 +699,7 @@ int ICACHE_FLASH_ATTR issue_command(char * buffer, int retsize, char *pusrdata, 
 
 		// Echo command. E[data], responds with the same data.
 		case 'e': case 'E':
+			parameters--; //Echo is the only single-byte command.
 			return cmd_Echo( pusrdata, retsize, len, buffend );
 
 		// Issue a custom command defined by the user in ../user/custom_commands.c

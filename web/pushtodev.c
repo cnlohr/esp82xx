@@ -15,7 +15,14 @@
 
 struct libusb_device_handle *devh = NULL;
 
+#define USB_SIZE 128
 #define sector_SIZE 4096
+#ifndef NET_MAXTRIES
+	#define NET_MAXTRIES 10 // In seconds, may be fractional
+#endif
+#ifndef NET_TIMEOUT
+	#define NET_TIMEOUT 3.0 // In seconds, may be fractional
+#endif
 int sockfd;
 char recvline[10000];
 
@@ -32,7 +39,7 @@ int SendData( uint8_t * buffer, int len )
 			0xA6,    //request
 			0x0100,  //wValue
 			0x0000,  //wIndex
-			buffer, 
+			buffer,
 			len,     //wLength  (more like max length)
 			1000 );
 	}
@@ -48,7 +55,7 @@ int PushMatch( const char * match )
 	if( use_usb )
 	{
 		int tries = 0;
-		for( tries = 0; tries < 10; tries++ )
+		for( tries = 0; tries < NET_MAXTRIES; tries++ )
 		{
 			usleep( 1000 );
 
@@ -58,7 +65,7 @@ int PushMatch( const char * match )
 				0x0100,  //wValue
 				0x0000,  //wIndex
 				recvline, //wLength  (more like max length)
-				128,
+				USB_SIZE,
 				1000 );
 
 			if( r2 < 0 ) continue;
@@ -78,8 +85,8 @@ int PushMatch( const char * match )
 	{
 		struct timeval tva, tvb;
 		gettimeofday( &tva, 0 );
-		gettimeofday( &tvb, 0 );
-		while( tvb.tv_sec - tva.tv_sec < 3 ) //3 second timeout.
+		float diff = 0.0;
+		while( diff < NET_TIMEOUT )
 		{
 			struct pollfd ufds;
 			ufds.fd = sockfd;
@@ -95,6 +102,7 @@ int PushMatch( const char * match )
 				}
 			}
 			gettimeofday( &tvb, 0 );
+			diff = tvb.tv_sec - tva.tv_sec + 1e-6*(tvb.tv_usec - tva.tv_usec);
 		}
 		return 1;
 	}
@@ -159,7 +167,7 @@ int main(int argc, char**argv)
 		}
 		printf( "Connected.\n" );
 		//USB is attached
-		sendsize_max = 128;
+		sendsize_max = USB_SIZE;
 	}
 	else
 	{
@@ -168,7 +176,7 @@ int main(int argc, char**argv)
 		bzero(&servaddr,sizeof(servaddr));
 		servaddr.sin_family = AF_INET;
 		servaddr.sin_addr.s_addr=inet_addr(argv[1]);
-		servaddr.sin_port=htons(7878);
+		servaddr.sin_port=htons(BACKEND_PORT);
 	}
 
 	int devo = 0;
@@ -184,6 +192,7 @@ int main(int argc, char**argv)
 		int reads = fread( buffer, 1, sendsize_max, f );
 		int sendplace = offset + devo;
 		int sendsize = reads;
+		if( sendsize == 0 ) break;
 
 #ifdef SECTOR
 		int sector = sendplace / sector_SIZE;
@@ -191,9 +200,9 @@ int main(int argc, char**argv)
 		{
 			char se[64];
 			int sel = sprintf( se, "FE%d\r\n", sector );
-	
+
 			thissuccess = 0;
-			for( tries = 0; tries < 10; tries++ )
+			for( tries = 0; tries < NET_MAXTRIES; tries++ )
 			{
 				char match[75];
 				printf( "Erase: %d\n", sector );
@@ -218,7 +227,7 @@ int main(int argc, char**argv)
 		{
 			char se[64];
 			int sel = sprintf( se, "FB%d\r\n", block );
-	
+
 			thissuccess = 0;
 			for( tries = 0; tries < 10; tries++ )
 			{
@@ -242,7 +251,8 @@ int main(int argc, char**argv)
 		resend_times = 0;
 resend:
 		r = sprintf( bufferout, "FW%d\t%d\t", sendplace, sendsize );
-		printf( "bufferout: %d %d %s\n", sendplace, sendsize, bufferout );
+		//printf( "bufferout: %d %d %s\n", sendplace, sendsize, bufferout );
+		printf( "." ); fflush( stdout );
 		memcpy( bufferout + r, buffer, sendsize );
 
 
@@ -313,5 +323,6 @@ resend:
 
 	}
 
+	printf( "Send done.\n" );
 	return 0;
 }

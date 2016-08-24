@@ -31,6 +31,9 @@ page.mpfs : mfsmaker $(wildcard page/*) Makefile
 push : pushtodev page.mpfs
 	./pushtodev $(IP) $(PAGE_OFFSET) page.mpfs
 
+usbpush : pushtodev page.mpfs
+	./pushtodev USB $(PAGE_OFFSET) page.mpfs
+
 clean :
 	$(RM) mfsmaker page.mpfs pushtodev execute_reflash tmp/*
 

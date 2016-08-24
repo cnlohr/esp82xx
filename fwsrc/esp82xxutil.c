@@ -2,46 +2,52 @@
 //Copyright 2015 <>< Charles Lohr Under the MIT/x11 License, NewBSD License or
 // ColorChord License.  You Choose.
 
-#include "mystuff.h"
+#include "esp82xxutil.h"
 #include <c_types.h>
 #include <mem.h>
 
 const char * enctypes[6] = { "open", "wep", "wpa", "wpa2", "wpa_wpa2", 0 };
-
-char generic_print_buffer[384];
-char generic_buffer[1500] __attribute__((aligned (32)));
 char * generic_ptr;
+char * parameters;
+uint8_t  paramcount;
 
-int32 my_atoi( const char * in )
+int32 ICACHE_FLASH_ATTR safe_atoi( const char * in )
 {
 	int positive = 1; //1 if negative.
 	int hit = 0;
 	int val = 0;
+
 	while( *in && hit < 11 	)
 	{
 		if( *in == '-' )
 		{
-			if( positive == -1 ) return val*positive;
+			if( positive == -1 )
+			{
+				//Two negatives aren't okay.
+				return val*positive;
+			}
 			positive = -1;
 		} else if( *in >= '0' && *in <= '9' )
 		{
 			val *= 10;
 			val += *in - '0';
 			hit++;
-		} else if (!hit && ( *in == ' ' || *in == '\t' ) )
+		} else if (!hit && ( *in == ' ' || *in == '\t' || *in == '\n' ) )
 		{
-			//okay
+			//okay before we hit a number.
 		} else
 		{
-			//bad.
+			//We already hit a number, now we hit something else.  Gotta bail.
+			if( hit ) paramcount++;
 			return val*positive;
 		}
 		in++;
 	}
+	if( hit ) paramcount++;
 	return val*positive;
 }
 
-void Uint32To10Str( char * out, uint32 dat )
+void ICACHE_FLASH_ATTR Uint32To10Str( char * out, uint32 dat )
 {
 	int tens = 1000000000;
 	int val;
@@ -64,13 +70,13 @@ void Uint32To10Str( char * out, uint32 dat )
 	out[place] = 0;
 }
 
-char tohex1( uint8_t i )
+char ICACHE_FLASH_ATTR tohex1( uint8_t i )
 {
 	i = i&0x0f;
 	return (i<10)?('0'+i):('a'-10+i);
 }
 
-int8_t fromhex1( char c )
+int8_t ICACHE_FLASH_ATTR fromhex1( char c )
 {
 	if( c >= '0' && c <= '9' )
 		return c - '0';
@@ -82,7 +88,7 @@ int8_t fromhex1( char c )
 		return -1;
 }
 
-void  NixNewline( char * str )
+void ICACHE_FLASH_ATTR NixNewline( char * str )
 {
 	if( !str ) return;
 	int sl = ets_strlen( str );
@@ -92,23 +98,15 @@ void  NixNewline( char * str )
 
 
 
-void ICACHE_FLASH_ATTR  EndTCPWrite( struct 	espconn * conn )
-{
-	if(generic_ptr!=generic_buffer)
-	{
-		int r = espconn_sent(conn,generic_buffer,generic_ptr-generic_buffer);
-	}
-}
 
-
-void  PushString( const char * buffer )
+void ICACHE_FLASH_ATTR PushString( const char * buffer )
 {
 	char c;
 	while( c = *(buffer++) )
 		PushByte( c );
 }
 
-void PushBlob( const uint8 * buffer, int len )
+void ICACHE_FLASH_ATTR PushBlob( const uint8 * buffer, int len )
 {
 	int i;
 	for( i = 0; i < len; i++ )
@@ -116,7 +114,7 @@ void PushBlob( const uint8 * buffer, int len )
 }
 
 
-int8_t TCPCanSend( struct espconn * conn, int size )
+int8_t ICACHE_FLASH_ATTR TCPCanSend( struct espconn * conn, int size )
 {
 #ifdef SAFESEND
 	return TCPDoneSend( conn );
@@ -142,21 +140,6 @@ const char * ICACHE_FLASH_ATTR  my_strchr( const char * st, char c )
 	if( !*st ) return 0;
 	return st;
 }
-
-int ICACHE_FLASH_ATTR  ColonsToInts( const char * str, int32_t * vals, int max_quantity )
-{
-	int i;
-	for( i = 0; i < max_quantity; i++ )
-	{
-		const char * colon = my_strchr( str, ':' );
-		vals[i] = my_atoi( str );
-		if( !colon ) break;
-		str = colon+1;
-	}
-	return i+1;
-}
-
-
 
 
 
@@ -255,5 +238,42 @@ uint32_t ICACHE_FLASH_ATTR GetCurrentIP( )
 		return sta_ip.ip.addr;
 	else
 		return 0;
+}
+
+char * ParamCaptureAndAdvance( )
+{
+	if( parameters == 0 ) return 0;  //If the string to start with was null
+	if( *parameters == 0 ) return 0; //If we got to the end of the string.
+	paramcount++;
+	char * ret = parameters;
+	while( *parameters != 0 && *parameters != 9 ) parameters++;
+	if( *parameters )
+	{
+		*parameters = 0;
+		parameters++;
+	}
+	return ret;
+}
+
+int32_t    ParamCaptureAndAdvanceInt( )
+{
+	char * r = ParamCaptureAndAdvance( );
+	if( !r )
+		return 0;
+	else
+	{
+		paramcount--; //Back out value from ParamCaptureAndAdvance.
+		return safe_atoi( r );
+	}
+}
+
+const ICACHE_FLASH_ATTR unsigned char *memchr(const unsigned char *s, int c, size_t n)
+{
+	int i;
+	for( i = 0; i < n; i++, s++ )
+	{
+		if( *s == c ) return s;
+	}
+	return 0;
 }
 

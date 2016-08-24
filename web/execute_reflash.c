@@ -4,6 +4,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
+#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
+    #include <unistd.h>
+    #include <arpa/inet.h>
+#endif
 #include <sys/time.h>
 #include <sys/poll.h>
 #include <sys/types.h>
@@ -19,6 +23,12 @@ struct libusb_device_handle *devh = NULL;
 #define BLOCK_SIZE 65536
 #define SECTOR_SIZE 4096
 #define PADDING 1024
+#ifndef NET_MAXTRIES
+	#define NET_MAXTRIES 10 // In seconds, may be fractional
+#endif
+#ifndef NET_TIMEOUT
+	#define NET_TIMEOUT 3.0 // In seconds, may be fractional
+#endif
 
 int sendsize_max = PADDING;
 int use_usb = 0;
@@ -38,7 +48,7 @@ retry:
 			0xA6,    //request
 			0x0100,  //wValue
 			0x0000,  //wIndex
-			buffer, 
+			buffer,
 			len,     //wLength  (more like max length)
 			100 );
 		if( r1 != len )
@@ -64,7 +74,7 @@ int PushMatch( const char * match )
 	{
 		char recvline[10000];
 		int tries = 0;
-		for( tries = 0; tries < 10; tries++ )
+		for( tries = 0; tries < NET_MAXTRIES; tries++ )
 		{
 			usleep( 500 );
 
@@ -94,8 +104,8 @@ int PushMatch( const char * match )
 	{
 		struct timeval tva, tvb;
 		gettimeofday( &tva, 0 );
-		gettimeofday( &tvb, 0 );
-		while( tvb.tv_sec - tva.tv_sec < 3 )
+		double diff = 0.0;
+		while( diff < NET_TIMEOUT )
 		{
 			struct pollfd ufds;
 			ufds.fd = sockfd;
@@ -113,6 +123,7 @@ int PushMatch( const char * match )
 				}
 			}
 			gettimeofday( &tvb, 0 );
+			diff = tvb.tv_sec - tva.tv_sec + 1e-6*(tvb.tv_usec - tva.tv_usec);
 		}
 		return 1;
 	}
@@ -160,9 +171,9 @@ uint32_t Push( uint32_t offset, const char * file )
 		{
 			char se[64];
 			int sel = sprintf( se, "FB%d\r\n", block );
-	
+
 			thissuccess = 0;
-			for( tries = 0; tries < 10; tries++ )
+			for( tries = 0; tries < NET_MAXTRIES; tries++ )
 			{
 				char match[75];
 				//printf( "Erase: %d\n", block );
@@ -182,10 +193,10 @@ uint32_t Push( uint32_t offset, const char * file )
 			lastblock = block;
 		}
 
-		
+
 		int r = sprintf( bufferout, "FW%d\t%d\t", sendplace, sendsize );
 		//printf( "FW: %d\n", sendplace );
-		memcpy( bufferout + r, buffer, sendsize ); 
+		memcpy( bufferout + r, buffer, sendsize );
 
 		//printf( "bufferout: %d %d\n", sendplace, sendsize );
 		printf( "." ); fflush( stdout );
@@ -325,7 +336,7 @@ int main(int argc, char**argv)
 		bzero(&servaddr,sizeof(servaddr));
 		servaddr.sin_family = AF_INET;
 		servaddr.sin_addr.s_addr=inet_addr(argv[1]);
-		servaddr.sin_port=htons(7878);
+		servaddr.sin_port=htons(BACKEND_PORT);
 	}
 
 	uint32_t fs1 = Push( 0x080000, file1 );
@@ -352,7 +363,7 @@ int main(int argc, char**argv)
 
 	char cmd[1024];
 
-	sprintf( cmd, "FM%d\t%d\t%d\t%s\t%d\t%d\t%d\t%s\n", 
+	sprintf( cmd, "FM%d\t%d\t%d\t%s\t%d\t%d\t%d\t%s\n",
 		0x080000,
 		0x000000,
 		fs1, //roundup( fs1 ),
@@ -376,7 +387,7 @@ int main(int argc, char**argv)
 		char recvline[10000];
 		int n=recvfrom(sockfd,recvline,10000,0,NULL,NULL);
 
-		printf( "Response: %s\n",recvline ); 
+		printf( "Response: %s\n",recvline );
 		return 0;
 	}
 	else

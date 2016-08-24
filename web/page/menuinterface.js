@@ -502,6 +502,7 @@ function WifiDataTicker()
 		QueueOperation( "WR", function(req,data) {
 			var lines = data.split( "\n" );
 			var innerhtml;
+			if( data[0] == '!' ) return;  //If no APs, don't deal with list.
 
 			if( lines.length < 3 )
 			{
