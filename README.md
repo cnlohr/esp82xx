@@ -31,10 +31,10 @@ or create your own
     git init project_name
     cd project_name
     git submodule add git@github.com:cnlohr/esp82xx.git
-    cp esp28xx/user.cfg.example user.cfg
-    cp esp28xx/Makefile.example Makefile
+    cp esp82xx/user.cfg.example user.cfg
+    cp esp82xx/Makefile.example Makefile
     mkdir -p web/page user
-    ln -s esp28xx/web/Makefile web/
+    ln -s esp82xx/web/Makefile web/
     # ... link or copy more files depending on how much you want to change ...
 
 After you have the basic file structure in place, you should edit `user.cfg` in the top level.
@@ -167,6 +167,26 @@ To make a release, just tag a commit with `git tag -a 'v1.3.3.7' -m 'Your releas
 
 After that, the github web-interface will allow you to make a release out of the new tag and include the binary file.
 To make the zip file invoke `make projectname-version-binaries.tgz` (Tab-autocomplete is your friend).
+
+## Docker support
+
+Docker support for esp82xx is experimental and makes the following assumptions:
+
+	1. You have a working and relatively recent (>1.12) Docker installation.
+	2. You have a copy of esptool.py installed **in your base system** (`pip install esptool`) and accessible in your `$PATH`.
+
+To enable cross-compiling inside docker (disabled by default), it should be sufficient to enable
+the following configuration directive in `user.cfg`:
+
+```
+DOCKER=yes
+```
+
+Then type `make burn` as usual and it will:
+
+	1. Will pull down [an esp-open-sdk ready container](https://hub.docker.com/r/brainstorm/dockcross-esp-open-sdk/)
+	2. Cross-compile your `.c` files using that docker container.
+	3. Burn the resulting image into the esp82xx by using `esptool.py` from your system.
 
 ## ToDo
 
