@@ -13,6 +13,9 @@ netburn .. Same as 'burn' but transfer firmware over the network rather
 netweb ... Same as 'burnweb' but transfer data over network if supported
            by firmware currently on the chip
 getips ... Get a list with IPs of esp82xxs connected to your network
+usbburn .. Burn via PRE-RELEASE USB loader (will probably change)
+usbweb ... Burn webpage by PRE-RELEASE USB loader (will probably change)
+
 
 More commands: all, clean, purge
 endef
@@ -71,6 +74,7 @@ $(TARGET) : $(SRCS) Makefile
 debug : $(TARGET)
 	nm -S -n $(TARGET) > image.map
 	$(PREFIX)objdump -S $(TARGET) > image.lst
+	$(PREFIX)size -A $(TARGET) | grep -v debug
 
 ifeq ($(CHIP), 8285)
 burn : $(FW_FILE1) $(FW_FILE2)
@@ -95,6 +99,13 @@ netburn : $(FW_FILE1) $(FW_FILE2)
 
 netweb :
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) push
+
+
+usbburn : $(FW_FILE1) $(FW_FILE2)
+	web/execute_reflash USB $(FW_FILE1) $(FW_FILE2)
+
+usbweb : $(FW_FILE1) $(FW_FILE2)
+	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) usbpush
 
 $(BIN_TARGET): $(FW_FILE1) $(FW_FILE2)
 	@cd web \
