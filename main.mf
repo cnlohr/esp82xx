@@ -119,6 +119,7 @@ else
 endif
 
 burnweb :
+	$(eval $(call outside_docker))
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs #Always rebuild page.mpfs
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(PAGE_OFFSET) web/page.mpfs)||(true)
 
