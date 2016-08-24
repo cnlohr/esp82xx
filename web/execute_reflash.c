@@ -14,7 +14,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <libusb-1.0/libusb.h>
-#include "common.h"
+#include "compat.h"
 #include "md5.h"
 
 struct libusb_device_handle *devh = NULL;
