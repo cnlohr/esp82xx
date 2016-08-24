@@ -174,19 +174,20 @@ Docker support for esp82xx is experimental and makes the following assumptions:
 
 	1. You have a working and relatively recent (>1.12) Docker installation.
 	2. You have a copy of esptool.py installed **in your base system** (`pip install esptool`) and accessible in your `$PATH`.
+	3. **You ran `docker pull brainstorm/dockcross-esp-open-sdk` before the next lines.**
 
-To enable cross-compiling inside docker (disabled by default), it should be sufficient to enable
+To enable cross-compiling inside docker (disabled by default in esp82xx), it should be sufficient to enable
 the following configuration directive in `user.cfg`:
 
 ```
+#DOCKER=no
 DOCKER=yes
 ```
 
-Then type `make burn` as usual and it will:
+Then run:
 
-	1. Will pull down [an esp-open-sdk ready container](https://hub.docker.com/r/brainstorm/dockcross-esp-open-sdk/)
-	2. Cross-compile your `.c` files using that docker container.
-	3. Burn the resulting image into the esp82xx by using `esptool.py` from your system.
+	1. `docker pull brainstorm/dockcross-esp-open-sdk`
+	2. `make burn`, `make netburn`, etc... the usual suspects.
 
 ## ToDo
 
