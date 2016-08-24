@@ -31,10 +31,10 @@ or create your own
     git init project_name
     cd project_name
     git submodule add git@github.com:cnlohr/esp82xx.git
-    cp esp28xx/user.cfg.example user.cfg
-    cp esp28xx/Makefile.example Makefile
+    cp esp82xx/user.cfg.example user.cfg
+    cp esp82xx/Makefile.example Makefile
     mkdir -p web/page user
-    ln -s esp28xx/web/Makefile web/
+    ln -s esp82xx/web/Makefile web/
     # ... link or copy more files depending on how much you want to change ...
 
 After you have the basic file structure in place, you should edit `user.cfg` in the top level.
@@ -107,7 +107,7 @@ Most WiFi routers have an option in their Web-GUI to list all IPs, that their DH
 
  - [esp82XX-basic](https://github.com/con-f-use/esp82XX-basic)
  - [Colorchord](https://github.com/cnlohr/colorchord)
- - [esp8266ws2812i2c](https://github.com/cnlohr/esp8266ws2812i2s)
+ - [esp8266ws8212i2c](https://github.com/cnlohr/esp8266ws8212i2s)
  - [espusb](https://github.com/cnlohr/espusb)
  - Migration of others in progress
 
@@ -170,5 +170,5 @@ To make the zip file invoke `make projectname-version-binaries.tgz` (Tab-autocom
 
 ## ToDo
 
- - Include libraries for usb, ws2812s and ethernet as soon as they are stable
+ - Include libraries for usb, ws8212s and ethernet as soon as they are stable
 
