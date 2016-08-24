@@ -36,28 +36,22 @@ static void FinalFlashRewrite( uint32_t from1, uint32_t to1, uint32_t size1, uin
 	for( i = 0; i < ipl; i++ )
 	{
 		SPIEraseSector( p++ );
-		uart_tx_one_char( '.' );
-
 		SPIWrite( to1, (uint32_t*)(0x40200000 + from1), SRCSIZE );
 		to1 += SRCSIZE;
 		from1 += SRCSIZE;
 	}
-
-	uart_tx_one_char( 'B' );
 
 	ipl = (size2/SRCSIZE)+1;
 	p = to2/SRCSIZE;
 	for( i = 0; i < ipl; i++ )
 	{
 		SPIEraseSector( p++ );
-		uart_tx_one_char( '.' );
 		SPIWrite( to2, (uint32_t*)(0x40200000 + from2), SRCSIZE );
 		to2 += SRCSIZE;
 		from2 += SRCSIZE;
 	}
 
 	uart_tx_one_char( 'C' );
-
 
 	void(*rebootme)() = (void(*)())0x40000080;
 	rebootme();

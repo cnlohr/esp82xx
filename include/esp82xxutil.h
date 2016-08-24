@@ -75,8 +75,8 @@ char * ICACHE_FLASH_ATTR strdupcaselower( const char * src );
 //WARNING: These functions are NOT threadsafe.
 extern char * parameters;
 extern uint8_t paramcount;
-char *  ParamCaptureAndAdvance( ); //Increments intcount if good.
-int32_t ParamCaptureAndAdvanceInt( ); //Do the same, but we're looking for an integer.
+char *  ICACHE_FLASH_ATTR ParamCaptureAndAdvance( ); //Increments intcount if good.
+int32_t ICACHE_FLASH_ATTR ParamCaptureAndAdvanceInt( ); //Do the same, but we're looking for an integer.
 
 uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
 

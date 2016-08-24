@@ -16,6 +16,12 @@ struct libusb_device_handle *devh = NULL;
 
 #define USB_SIZE 128
 #define sector_SIZE 4096
+#ifndef NET_MAXTRIES
+	#define NET_MAXTRIES 10 // In seconds, may be fractional
+#endif
+#ifndef NET_TIMEOUT
+	#define NET_TIMEOUT 3.0 // In seconds, may be fractional
+#endif
 int sockfd;
 char recvline[10000];
 
@@ -32,7 +38,7 @@ int SendData( uint8_t * buffer, int len )
 			0xA6,    //request
 			0x0100,  //wValue
 			0x0000,  //wIndex
-			buffer, 
+			buffer,
 			len,     //wLength  (more like max length)
 			1000 );
 	}
@@ -48,7 +54,7 @@ int PushMatch( const char * match )
 	if( use_usb )
 	{
 		int tries = 0;
-		for( tries = 0; tries < 10; tries++ )
+		for( tries = 0; tries < NET_MAXTRIES; tries++ )
 		{
 			usleep( 1000 );
 
@@ -78,8 +84,8 @@ int PushMatch( const char * match )
 	{
 		struct timeval tva, tvb;
 		gettimeofday( &tva, 0 );
-		gettimeofday( &tvb, 0 );
-		while( tvb.tv_sec - tva.tv_sec < 3 ) //3 second timeout.
+		float diff = 0.0;
+		while( diff < NET_TIMEOUT )
 		{
 			struct pollfd ufds;
 			ufds.fd = sockfd;
@@ -95,6 +101,7 @@ int PushMatch( const char * match )
 				}
 			}
 			gettimeofday( &tvb, 0 );
+			diff = tvb.tv_sec - tva.tv_sec + 1e-6*(tvb.tv_usec - tva.tv_usec);
 		}
 		return 1;
 	}
@@ -168,7 +175,7 @@ int main(int argc, char**argv)
 		bzero(&servaddr,sizeof(servaddr));
 		servaddr.sin_family = AF_INET;
 		servaddr.sin_addr.s_addr=inet_addr(argv[1]);
-		servaddr.sin_port=htons(7878);
+		servaddr.sin_port=htons(BACKEND_PORT);
 	}
 
 	int devo = 0;
@@ -192,9 +199,9 @@ int main(int argc, char**argv)
 		{
 			char se[64];
 			int sel = sprintf( se, "FE%d\r\n", sector );
-	
+
 			thissuccess = 0;
-			for( tries = 0; tries < 10; tries++ )
+			for( tries = 0; tries < NET_MAXTRIES; tries++ )
 			{
 				char match[75];
 				printf( "Erase: %d\n", sector );
@@ -219,7 +226,7 @@ int main(int argc, char**argv)
 		{
 			char se[64];
 			int sel = sprintf( se, "FB%d\r\n", block );
-	
+
 			thissuccess = 0;
 			for( tries = 0; tries < 10; tries++ )
 			{
