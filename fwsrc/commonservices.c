@@ -66,28 +66,51 @@ struct totalscan_t
 	int8_t rssi;
 	uint8_t channel;
 	uint8_t encryption;
-} totalscan[MAX_STATIONS];
+};
+
+struct totalscan_t ** scanarray;
+
 int scanplace = 0;
+
+static void ICACHE_FLASH_ATTR free_scan_array()
+{
+	if( !scanarray ) return;
+	int i;
+	for( i = 0; i < MAX_STATIONS; i++ )
+	{
+		if( scanarray[i] ) os_free( scanarray[i] );
+	}
+	os_free( scanarray );
+	scanarray = 0;
+}
+
 static void ICACHE_FLASH_ATTR scandone(void *arg, STATUS status)
 {
+	free_scan_array();
+	scanarray = (struct totalscan_t **)os_malloc( sizeof(struct totalscan_t *) * MAX_STATIONS ); 
+
 	scaninfo *c = arg;
 	struct bss_info *inf;
 
 	if( need_to_switch_opmode == 1 )
 		need_to_switch_opmode = 2;
 
-	if (!c->pbss) {  scanplace = -1;  return;  }
+	if( !c->pbss ) { scanplace = -1;  return;  }
+	scanplace = 0;
+
+	printf( "ISCAN\n" );
 
 	STAILQ_FOREACH(inf, c->pbss, next) {
+		struct totalscan_t * t = scanarray[scanplace++] = (struct totalscan_t *)os_malloc( sizeof(struct totalscan_t) );
+
 		printf( "%s\n", inf->ssid );
-		ets_memcpy( totalscan[scanplace].name, inf->ssid, 32 );
-		ets_sprintf( totalscan[scanplace].mac, MACSTR, MAC2STR( inf->bssid ) );
-		totalscan[scanplace].rssi = inf->rssi;
-		totalscan[scanplace].channel = inf->channel;
-		totalscan[scanplace].encryption = inf->authmode;
+		ets_memcpy( t->name, inf->ssid, 32 );
+		ets_sprintf( t->mac, MACSTR, MAC2STR( inf->bssid ) );
+		t->rssi = inf->rssi;
+		t->channel = inf->channel;
+		t->encryption = inf->authmode;
 		inf = (struct bss_info *) &inf->next;
-		scanplace++;
-		if( scanplace == MAX_STATIONS ) break;
+		if( scanplace == MAX_STATIONS - 1 ) break;
 	}
 }
 
@@ -482,7 +505,6 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 		case 'S': case 's': {
 			int r;   struct scan_config sc;
 
-			scanplace = 0;
 			sc.ssid = 0;  sc.bssid = 0;  sc.channel = 0;  sc.show_hidden = 1;
 
 			EnterCritical();
@@ -499,11 +521,20 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 
 		case 'R': case 'r': {
 			int i;
-			buffprint( "WR%d\n", scanplace );
-			for( i = 0; i < scanplace && buffend - buffer < retsize - 64; i++ ) {
-				buffprint( "#%s\t%s\t%d\t%d\t%s\n",
-					totalscan[i].name, totalscan[i].mac, totalscan[i].rssi, totalscan[i].channel, enctypes[totalscan[i].encryption] );
+			if( !scanarray )
+			{
+				buffprint( "!WR" );
 			}
+			else
+			{
+				buffprint( "WR%d\n", scanplace );
+				for( i = 0; i < scanplace && buffend - buffer < retsize - 64; i++ ) {
+					buffprint( "#%s\t%s\t%d\t%d\t%s\n",
+						scanarray[i]->name, scanarray[i]->mac, scanarray[i]->rssi, scanarray[i]->channel, enctypes[scanarray[i]->encryption] );
+				}
+				free_scan_array();
+			}
+
 		} break;
 	}
 	return buffend - buffer;

@@ -14,6 +14,7 @@
 
 struct libusb_device_handle *devh = NULL;
 
+#define USB_SIZE 128
 #define sector_SIZE 4096
 #ifndef NET_MAXTRIES
 	#define NET_MAXTRIES 10 // In seconds, may be fractional
@@ -63,7 +64,7 @@ int PushMatch( const char * match )
 				0x0100,  //wValue
 				0x0000,  //wIndex
 				recvline, //wLength  (more like max length)
-				128,
+				USB_SIZE,
 				1000 );
 
 			if( r2 < 0 ) continue;
@@ -165,7 +166,7 @@ int main(int argc, char**argv)
 		}
 		printf( "Connected.\n" );
 		//USB is attached
-		sendsize_max = 128;
+		sendsize_max = USB_SIZE;
 	}
 	else
 	{
@@ -190,6 +191,7 @@ int main(int argc, char**argv)
 		int reads = fread( buffer, 1, sendsize_max, f );
 		int sendplace = offset + devo;
 		int sendsize = reads;
+		if( sendsize == 0 ) break;
 
 #ifdef SECTOR
 		int sector = sendplace / sector_SIZE;
@@ -248,7 +250,8 @@ int main(int argc, char**argv)
 		resend_times = 0;
 resend:
 		r = sprintf( bufferout, "FW%d\t%d\t", sendplace, sendsize );
-		printf( "bufferout: %d %d %s\n", sendplace, sendsize, bufferout );
+		//printf( "bufferout: %d %d %s\n", sendplace, sendsize, bufferout );
+		printf( "." ); fflush( stdout );
 		memcpy( bufferout + r, buffer, sendsize );
 
 
@@ -319,5 +322,6 @@ resend:
 
 	}
 
+	printf( "Send done.\n" );
 	return 0;
 }

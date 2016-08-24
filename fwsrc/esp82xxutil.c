@@ -7,14 +7,11 @@
 #include <mem.h>
 
 const char * enctypes[6] = { "open", "wep", "wpa", "wpa2", "wpa_wpa2", 0 };
-
-char generic_print_buffer[384];
-char generic_buffer[1500] __attribute__((aligned (32)));
 char * generic_ptr;
 char * parameters;
 uint8_t  paramcount;
 
-int32 safe_atoi( const char * in )
+int32 ICACHE_FLASH_ATTR safe_atoi( const char * in )
 {
 	int positive = 1; //1 if negative.
 	int hit = 0;
@@ -50,7 +47,7 @@ int32 safe_atoi( const char * in )
 	return val*positive;
 }
 
-void Uint32To10Str( char * out, uint32 dat )
+void ICACHE_FLASH_ATTR Uint32To10Str( char * out, uint32 dat )
 {
 	int tens = 1000000000;
 	int val;
@@ -73,13 +70,13 @@ void Uint32To10Str( char * out, uint32 dat )
 	out[place] = 0;
 }
 
-char tohex1( uint8_t i )
+char ICACHE_FLASH_ATTR tohex1( uint8_t i )
 {
 	i = i&0x0f;
 	return (i<10)?('0'+i):('a'-10+i);
 }
 
-int8_t fromhex1( char c )
+int8_t ICACHE_FLASH_ATTR fromhex1( char c )
 {
 	if( c >= '0' && c <= '9' )
 		return c - '0';
@@ -91,7 +88,7 @@ int8_t fromhex1( char c )
 		return -1;
 }
 
-void  ICACHE_FLASH_ATTR NixNewline( char * str )
+void ICACHE_FLASH_ATTR NixNewline( char * str )
 {
 	if( !str ) return;
 	int sl = ets_strlen( str );
@@ -101,23 +98,15 @@ void  ICACHE_FLASH_ATTR NixNewline( char * str )
 
 
 
-void ICACHE_FLASH_ATTR  EndTCPWrite( struct 	espconn * conn )
-{
-	if(generic_ptr!=generic_buffer)
-	{
-		int r = espconn_sent(conn,generic_buffer,generic_ptr-generic_buffer);
-	}
-}
 
-
-void  PushString( const char * buffer )
+void ICACHE_FLASH_ATTR PushString( const char * buffer )
 {
 	char c;
 	while( c = *(buffer++) )
 		PushByte( c );
 }
 
-void PushBlob( const uint8 * buffer, int len )
+void ICACHE_FLASH_ATTR PushBlob( const uint8 * buffer, int len )
 {
 	int i;
 	for( i = 0; i < len; i++ )
@@ -125,7 +114,7 @@ void PushBlob( const uint8 * buffer, int len )
 }
 
 
-int8_t TCPCanSend( struct espconn * conn, int size )
+int8_t ICACHE_FLASH_ATTR TCPCanSend( struct espconn * conn, int size )
 {
 #ifdef SAFESEND
 	return TCPDoneSend( conn );

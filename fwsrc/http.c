@@ -193,15 +193,15 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 		HTTPClose( );
 		return;
 	}
-	if( curhttp->is404 )
+	else if( curhttp->is404 )
 	{
 		START_PACK
 		PushString("HTTP/1.1 404 Not Found\r\nConnection: close\r\n\r\nFile not found.");
-		EndTCPWrite( curhttp->socket );
+		END_TCP_WRITE( curhttp->socket );
 		curhttp->isdone = 1;
 		return;
 	}
-	if( curhttp->isfirst )
+	else if( curhttp->isfirst )
 	{
 		char stto[10];
 		uint8_t slen = os_strlen( curhttp->pathbuffer );
@@ -246,26 +246,28 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 		}
 
 		PushString( "\r\n\r\n" );
-		EndTCPWrite( curhttp->socket );
+		END_TCP_WRITE( curhttp->socket );
 		curhttp->isfirst = 0;
 
 		return;
 	}
-
-	START_PACK
-
-	for( i = 0; i < 4 && curhttp->bytesleft; i++ )
+	else
 	{
-		int bpt = curhttp->bytesleft;
-		if( bpt > MFS_SECTOR ) bpt = MFS_SECTOR;
-		curhttp->bytesleft = MFSReadSector( generic_ptr, &curhttp->data.filedescriptor );
-		generic_ptr += bpt;
+		START_PACK
+
+		for( i = 0; i < 4 && curhttp->bytesleft; i++ )
+		{
+			int bpt = curhttp->bytesleft;
+			if( bpt > MFS_SECTOR ) bpt = MFS_SECTOR;
+			curhttp->bytesleft = MFSReadSector( generic_ptr, &curhttp->data.filedescriptor );
+			generic_ptr += bpt;
+		}
+
+		END_TCP_WRITE( curhttp->socket );
+
+		if( !curhttp->bytesleft )
+			curhttp->isdone = 1;
 	}
-
-	EndTCPWrite( curhttp->socket );
-
-	if( !curhttp->bytesleft )
-		curhttp->isdone = 1;
 }
 
 void InternalStartHTTP( )
@@ -583,14 +585,16 @@ void ICACHE_FLASH_ATTR WebSocketTickInternal()
 	switch( curhttp->state_deets )
 	{
 	case 4: //Has key full HTTP header, etc. wants response.
+	{
 		START_PACK;
 		PushString( "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: " );
 		PushString( curhttp->pathbuffer + (MAX_PATHLEN-WS_RETKEY_SIZEM1) );
 		PushString( "\r\n\r\n" );
-		EndTCPWrite( curhttp->socket );
+		END_TCP_WRITE( curhttp->socket );
 		curhttp->state_deets = 5;
 		curhttp->keep_alive = 0;
 		break;
+	}
 	case 5:
 		WebSocketTick();
 		break;
@@ -612,7 +616,7 @@ void ICACHE_FLASH_ATTR WebSocketSend( uint8_t * data, int size )
 		PushByte( 0x00 | size );
 	}
 	PushBlob( data, size );
-	EndTCPWrite( curhttp->socket );
+	END_TCP_WRITE( curhttp->socket );
 }
 
 uint8_t WSPOPMASK()
