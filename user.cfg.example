@@ -4,8 +4,8 @@
 
 CHIP  = 8266
 IP    = 192.168.4.1     # does not actually set the IP in firmware
-PORT  = /dev/cu.usbserial-FTYKHBJT # could also be, i.e: /dev/ttyACM0 or /dev/cu.usbserial-xxxxxxxx
-FWBURNFLAGS= --baud 940200
+PORT  = /dev/ttyUSB0    # could also be, i.e: /dev/ttyACM0 or /dev/cu.usbserial-xxxxxxxx
+FWBURNFLAGS =           # things like "--baud 940200" to be passed to esptool.py
 WEB_PORT     = 80
 COM_PORT     = 7777
 BACKEND_PORT = 7878
@@ -14,7 +14,7 @@ PAGE_OFFSET  = 65536     # 1048576
 SDK_DEFAULT  = $(HOME)/esp8266/esp-open-sdk
 ESP_GCC_VERS = 4.8.5
 
-DOCKER = yes
+DOCKER = no
 DOCKER_PREFIX = /work/
 DOCKER_SDK_DEFAULT = /home/espbuild/esp-open-sdk
 DOCKER_ESPTOOL_PY = $(DOCKER_SDK_DEFAULT)/esptool/esptool.py

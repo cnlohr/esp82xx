@@ -16,54 +16,70 @@ getips ... Get a list with IPs of esp82xxs connected to your network
 usbburn .. Burn via PRE-RELEASE USB loader (will probably change)
 usbweb ... Burn webpage by PRE-RELEASE USB loader (will probably change)
 
-
 More commands: all, clean, purge
 endef
+
+define inside_docker
+# Cross-compile toolchain in a docker image
+ ifeq ($(strip $(DOCKER)), yes)
+  INCL += $(DOCKER_PREFIX)/esp82xx/include $(DOCKER_PREFIX)
+    $(eval SRCS:=$(addprefix $(DOCKER_PREFIX), $(SRCS)))
+    $(eval FW_FILE1:=$(addprefix $(DOCKER_PREFIX), $(FW_FILE1)))
+    $(eval FW_FILE2:=$(addprefix $(DOCKER_PREFIX), $(FW_FILE2)))
+    $(eval TARGET:=$(addprefix $(DOCKER_PREFIX), $(TARGET)))
+    $(eval CC:=$(DOCKCROSS) $(CC))
+    $(eval ESP_ROOT:=$(DOCKER_SDK_DEFAULT))
+    $(eval ESPTOOL_PY:=$(DOCKCROSS) $(ESPTOOL_PY))
+  else
+  DOCKCROSS=
+  DOCKER_PREFIX=
+  endif
+endef
+
+define outside_docker
+# Make sure the actual burning of the chip is done with the system-wide esptool.py
+# since it's the only one that has working (privileged) /dev/*USB access.
+  ifeq ($(strip $(DOCKER)), yes)
+    $(warning Warning: Docker cannot flash via in-docker esptool.py (yet) due to USB issues, see: http://bit.ly/2b9qFY2)
+    $(eval ESPTOOL_PY:=$(shell which esptool.py))
+  endif
+endef
+
 .PHONY : all clean cleanall netburn burnweb burn $(BIN_TARGET) netweb getips help
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
 LIBS = main lwip ssl upgrade net80211 wpa phy lwip pp crypto
 INCL = $(SDK)/include esp82xx/include .
 
-FW_FILE1 = $(DOCKER_PREFIX)image.elf-0x00000.bin
-FW_FILE2 = $(DOCKER_PREFIX)image.elf-0x40000.bin
-TARGET = $(DOCKER_PREFIX)image.elf
+FW_FILE1 = image.elf-0x00000.bin
+FW_FILE2 = image.elf-0x40000.bin
+TARGET = image.elf
 
 SRCS =  esp82xx/fwsrc/uart.c \
-	esp82xx/fwsrc/esp82xxutil.c \
-	esp82xx/fwsrc/flash_rewriter.c \
-	esp82xx/fwsrc/http.c \
-	esp82xx/fwsrc/commonservices.c \
-	esp82xx/fwsrc/http_custom.c \
-	esp82xx/fwsrc/mdns.c \
-	esp82xx/fwsrc/mfs.c \
-	user/custom_commands.c \
-	user/user_main.c
-
-# Cross-compile toolchain in a docker image
-ifeq ($(strip $(DOCKER)), yes)
-	ESPTOOL_PY=DOCKER_ESPTOOL_PY # elf2image merge only, no flashing
-	INCL += $(DOCKER_PREFIX)/esp82xx/include $(DOCKER_PREFIX)
-#	$(warning WARNING: Docker cannot flash via USB-uart via esptool.py (yet), see: http://bit.ly/2b9qFY2)
-else
-	DOCKCROSS=""
-	DOCKER_PREFIX=""
-endif
+  esp82xx/fwsrc/esp82xxutil.c \
+  esp82xx/fwsrc/flash_rewriter.c \
+  esp82xx/fwsrc/http.c \
+  esp82xx/fwsrc/commonservices.c \
+  esp82xx/fwsrc/http_custom.c \
+  esp82xx/fwsrc/mdns.c \
+  esp82xx/fwsrc/mfs.c \
+  user/custom_commands.c \
+  user/user_main.c
 
 CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)'
 
 LDFLAGS_CORE = -Wl,--relax -Wl,--gc-sections -nostdlib -L$(XTLIB) \
-	-L$(XTGCCLIB) $(addprefix $(SDK)/lib/lib,$(addsuffix .a,$(LIBS))) \
-	$(XTGCCLIB) -T $(SDK)/ld/eagle.app.v6.ld
-#	-flto -Wl,--relax -Wl,--gc-sections
+  -L$(XTGCCLIB) $(addprefix $(SDK)/lib/lib,$(addsuffix .a,$(LIBS))) \
+  $(XTGCCLIB) -T $(SDK)/ld/eagle.app.v6.ld
+# -flto -Wl,--relax -Wl,--gc-sections
 
 LINKFLAGS = $(LDFLAGS_CORE) -B$(XTLIB)
 
 BIN_TARGET = $(PROJECT_NAME)-$(VERSION)-binaries.zip
 
 ifneq (,$(findstring -DDEBUG,$(OPTS)))
-	$(warning Debug is enabled!)
-	FLASH_WRITE_FLAGS += --verify
+  $(warning Debug is enabled!)
+  FLASH_WRITE_FLAGS += --verify
 endif
 
 ##########################################################################RULES
@@ -75,30 +91,33 @@ help :
 all : $(FW_FILE1) $(FW_FILE2)
 
 $(FW_FILE1) $(FW_FILE2) : $(TARGET)
-	$(DOCKCROSS) $(ESPTOOL_PY) elf2image $(TARGET)
+	$(ESPTOOL_PY) elf2image $(TARGET)
 
-$(TARGET) : Makefile
-	SRCS=$(addprefix $(DOCKER_PREFIX), $(SRCS))
-	$(DOCKCROSS) $(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
+$(TARGET) : $(SRCS) Makefile
+	$(eval $(call inside_docker))
+	$(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $(TARGET)
 
 debug : $(TARGET)
 	nm -S -n $(TARGET) > image.map
 	$(PREFIX)objdump -S $(TARGET) > image.lst
 	$(PREFIX)size -A $(TARGET) | grep -v debug
 
+
+
 ifeq ($(CHIP), 8285)
 burn : $(FW_FILE1) $(FW_FILE2)  
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) 0x00000 $(basename $(FW_FILE1)) 0x40000 $(basename $(FW_FILE2)))||(true)
+	$(eval $(call outside_docker))
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
 else ifeq ($(CHIP), 8266)
 burn : $(FW_FILE1) $(FW_FILE2)
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) 0x00000 $(basename $(FW_FILE1)) 0x40000 $(basename $(FW_FILE2)))||(true)
-  $(info Docker cross-compiling done, now burn with esptool.py manually)
+	$(eval $(call outside_docker))
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
 else
 	$(error Error: Unknown chip '$(CHIP)')
 endif
 
 burnweb :
-	@cd web && $(DOCKCROSS) $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs #Always rebuild page.mpfs
+	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs #Always rebuild page.mpfs
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(PAGE_OFFSET) web/page.mpfs)||(true)
 
 #If you have space, MFS should live at 0x100000. It can also live at
@@ -106,11 +125,11 @@ burnweb :
 # you have a 512kB, or 1M ESP variant.
 
 netburn : $(FW_FILE1) $(FW_FILE2)
-	@cd web && $(DOCKCROSS) $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) execute_reflash
-	$(DOCKCROSS) web/execute_reflash $(IP) $(FW_FILE1) $(FW_FILE2)
+	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) execute_reflash
+	web/execute_reflash $(IP) $(FW_FILE1) $(FW_FILE2)
 
 netweb :
-	@cd web && $(DOCKCROSS) $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) push
+	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) push
 
 
 usbburn : $(FW_FILE1) $(FW_FILE2)
