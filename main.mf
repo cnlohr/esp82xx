@@ -19,18 +19,12 @@ endef
 .PHONY : all clean cleanall netburn burnweb burn $(BIN_TARGET) netweb getips help
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
-ifneq ($(strip $(DOCKER)), yes)
-	DOCKCROSS=""
-	DOCKER_PREFIX=""
-else
-	MAKE=make
-  $(warning Warning: Docker cannot flash via in-docker esptool.py (yet), see: http://bit.ly/2b9qFY2)
-endif
+LIBS = main lwip ssl upgrade net80211 wpa phy lwip pp crypto
+INCL = $(SDK)/include esp82xx/include .
 
 FW_FILE1 = $(DOCKER_PREFIX)image.elf-0x00000.bin
 FW_FILE2 = $(DOCKER_PREFIX)image.elf-0x40000.bin
 TARGET = $(DOCKER_PREFIX)image.elf
-
 
 SRCS =  esp82xx/fwsrc/uart.c \
 	esp82xx/fwsrc/mystuff.c \
@@ -43,22 +37,15 @@ SRCS =  esp82xx/fwsrc/uart.c \
 	user/custom_commands.c \
 	user/user_main.c
 
-LIBS = main lwip ssl upgrade net80211 wpa phy lwip pp crypto
-
 ifeq ($(strip $(DOCKER)), yes)
-	INCL = $(SDK)/include $(DOCKER_PREFIX)/esp82xx/include $(DOCKER_PREFIX)
-	SRCS =  $(DOCKER_PREFIX)/esp82xx/fwsrc/uart.c \
-	$(DOCKER_PREFIX)/esp82xx/fwsrc/mystuff.c \
-	$(DOCKER_PREFIX)/esp82xx/fwsrc/flash_rewriter.c \
-	$(DOCKER_PREFIX)/esp82xx/fwsrc/http.c \
-	$(DOCKER_PREFIX)/esp82xx/fwsrc/commonservices.c \
-	$(DOCKER_PREFIX)/esp82xx/fwsrc/http_custom.c \
-	$(DOCKER_PREFIX)/esp82xx/fwsrc/mdns.c \
-	$(DOCKER_PREFIX)/esp82xx/fwsrc/mfs.c \
-	$(DOCKER_PREFIX)/user/custom_commands.c \
-	$(DOCKER_PREFIX)/user/user_main.c
+	#MAKE=make
+	ESPTOOL_PY=DOCKER_ESPTOOL_PY # elf2image merge only, no flashing
+	NSRCS = $(addprefix $(DOCKER_PREFIX), $(SRCS))
+	INCL += $(DOCKER_PREFIX)/esp82xx/include $(DOCKER_PREFIX)
+#	$(warning WARNING: Docker cannot flash via USB-uart via esptool.py (yet), see: http://bit.ly/2b9qFY2)
 else
-	INCL = $(SDK)/include esp82xx/include .
+	DOCKCROSS=""
+	DOCKER_PREFIX=""
 endif
 
 CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)'
@@ -84,7 +71,6 @@ all : $(FW_FILE1) $(FW_FILE2)
 $(FW_FILE1) $(FW_FILE2) : $(TARGET)
 	$(DOCKCROSS) $(ESPTOOL_PY) elf2image $(TARGET)
 
-PATH=$(PATH):$(FOLDERPREFIX) $(ESPTOOL_PY) elf2image $(TARGET)
 $(TARGET) : Makefile
 	$(DOCKCROSS) $(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
 
@@ -94,10 +80,11 @@ debug : $(TARGET)
 
 ifeq ($(CHIP), 8285)
 burn : $(FW_FILE1) $(FW_FILE2)
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --baud $(BAUD) --port $(PORT) write_flash -fs 8m -fm dout 0x00000 $(basename $(FW_FILE1)) 0x40000 $(basename $(FW_FILE2)))||(true)
 else ifeq ($(CHIP), 8266)
 burn : $(FW_FILE1) $(FW_FILE2)
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --baud $(BAUD) --port $(PORT) write_flash 0x00000 $(basename $(FW_FILE1)) 0x40000 $(basename $(FW_FILE2)))||(true)
+  $(info Docker cross-compiling done, now burn with esptool.py manually)
 else
 	$(error Error: Unknown chip '$(CHIP)')
 endif
@@ -105,6 +92,7 @@ endif
 burnweb :
 	@cd web && $(DOCKCROSS) $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs #Always rebuild page.mpfs
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(PAGE_OFFSET) web/page.mpfs)||(true)
+
 #If you have space, MFS should live at 0x100000. It can also live at
 #0x10000. But, then it is limited to 180kB. You might need to do this if
 # you have a 512kB, or 1M ESP variant.
