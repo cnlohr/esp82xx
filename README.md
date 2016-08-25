@@ -110,7 +110,7 @@ It is excellent!
 
  - [esp82XX-basic](https://github.com/con-f-use/esp82XX-basic)
  - [Colorchord](https://github.com/cnlohr/colorchord)
- - [esp8266ws8212i2c](https://github.com/cnlohr/esp8266ws8212i2s)
+ - [esp8266ws2812i2c](https://github.com/cnlohr/esp8266ws2812i2s)
  - [espusb](https://github.com/cnlohr/espusb)
  - Migration of others in progress
 
@@ -177,29 +177,7 @@ To make a release, just tag a commit with `git tag -a 'v1.3.3.7' -m 'Your releas
 After that, the github web-interface will allow you to make a release out of the new tag and include the binary file.
 To make the zip file invoke `make projectname-version-binaries.tgz` (Tab-autocomplete is your friend).
 
-## Docker support
-
-Docker support for esp82xx is experimental and makes the following assumptions:
-
-	1. You have a working and relatively recent (>1.12) Docker installation.
-	2. You have a copy of esptool.py installed **in your base system** (`pip install esptool`) and accessible in your `$PATH`.
-	3. **You ran `docker pull brainstorm/dockcross-esp-open-sdk` before the next lines.**
-
-To enable cross-compiling inside docker (disabled by default in esp82xx), it should be sufficient to enable
-the following configuration directive in `user.cfg`:
-
-```
-#DOCKER=no
-DOCKER=yes
-```
-
-Then run:
-
-	1. `docker pull brainstorm/dockcross-esp-open-sdk`
-	2. `make burn`, `make netburn`, etc... the usual suspects.
-
 ## ToDo
 
  - Include libraries for usb, ws2812s and ethernet as soon as they are stable
- - Switch to a more convenient, flexible and optimized docker image: https://hub.docker.com/r/vowstar/esp8266/
- - Include libraries for usb, ws8212s and ethernet as soon as they are stable
+

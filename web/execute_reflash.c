@@ -13,11 +13,11 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libusb-1.0/libusb.h>
-#include "compat.h"
 #include "md5.h"
+#include <libusb-1.0/libusb.h>
 
 struct libusb_device_handle *devh = NULL;
+
 
 
 #define BLOCK_SIZE 65536
@@ -32,6 +32,7 @@ struct libusb_device_handle *devh = NULL;
 
 int sendsize_max = PADDING;
 int use_usb = 0;
+
 
 int sockfd;
 struct sockaddr_in servaddr,cliaddr;
