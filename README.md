@@ -31,10 +31,10 @@ or create your own
     git init project_name
     cd project_name
     git submodule add git@github.com:cnlohr/esp82xx.git
-    cp esp28xx/user.cfg.example user.cfg
-    cp esp28xx/Makefile.example Makefile
+    cp esp82xx/user.cfg.example user.cfg
+    cp esp82xx/Makefile.example Makefile
     mkdir -p web/page user
-    ln -s esp28xx/web/Makefile web/
+    ln -s esp82xx/web/Makefile web/
     # ... link or copy more files depending on how much you want to change ...
 
 After you have the basic file structure in place, you should edit `user.cfg` in the top level.
@@ -103,6 +103,9 @@ The default IP of the ESP, when it operates as it's own access point, is **192.1
 When connected to an existing WiFi Network, it will ask your DHCP-Server for an IP.
 Most WiFi routers have an option in their Web-GUI to list all IPs, that their DHCP has given out.
 
+For general troubleshooting hints, see [esptools troubleshooting page](https://github.com/themadinventor/esptool#troubleshooting).
+It is excellent!
+
 ## List of projects using esp82xx
 
  - [esp82XX-basic](https://github.com/con-f-use/esp82XX-basic)
@@ -114,6 +117,12 @@ Most WiFi routers have an option in their Web-GUI to list all IPs, that their DH
 ## Notes
 
 This section should mostly concern developers and contributors to this project.
+We try to keep the generally interesting stuff on top.
+
+### Gibberish Serial Data right after Boot
+
+If you get weird data at the start of your serial communication with the esp, don't forsake!
+The boot rom writes a log to the UART with the unusual timing of 74880 baud.
 
 ### Branches
 
