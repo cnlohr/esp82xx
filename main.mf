@@ -81,7 +81,7 @@ burn : $(FW_FILE1) $(FW_FILE2)
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
 else ifeq ($(CHIP), 8266)
 burn : $(FW_FILE1) $(FW_FILE2)
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
 else
 	$(error Error: Unknown chip '$(CHIP)')
 endif
