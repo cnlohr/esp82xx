@@ -11,13 +11,12 @@ mfsmaker : mfsmaker.c
 pushtodev : pushtodev.c
 execute_reflash : execute_reflash.c md5.c
 
-mfsmaker pushtodev execute_reflash : 
+mfsmaker pushtodev execute_reflash :
 	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) -lusb-1.0
 
 page.mpfs : mfsmaker $(wildcard page/*) Makefile
 	$(RM) -r tmp
 	$(CP) -r page tmp
-	$(info $(PROJECT_URL))
 	sed -i 's/{{PAGE_TITLE}}/$(subst /,\/,$(PAGE_TITLE))/' tmp/index.html
 	sed -i 's/{{PAGE_SCRIPT}}/$(subst /,\/,$(PAGE_SCRIPT))/' tmp/index.html
 	sed -i 's/{{PAGE_HEADING}}/$(subst /,\/,$(PAGE_HEADING))/' tmp/index.html
