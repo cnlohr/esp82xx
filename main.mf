@@ -65,8 +65,13 @@ help :
 
 all : $(FW_FILE1) $(FW_FILE2)
 
+ifeq ($(CHIP), 8285)
+$(FW_FILE1) $(FW_FILE2) : $(TARGET)
+	PATH=$(PATH):$(FOLDERPREFIX) $(ESPTOOL_PY) elf2image $(TARGET) --flash_mode dout --flash_freq 80m --flash_size 8m
+else
 $(FW_FILE1) $(FW_FILE2) : $(TARGET)
 	PATH=$(PATH):$(FOLDERPREFIX) $(ESPTOOL_PY) elf2image $(TARGET)
+endif
 
 $(TARGET) : $(SRCS) Makefile
 	$(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
