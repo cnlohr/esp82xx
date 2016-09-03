@@ -17,7 +17,7 @@ usbburn .. Burn via PRE-RELEASE USB loader (will probably change)
 usbweb ... Burn webpage by PRE-RELEASE USB loader (will probably change)
 
 
-More commands: all, clean, purge
+More commands: all, clean, purge, dumprom
 endef
 .PHONY : all clean cleanall netburn burnweb burn $(BIN_TARGET) netweb getips help
 uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
@@ -129,6 +129,9 @@ getips:
 
 clean :
 	$(RM) $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(SRCS))) $(TARGET) image.map image.lst $(CLEAN_EXTRA)
+
+dumprom : 
+	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) read_flash 0 1048576 dump.bin)||(true)
 
 purge : clean
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean

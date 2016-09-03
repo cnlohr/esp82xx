@@ -17,12 +17,14 @@ LD           = $(PREFIX)ld
 AR           = $(PREFIX)ar
 CP           = cp
 
+SLOWTICK_MS  = 50
+
 ###############################################################################
 # Derived Options
 ###############################################################################
 
 SDK_DEFAULT = $(HOME)/esp8266/esp-open-sdk
-OPTS += -DWEB_PORT=$(WEB_PORT) -DCOM_PORT=$(COM_PORT) -DBACKEND_PORT=$(BACKEND_PORT) $(EXTRAOPTS)
+OPTS += -DWEB_PORT=$(WEB_PORT) -DCOM_PORT=$(COM_PORT) -DBACKEND_PORT=$(BACKEND_PORT) $(EXTRAOPTS) -DSLOWTICK_MS=$(SLOWTICK_MS)
 ESP_ROOT := $(shell echo "$$ESP_ROOT")
 ifeq ($(strip $(ESP_ROOT)),)
     $(warning Warning: No shell variable 'ESP_ROOT', using '$(SDK_DEFAULT)')
