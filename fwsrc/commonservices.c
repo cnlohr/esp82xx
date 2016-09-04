@@ -423,6 +423,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					wifi_set_opmode( 1 );
 					wifi_station_set_config(&stationConf);
 					wifi_station_connect();
+					wifi_station_set_config(&stationConf);  //I don't know why, doing this twice seems to make it store more reliably.
 					ExitCritical();
 					//wifi_station_get_config( &stationConf );
 
