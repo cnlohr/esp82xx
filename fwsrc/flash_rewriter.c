@@ -29,7 +29,7 @@ void ICACHE_FLASH_ATTR HEX16Convert( char * out, uint8_t * in )
 //Must reside in iram.
 static void FinalFlashRewrite( uint32_t from1, uint32_t to1, uint32_t size1, uint32_t from2, uint32_t to2, uint32_t size2 )
 {
-	//uint32 buf[SRCSIZE/4] __attribute__((aligned(32)));
+	uint32 buf[SRCSIZE/4] __attribute__((aligned(32)));
 
 	int i, j;
 	int ipl;
@@ -42,8 +42,14 @@ static void FinalFlashRewrite( uint32_t from1, uint32_t to1, uint32_t size1, uin
 		ipl = (size1/SRCSIZE)+1;
 		for( i = ipl; i; i-- )
 		{
-			SPIEraseSector( p++ );
-			SPIWrite( to1, (uint32_t*)(0x40200000 + from1), SRCSIZE );
+			spi_flash_read( from1, buf, SRCSIZE );
+			if( to1 == 0 )
+			{
+				//Tricky: if first sector, must overwrite out our flash control bits.  This sets things like din, dio, qio, as well as configuration points.
+				buf[0] = *(uint32_t*)(0x40200000);
+			}
+			spi_flash_erase_sector( p++ );
+			spi_flash_write( to1, buf, SRCSIZE );
 			to1 += SRCSIZE;
 			from1 += SRCSIZE;
 		}
@@ -51,16 +57,6 @@ static void FinalFlashRewrite( uint32_t from1, uint32_t to1, uint32_t size1, uin
 		to1 = to2;
 		size1 = size2;
 	}
-/*
-	p = to2/SRCSIZE;
-	ipl = (size2/SRCSIZE)+1;
-	for( i = ipl; i; i-- )
-	{
-		SPIEraseSector( p++ );
-		SPIWrite( to2, (uint32_t*)(0x40200000 + from2), SRCSIZE );
-		to2 += SRCSIZE;
-		from2 += SRCSIZE;
-	}*/
 
 	void(*rebootme)() = (void(*)())0x40000080;
 	rebootme();
