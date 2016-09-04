@@ -39,7 +39,7 @@ static uint32_t BrowseRespond = 0;
 static uint16_t BrowseRespondPort = 0;
 static uint32_t thisfromip;
 static uint16_t thisfromport;
-
+static int wifi_fail_connects;
 int ets_str2macaddr(void *, void *);
 
 uint8_t need_to_switch_opmode = 0; //0 = no, 1 = will need to. 2 = do it now.
@@ -791,6 +791,13 @@ void ICACHE_FLASH_ATTR CSInit()
 	PIN_OUT_CLEAR = _BV(2);
 }
 
+static void ICACHE_FLASH_ATTR RestoreAndReboot( )
+{
+	PIN_DIR_OUTPUT = _BV(2); //Turn GPIO2 light off.
+	system_restore();
+	ets_delay_us(1000000);
+	system_restart();
+}
 
 static void ICACHE_FLASH_ATTR SlowTick( int opm )
 {
@@ -800,10 +807,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 	{
 		if( GPIO0Down++ > (5000 / SLOWTICK_MS) )
 		{
-			PIN_DIR_OUTPUT = _BV(2); //Turn GPIO2 light off.
-			system_restore();
-			ets_delay_us(1000000);
-			system_restart();
+			RestoreAndReboot();
 		}
 	}
 	else
@@ -839,7 +843,14 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 
 		if( stat == STATION_WRONG_PASSWORD || stat == STATION_NO_AP_FOUND || stat == STATION_CONNECT_FAIL ) {
 			wifi_station_disconnect();
-			printf( "Connection failed with code %d... Retrying", stat );
+			wifi_fail_connects++;
+			printf( "Connection failed with code %d... Retrying, try: ", stat, wifi_fail_connects );
+#ifdef MAX_CONNECT_FAILURES_BEFORE_SOFTAP
+			if( wifi_fail_connects > MAX_CONNECT_FAILURES_BEFORE_SOFTAP )
+			{
+				RestoreAndReboot();
+			}
+#endif
 			wifi_station_connect();
 			printf("\n");
 			printed_ip = 0;
@@ -853,6 +864,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 			printf( "GW: %d.%d.%d.%d\n", chop_ip(ipi.gw.addr)      );
 			printf( "WCFG: /%s/%s/\n"  , wcfg.ssid, wcfg.password  );
 			printed_ip = 1;
+			wifi_fail_connects = 0;
 			CSConnectionChange();
 		}
 	}
