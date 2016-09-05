@@ -19,7 +19,7 @@
 
 #define buffprint(M, ...) buffend += ets_sprintf( buffend, M, ##__VA_ARGS__)
 
-static uint8_t printed_ip = 0;
+uint8_t printed_ip = 0;
 static uint8_t attached_to_mdns = 0;
 
 static struct espconn *pUdpServer;

@@ -17,7 +17,7 @@ LD           = $(PREFIX)ld
 AR           = $(PREFIX)ar
 CP           = cp
 
-SLOWTICK_MS  = 50
+SLOWTICK_MS ?= 50
 
 ###############################################################################
 # Derived Options

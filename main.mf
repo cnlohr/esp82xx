@@ -38,7 +38,11 @@ SRCS =  esp82xx/fwsrc/uart.c \
 	user/custom_commands.c \
 	user/user_main.c
 
-LIBS = main lwip ssl upgrade net80211 wpa phy lwip pp crypto
+LIBS = main lwip ssl upgrade net80211 wpa phy lwip crypto
+ifneq ($(CUSTOMPP), 1)
+	LIBS += pp
+endif
+
 INCL = $(SDK)/include esp82xx/include .
 
 CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)'
@@ -48,7 +52,7 @@ LDFLAGS_CORE = -Wl,--relax -Wl,--gc-sections -nostdlib -L$(XTLIB) \
 	$(XTGCCLIB) -T $(SDK)/ld/eagle.app.v6.ld
 #	-flto -Wl,--relax -Wl,--gc-sections
 
-LINKFLAGS = $(LDFLAGS_CORE) -B$(XTLIB)
+LINKFLAGS = $(LDFLAGS_CORE) -B$(XTLIB) $(LDFLAGS_POST)
 
 BIN_TARGET = $(PROJECT_NAME)-$(VERSION)-binaries.zip
 
