@@ -6,7 +6,7 @@ all : execute_reflash push
 
 CC = gcc
 CFLAGS = $(OPTS)
-PAGE_JQUERYFL = $(subst page/,,$(wildcard page/jquery*gz))
+PAGE_SCRIPT = $(foreach s, $(wildcard page/jquery*gz) $(call uniq, $(PAGE_SCRIPTS)), <script language="javascript" type="text/javascript" src="$(notdir $(s))"></script>${\n})
 
 mfsmaker : mfsmaker.c
 pushtodev : pushtodev.c
