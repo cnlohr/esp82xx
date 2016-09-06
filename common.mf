@@ -1,8 +1,12 @@
 ###############################################################################
+# This is for commom variables shared between sub-Makefiles
+# The variables here are not necessary for the extensa compiler, but also
+#+for client software like the command-line utilities (e.g. execute_reflash).
+# Note: user.cfg can override these.
+
+###############################################################################
 # Toolchain Options
 ###############################################################################
-
-#Note: user.cfg can override these.
 
 GCC_FOLDER = $(ESP_ROOT)/xtensa-lx106-elf
 ESPTOOL_PY = $(ESP_ROOT)/esptool/esptool.py
@@ -23,15 +27,25 @@ SLOWTICK_MS ?= 50
 # Derived Options
 ###############################################################################
 
-SDK_DEFAULT = $(HOME)/esp8266/esp-open-sdk
 OPTS += -DWEB_PORT=$(WEB_PORT) -DCOM_PORT=$(COM_PORT) -DBACKEND_PORT=$(BACKEND_PORT) $(EXTRAOPTS) -DSLOWTICK_MS=$(SLOWTICK_MS)
+
+# Mechanism for getting SDK/xtensa compiler paths from shell variables
+SDK_DEFAULT = $(HOME)/esp8266/esp-open-sdk
 ESP_ROOT := $(shell echo "$$ESP_ROOT")
 ifeq ($(strip $(ESP_ROOT)),)
     $(warning Warning: No shell variable 'ESP_ROOT', using '$(SDK_DEFAULT)')
     ESP_ROOT := $(SDK_DEFAULT)
 endif
+
+# Version related stuff
 VERSION := $(shell git describe --abbrev=5 --dirty=-dev --always --tags)
 VERSSTR := "Version: $(VERSION) - Build $(shell date) with $(OPTS)"
 PROJECT_NAME := $(notdir $(shell git rev-parse --show-toplevel))
 PROJECT_URL := $(subst .com:,.com/,$(subst .git,,$(subst git@,https://,$(shell git config --get remote.origin.url))))
 
+# Newline and space hacks
+define \n
+
+endef
+empty:=
+\s:= $(empty) $(empty)
