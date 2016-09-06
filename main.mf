@@ -44,12 +44,13 @@ ifneq ($(CUSTOMPP), 1)
 endif
 
 INCL = $(SDK)/include esp82xx/include .
+LINKERSCRIPT ?= $(SDK)/ld/eagle.app.v6.ld
 
 CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)'
 
 LDFLAGS_CORE = -Wl,--relax -Wl,--gc-sections -nostdlib -L$(XTLIB) \
 	-L$(XTGCCLIB) $(addprefix $(SDK)/lib/lib,$(addsuffix .a,$(LIBS))) \
-	$(XTGCCLIB) -T $(SDK)/ld/eagle.app.v6.ld
+	$(XTGCCLIB) -T $(LINKERSCRIPT)
 #	-flto -Wl,--relax -Wl,--gc-sections
 
 LINKFLAGS = $(LDFLAGS_CORE) -B$(XTLIB) $(LDFLAGS_POST)

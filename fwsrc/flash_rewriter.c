@@ -58,6 +58,7 @@ static void FinalFlashRewrite( uint32_t from1, uint32_t to1, uint32_t size1, uin
 		size1 = size2;
 	}
 
+	Kuart0_sendStr( "D\n" );
 	system_restart();
 //	void(*rebootme)() = (void(*)())0x40000080;
 //	rebootme();
