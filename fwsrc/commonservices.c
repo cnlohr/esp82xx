@@ -17,10 +17,9 @@
 #include <gpio.h>
 #include "flash_rewriter.h"
 
-#define MAX_RETRY_COUNT 5
 #define buffprint(M, ...) buffend += ets_sprintf( buffend, M, ##__VA_ARGS__)
 
-static uint8_t printed_ip = 0;
+uint8_t printed_ip = 0;
 static uint8_t attached_to_mdns = 0;
 
 static struct espconn *pUdpServer;
@@ -40,12 +39,10 @@ static uint32_t BrowseRespond = 0;
 static uint16_t BrowseRespondPort = 0;
 static uint32_t thisfromip;
 static uint16_t thisfromport;
-static uint8_t alivecnt = 0;
-
+static int wifi_fail_connects;
 int ets_str2macaddr(void *, void *);
 
 uint8_t need_to_switch_opmode = 0; //0 = no, 1 = will need to. 2 = do it now.
-uint8_t retry_count = 0;
 
 
 void ICACHE_FLASH_ATTR SetServiceName( const char * myservice )
@@ -426,6 +423,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					wifi_set_opmode( 1 );
 					wifi_station_set_config(&stationConf);
 					wifi_station_connect();
+					wifi_station_set_config(&stationConf);  //I don't know why, doing this twice seems to make it store more reliably.
 					ExitCritical();
 					//wifi_station_get_config( &stationConf );
 
@@ -785,12 +783,38 @@ void ICACHE_FLASH_ATTR CSInit()
     espconn_regist_connectcb(pHTTPServer, httpserver_connectcb);
     espconn_accept(pHTTPServer);
     espconn_regist_time(pHTTPServer, 15, 0); //timeout
+
+
+	//Setup GPIO0 and 2 for input.
+	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U,FUNC_GPIO2);
+	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U,FUNC_GPIO0);
+	PIN_DIR_INPUT = _BV(2) | _BV(0);
+	PIN_OUT_CLEAR = _BV(2);
 }
 
+static void ICACHE_FLASH_ATTR RestoreAndReboot( )
+{
+	PIN_DIR_OUTPUT = _BV(2); //Turn GPIO2 light off.
+	system_restore();
+	ets_delay_us(1000000);
+	system_restart();
+}
 
 static void ICACHE_FLASH_ATTR SlowTick( int opm )
 {
-	if( ! alivecnt++ ) printf( "." ); // heartbeat to uart
+	static int GPIO0Down = 0;
+
+	if( (PIN_IN & _BV(0)) == 0 )
+	{
+		if( GPIO0Down++ > (5000 / SLOWTICK_MS) )
+		{
+			RestoreAndReboot();
+		}
+	}
+	else
+	{
+		GPIO0Down = 0;
+	}
 
 	HTTPTick(1);
 
@@ -820,21 +844,20 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 
 		if( stat == STATION_WRONG_PASSWORD || stat == STATION_NO_AP_FOUND || stat == STATION_CONNECT_FAIL ) {
 			wifi_station_disconnect();
-			printf( "Connection failed with code %d... ", stat );
-			retry_count++;
-			if( retry_count > MAX_RETRY_COUNT ) {
-				printf("faild.\nSwitching to soft AP.");
-				SwitchToSoftAP(); //XXX WARNING: This does not /actually/ work.
-			} else {
-				printf("retry %d... ", retry_count);
-				wifi_station_connect();
+			wifi_fail_connects++;
+			printf( "Connection failed with code %d... Retrying, try: ", stat, wifi_fail_connects );
+#ifdef MAX_CONNECT_FAILURES_BEFORE_SOFTAP
+			if( wifi_fail_connects > MAX_CONNECT_FAILURES_BEFORE_SOFTAP )
+			{
+				RestoreAndReboot();
 			}
+#endif
+			wifi_station_connect();
 			printf("\n");
 			printed_ip = 0;
 		} else if( stat == STATION_GOT_IP && !printed_ip ) {
 			wifi_station_get_config( &wcfg );
 			wifi_get_ip_info(0, &ipi);
-			retry_count = 0;
 			printf( "STAT: %d\n", stat );
 			#define chop_ip(x) (((x)>>0)&0xff), (((x)>>8)&0xff), (((x)>>16)&0xff), (((x)>>24)&0xff)
 			printf( "IP: %d.%d.%d.%d\n", chop_ip(ipi.ip.addr)      );
@@ -842,6 +865,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 			printf( "GW: %d.%d.%d.%d\n", chop_ip(ipi.gw.addr)      );
 			printf( "WCFG: /%s/%s/\n"  , wcfg.ssid, wcfg.password  );
 			printed_ip = 1;
+			wifi_fail_connects = 0;
 			CSConnectionChange();
 		}
 	}

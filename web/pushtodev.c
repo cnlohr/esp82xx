@@ -5,6 +5,10 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdio.h>
+#if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
+    #include <unistd.h>
+    #include <arpa/inet.h>
+#endif
 #include <sys/time.h>
 #include <sys/poll.h>
 #include <sys/types.h>
