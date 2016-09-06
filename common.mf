@@ -47,6 +47,7 @@ PROJECT_URL := $(subst .com:,.com/,$(subst .git,,$(subst git@,https://,$(shell g
 # Newline and space hacks
 define \n
 
+
 endef
 empty:=
 \s:= $(empty) $(empty)

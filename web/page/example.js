@@ -4,11 +4,11 @@
 
 function initExample() {
 var menItm = `
-	<tr><td width=1><input type=submit onclick="ShowHideEvent( 'Example' ); KickExample();" value="Example"></td><td>
+	<tr><td width=1><input type=submit onclick="ShowHideEvent( 'Example' );" value="Example"></td><td>
 	<div id=Example class="collapsible">
 	<p>I'm an example feature found in ./web/page/feature.example.js.</p>
 	<input type=button id=InfoBtn value="Display Info"><br>
-	<p id=>&nbsp;</p>
+	<p id=InfoDspl>&nbsp;</p>
 	</div>
 	</td></tr>
 `;
@@ -16,8 +16,8 @@ var menItm = `
 
 	$('#InfoBtn').click( function(e) {
 		$('#InfoBtn').val('Getting data...');
-		$('#InfoDspl').val('&nbsp;');
-		QueueOperation( "I", clbInfoBtn ); // Send request to ESP
+		$('#InfoDspl').html('&nbsp;');
+		QueueOperation( "I", clbInfoBtn ); // Send info request to ESP
 	});
 }
 
@@ -27,5 +27,5 @@ window.addEventListener("load", initExample, false);
 // Handle request previously sent on button click
 function clbInfoBtn(req,data) {
 	$('#InfoBtn').val('Display Info');
-	$('#InfoDspl').val(data);
+	$('#InfoDspl').html('Info returned from esp:<br>'+ data);
 }

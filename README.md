@@ -1,6 +1,6 @@
 # esp82xx
 
-Useful ESP8266 C Environment. 
+Useful ESP8266 C Environment.
 Includes useful libraries and some basic functionality such as a Web-GUI, flashing firmware and web-data over network and basic GPIO functions.
 Intended to be included as sub-module in derivate projects.
 
@@ -167,6 +167,8 @@ Cope with submodules in top-level projects updates:
     git commit -m 'Bumped submodule version'
     git push
     ```
+
+ - Make sure you reference the master branch of submoules and test against that, when youre about to merge a dev version of top-level projects. Master-branch top-level projects sould have master-branch submodules.
 
 ### Include Binaries
 

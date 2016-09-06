@@ -6,7 +6,7 @@ all : execute_reflash push
 
 CC = gcc
 CFLAGS = $(OPTS)
-PAGE_SCRIPT = $(foreach s, $(wildcard page/jquery*gz) $(call uniq, $(PAGE_SCRIPTS)), <script language="javascript" type="text/javascript" src="$(notdir $(s))"></script>${\n})
+PAGE_SCRIPT = $(foreach s, $(wildcard page/jquery*gz)  $(call uniq, menuinterface.js $(PAGE_SCRIPTS)), <script language="javascript" type="text/javascript" src="$(notdir $(s))"></script>)
 
 mfsmaker : mfsmaker.c
 pushtodev : pushtodev.c
@@ -19,6 +19,7 @@ page.mpfs : mfsmaker $(wildcard page/*) Makefile
 	$(RM) -r tmp
 	$(CP) -r page tmp
 	# Inception level over 9000 for poor man's template substitution
+	$(info bla$ ${\n} blubb)
 	$(foreach p, $(filter PAGE_%,$(.VARIABLES)) $(filter PROJECT_%,$(.VARIABLES)) VERSSTR, \
 		sed -i "s/{{$(p)}}/$$(echo -n '$($(p))' | sed -e 's/[\/&"]/\\&/g')/" tmp/index.html && \
 	) true

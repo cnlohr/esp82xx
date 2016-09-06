@@ -72,7 +72,7 @@ all : $(FW_FILE1) $(FW_FILE2)
 
 $(FW_FILE1) $(FW_FILE2) : $(TARGET)
 	PATH=$(PATH):$(FOLDERPREFIX) $(ESPTOOL_PY) elf2image $(TARGET)
-	#no need to set things like dout, and memory size.  This data is copied from the ESP back to itself on write.
+	@#no need to set things like dout, and memory size.  This data is copied from the ESP back to itself on write.
 
 $(TARGET) : $(SRCS) Makefile
 	$(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
