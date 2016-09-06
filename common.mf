@@ -28,6 +28,7 @@ SLOWTICK_MS ?= 50
 ###############################################################################
 
 OPTS += -DWEB_PORT=$(WEB_PORT) -DCOM_PORT=$(COM_PORT) -DBACKEND_PORT=$(BACKEND_PORT) $(EXTRAOPTS) -DSLOWTICK_MS=$(SLOWTICK_MS)
+PAGE_SCRIPTS?=$(wildcard web/page/*.js)
 
 # Mechanism for getting SDK/xtensa compiler paths from shell variables
 SDK_DEFAULT = $(HOME)/esp8266/esp-open-sdk
