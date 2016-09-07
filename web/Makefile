@@ -6,25 +6,20 @@ all : execute_reflash push
 
 CC = gcc
 CFLAGS = $(OPTS)
+LDLIBS = -lusb-1.0
+PAGE_SCRIPT = $(foreach s, $(wildcard page/jquery*gz)  $(call uniq, menuinterface.js $(PAGE_SCRIPTS)), <script language="javascript" type="text/javascript" src="$(notdir $(s))"></script>)
 
 mfsmaker : mfsmaker.c
 pushtodev : pushtodev.c
 execute_reflash : execute_reflash.c md5.c
 
-mfsmaker pushtodev execute_reflash :
-	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) -lusb-1.0
-
 page.mpfs : mfsmaker $(wildcard page/*) Makefile
 	$(RM) -r tmp
 	$(CP) -r page tmp
-	sed -i 's/{{PAGE_TITLE}}/$(subst /,\/,$(PAGE_TITLE))/' tmp/index.html
-	sed -i 's/{{PAGE_SCRIPT}}/$(subst /,\/,$(PAGE_SCRIPT))/' tmp/index.html
-	sed -i 's/{{PAGE_HEADING}}/$(subst /,\/,$(PAGE_HEADING))/' tmp/index.html
-	sed -i 's/{{PAGE_INFO}}/$(subst /,\/,$(PAGE_INFO))/' tmp/index.html
-	sed -i 's/{{VERSSTR}}/$(subst ",,$(VERSSTR))/' tmp/index.html
-	sed -i 's/{{PROJECT_URL}}/$(subst ",,$(subst /,\/,$(PROJECT_URL)))/' tmp/index.html
-	sed -i 's/{{PROJECT_NAME}}/$(subst ",,$(PROJECT_NAME))/' tmp/index.html
-	sed -i 's/{{PAGE_JQUERYFL}}/$(subst page/,,$(wildcard page/jquery*gz))/' tmp/index.html
+	# Inception level over 9000 for poor man's template substitution
+	$(foreach p, $(filter PAGE_%,$(.VARIABLES)) $(filter PROJECT_%,$(.VARIABLES)) VERSSTR, \
+		sed -i "s/{{$(p)}}/$$(echo -n '$($(p))' | sed -e 's/[\/&"]/\\&/g')/" tmp/index.html && \
+	) true
 	./mfsmaker tmp page.mpfs
 
 push : pushtodev page.mpfs
@@ -35,4 +30,3 @@ usbpush : pushtodev page.mpfs
 
 clean :
 	$(RM) mfsmaker page.mpfs pushtodev execute_reflash tmp/*
-

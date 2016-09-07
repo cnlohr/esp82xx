@@ -19,8 +19,8 @@ usbweb ... Burn webpage by PRE-RELEASE USB loader (will probably change)
 
 More commands: all, clean, purge, dumprom
 endef
+
 .PHONY : all clean cleanall netburn burnweb burn $(BIN_TARGET) netweb getips help
-uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
 
 FW_FILE1 = image.elf-0x00000.bin
 FW_FILE2 = image.elf-0x40000.bin
@@ -72,7 +72,7 @@ all : $(FW_FILE1) $(FW_FILE2)
 
 $(FW_FILE1) $(FW_FILE2) : $(TARGET)
 	PATH=$(PATH):$(FOLDERPREFIX) $(ESPTOOL_PY) elf2image $(TARGET)
-	#no need to set things like dout, and memory size.  This data is copied from the ESP back to itself on write.
+	@#no need to set things like dout, and memory size.  This data is copied from the ESP back to itself on write.
 
 $(TARGET) : $(SRCS) Makefile
 	$(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
@@ -131,7 +131,7 @@ getips:
 clean :
 	$(RM) $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(SRCS))) $(TARGET) image.map image.lst $(CLEAN_EXTRA)
 
-dumprom : 
+dumprom :
 	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) read_flash 0 1048576 dump.bin)||(true)
 
 purge : clean
