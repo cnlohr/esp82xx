@@ -28,7 +28,7 @@ ICACHE_FLASH_ATTR void HTTPClose( )
 	//socket is successfully closed.
 	//curhttp->state = HTTP_STATE_NONE;
 	curhttp->state = HTTP_WAIT_CLOSE;
-	espconn_disconnect( curhttp->socket ); 
+	espconn_disconnect( curhttp->socket );
 }
 
 
@@ -56,7 +56,7 @@ void ICACHE_FLASH_ATTR HTTPGotData( )
 			{
 				curhttp->state_deets--;
 			}
-			
+
 			if( c == ' ' )
 			{
 				//Tricky: If we're a websocket, we need the whole header.
@@ -70,7 +70,7 @@ void ICACHE_FLASH_ATTR HTTPGotData( )
 				}
 				else
 				{
-					curhttp->state = HTTP_STATE_WAIT_PROTO; 
+					curhttp->state = HTTP_STATE_WAIT_PROTO;
 				}
 			}
 			break;
@@ -234,7 +234,25 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 		}
 		else if( strcmp( k, "gz" ) == 0 )
 		{
-			PushString( "text/plain\r\nContent-Encoding: gzip\r\nCache-Control: public, max-age=3600" );			
+			// move past the dot
+			--slen;
+
+			// find the next extension (dot)
+			while( slen && ( curhttp->pathbuffer[--slen] != '.' ) );
+			k2 = &curhttp->pathbuffer[slen+1];
+
+			if( strcmp (k2, "js.gz") == 0 ) {
+				PushString( "text/javascript" );
+			}
+			else if( strcmp (k2, "css.gz") == 0 ) {
+				PushString( "text/css" );
+			}
+			else {
+				// unknown extension (or none), let's just default to text/plain
+				PushString( "text/plain" );
+			}
+
+			PushString( "\r\nContent-Encoding: gzip\r\nCache-Control: public, max-age=3600" );
 		}
 		else if( curhttp->bytesleft == 0xfffffffe )
 		{
@@ -406,7 +424,7 @@ int ICACHE_FLASH_ATTR URLDecode( char * decodeinto, int maxlen, const char * buf
 			decodeinto[i++] = c;
 		}
 		if( i >= maxlen -1 )  break;
-		
+
 	}
 	decodeinto[i] = 0;
 	return i;
@@ -570,7 +588,7 @@ void ICACHE_FLASH_ATTR WebSocketGotData( uint8_t c )
 		}
 
 		WebSocketData( payloadlen );
-		curlen -= payloadlen; 
+		curlen -= payloadlen;
 		curdata += payloadlen;
 
 		break;
@@ -625,5 +643,3 @@ uint8_t WSPOPMASK()
 	wsmaskplace = (wsmaskplace+1)&3;
 	return (*curdata++)^(mask);
 }
-
-
