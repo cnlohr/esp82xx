@@ -206,6 +206,7 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 		char stto[10];
 		uint8_t slen = os_strlen( curhttp->pathbuffer );
 		const char * k;
+		const char * k2; // Used for gzip, perhaps not needed? -NM 2016-09-24
 
 		START_PACK;
 		//TODO: Content Length?  MIME-Type?
