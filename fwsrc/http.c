@@ -220,7 +220,7 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 		}
 		else
 		{
-			PushString("Connection: close\r\n");
+			PushString("Connection: close");
 			curhttp->keep_alive = 0;
 		}
 
