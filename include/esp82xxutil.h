@@ -18,8 +18,10 @@
 
 //XXX WARNING As of 1.3.0, "cansend" doesn't work.
 //the SDK seems to misbehave when trying to send without a full
-//response packet.
-#define SAFESEND
+//response packet.  XXX 2: This is not true.  By setting:
+//	espconn_set_opt(pespconn, 0x04);
+//It makes it so you can keep doing this.
+//#define SAFESEND
 
 
 #define HTONS(x) ((((uint16_t)(x))>>8)|(((x)&0xff)<<8))

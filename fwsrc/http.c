@@ -369,9 +369,12 @@ httpserver_connectcb(void *arg)
 		return;
 	}
 
-//	espconn_set_opt(pespconn, ESPCONN_NODELAY);
-//	espconn_set_opt(pespconn, ESPCONN_COPY);
+	//http://bbs.espressif.com/viewtopic.php?f=21&t=320
+	espconn_set_opt(pespconn, 0x04); // enable write buffer
+	//Doing this allows us to queue writes in the socket, which
+	//SIGNIFICANTLY speeds up transfer in Windows.
 
+	//espconn_regist_write_finish( pespconn, http_sentcb );
     espconn_regist_recvcb( pespconn, http_recvcb );
     espconn_regist_disconcb( pespconn, http_disconnetcb );
 
