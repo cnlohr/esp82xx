@@ -4,7 +4,6 @@
 //This is my best guess at some of the ROM functions for the ESP8266.
 //I have no idea if this stuff is correct!
 
-#include <spi_flash.h>
 #include <c_types.h>
 
 void Cache_Read_Disable(); //Can't seem to operate...
@@ -52,6 +51,19 @@ void SPIWrite(uint32 des_addr, uint32_t *src_addr, uint32_t size);
 void SPIRead(uint32 src_addr, uint32_t *des_addr, uint16_t size);
 void SPILock( uint16_t sec ); //??? I don't use this?
 void SPIUnlock( ); //??? I don't use this? -> Seems to crash.
+
+#ifdef NOSDK
+typedef struct{
+	uint32	deviceId;
+	uint32	chip_size;    // chip size in byte
+	uint32	block_size;
+	uint32  sector_size;
+	uint32  page_size;
+	uint32  status_mask;
+} SpiFlashChip;
+#else
+#include <spi_flash.h>
+#endif
 
 extern SpiFlashChip * flashchip; //don't forget: flashchip->chip_size = 0x01000000;
 
