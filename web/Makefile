@@ -6,7 +6,8 @@ all : execute_reflash push
 
 CC = gcc
 CFLAGS = $(OPTS)
-PAGE_SCRIPT = $(foreach s, $(wildcard page/jquery*gz)  $(call uniq, menuinterface.js $(PAGE_SCRIPTS)), <script language="javascript" type="text/javascript" src="$(notdir $(s))"></script>)
+LDLIBS = -lusb-1.0
+PAGE_SCRIPT = $(foreach s, $(call uniq, $(notdir $(wildcard page/jquery*gz) menuinterface.js $(PAGE_SCRIPTS))), <script language="javascript" type="text/javascript" src="$(s)"></script>)
 
 mfsmaker : mfsmaker.c
 pushtodev : pushtodev.c
@@ -33,4 +34,3 @@ usbpush : pushtodev page.mpfs
 
 clean :
 	$(RM) mfsmaker page.mpfs pushtodev execute_reflash tmp/*
-

@@ -40,7 +40,7 @@ endif
 
 # Version related stuff
 VERSION := $(shell git describe --abbrev=5 --dirty=-dev --always --tags)
-VERSSTR := "Version: $(VERSION) - Build $(shell date) with $(OPTS)"
+VERSSTR := "Version: $(VERSION) - Build $(shell date -R) with $(OPTS)"
 PROJECT_NAME := $(notdir $(shell git rev-parse --show-toplevel))
 PROJECT_URL := $(subst .com:,.com/,$(subst .git,,$(subst git@,https://,$(shell git config --get remote.origin.url))))
 

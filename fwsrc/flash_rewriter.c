@@ -58,8 +58,10 @@ static void FinalFlashRewrite( uint32_t from1, uint32_t to1, uint32_t size1, uin
 		size1 = size2;
 	}
 
+	ets_wdt_enable();  //In case the system restart doesn't hit us... Not sure why it doesn't sometimes.
 	Kuart0_sendStr( "D\n" );
-	system_restart();
+	system_restart();  //This seems to not always trigger.
+
 //	void(*rebootme)() = (void(*)())0x40000080;
 //	rebootme();
 }
