@@ -5,6 +5,8 @@
 #include "esp82xxutil.h"
 #include "commonservices.h"
 
+int (*custom_http_cb_start)( struct HTTPConnection * hc ); //If set, means custom callback present.  If you use, will need to set ->rcb and ->bytesleft.  Return 0 if intercepted, 1 if not.
+
 static ICACHE_FLASH_ATTR void huge()
 {
 	uint8_t i = 0;
@@ -50,7 +52,11 @@ static ICACHE_FLASH_ATTR void issue()
 
 void ICACHE_FLASH_ATTR HTTPCustomStart( )
 {
-	if( strncmp( (const char*)curhttp->pathbuffer, "/d/huge", 7 ) == 0 )
+	if( custom_http_cb_start && custom_http_cb_start( curhttp ) == 0 )
+	{
+		//Was a custom CB.  It should have set this all
+	}
+	else if( strncmp( (const char*)curhttp->pathbuffer, "/d/huge", 7 ) == 0 )
 	{
 		curhttp->rcb = (void(*)())&huge;
 		curhttp->bytesleft = 0xffffffff;

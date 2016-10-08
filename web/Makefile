@@ -13,11 +13,15 @@ mfsmaker : mfsmaker.c
 pushtodev : pushtodev.c
 execute_reflash : execute_reflash.c md5.c
 
+mfsmaker pushtodev execute_reflash :
+	$(CC) $(CFLAGS) $^ -o $@ $(LDFLAGS) -lusb-1.0
+
 page.mpfs : mfsmaker $(wildcard page/*) Makefile
 	$(RM) -r tmp
 	$(CP) -r page tmp
 	# Inception level over 9000 for poor man's template substitution
-	$(foreach p, $(filter PAGE_% PROJECT_%,$(.VARIABLES)) VERSSTR, \
+	$(info bla$ ${\n} blubb)
+	$(foreach p, $(filter PAGE_%,$(.VARIABLES)) $(filter PROJECT_%,$(.VARIABLES)) VERSSTR, \
 		sed -i "s/{{$(p)}}/$$(echo -n '$($(p))' | sed -e 's/[\/&"]/\\&/g')/" tmp/index.html && \
 	) true
 	./mfsmaker tmp page.mpfs
