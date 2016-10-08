@@ -5,15 +5,17 @@
 #ifndef _ESP82XXUTIL_H
 #define _ESP82XXUTIL_H
 
+#include <ets_sys.h>
+#include <c_types.h>
+#include <esp8266_rom.h>
+
+#ifndef NOSDK
 
 #include <mem.h>
 #include <c_types.h>
 #include <user_interface.h>
-#include <ets_sys.h>
 #include <espconn.h>
-#include <c_types.h>
 #include <stdio.h>
-#include <esp8266_rom.h>
 
 
 //XXX WARNING As of 1.3.0, "cansend" doesn't work.
@@ -81,6 +83,8 @@ char *  ICACHE_FLASH_ATTR ParamCaptureAndAdvance( ); //Increments intcount if go
 int32_t ICACHE_FLASH_ATTR ParamCaptureAndAdvanceInt( ); //Do the same, but we're looking for an integer.
 
 uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
+
+#endif
 
 #define PIN_OUT       ( *((uint32_t*)0x60000300) )
 #define PIN_OUT_SET   ( *((uint32_t*)0x60000304) )
