@@ -19,6 +19,9 @@
     #define debug(...) ;
 #endif
 
+extern int wifi_fail_connects;
+extern uint8_t printed_ip;
+
 //Returns nr bytes to return.  You must allocate retdata.
 //It MUST be at least 1,300 bytes large and it MUST be 32-bit aligned.
 //NOTE: It is SAFE to use pusrdata and retdata as the same buffer.

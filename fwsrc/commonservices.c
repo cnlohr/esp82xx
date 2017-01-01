@@ -39,7 +39,7 @@ static uint32_t BrowseRespond = 0;
 static uint16_t BrowseRespondPort = 0;
 static uint32_t thisfromip;
 static uint16_t thisfromport;
-static int wifi_fail_connects;
+int wifi_fail_connects;
 int ets_str2macaddr(void *, void *);
 
 uint8_t need_to_switch_opmode = 0; //0 = no, 1 = will need to. 2 = do it now.
