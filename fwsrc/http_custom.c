@@ -5,6 +5,10 @@
 #include "esp82xxutil.h"
 #include "commonservices.h"
 
+#ifdef DISABLE_HTTP
+
+#else
+
 int (*custom_http_cb_start)( struct HTTPConnection * hc ); //If set, means custom callback present.  If you use, will need to set ->rcb and ->bytesleft.  Return 0 if intercepted, 1 if not.
 
 static ICACHE_FLASH_ATTR void huge()
@@ -180,3 +184,5 @@ void ICACHE_FLASH_ATTR WebSocketData( int len )
 		((void(*)( int ))curhttp->rcbDat)(  len ); 
 	}
 }
+
+#endif

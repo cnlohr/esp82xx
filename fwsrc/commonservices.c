@@ -22,8 +22,14 @@
 uint8_t printed_ip = 0;
 static uint8_t attached_to_mdns = 0;
 
+#ifndef DISABLE_SERVICE_UDP
 static struct espconn *pUdpServer;
+#endif
+
+#ifndef DISABLE_HTTP
 static struct espconn *pHTTPServer;
+#endif
+
 struct espconn *pespconn;
 uint16_t g_gpiooutputmask = 0;
 
@@ -133,6 +139,7 @@ void ICACHE_FLASH_ATTR BrowseForService( const char * servicename )
 
 static void ICACHE_FLASH_ATTR EmitWhoAmINow( )
 {
+#ifndef DISABLE_SERVICE_UDP
 	char etsend[64];
 	ets_sprintf( etsend, "BR%s\t%s\t%s", ServiceName, SETTINGS.DeviceName, SETTINGS.DeviceDescription );
 	uint32_to_IP4(BrowseRespond,pUdpServer->proto.udp->remote_ip);
@@ -140,16 +147,19 @@ static void ICACHE_FLASH_ATTR EmitWhoAmINow( )
 	espconn_sent( (struct espconn *)pUdpServer, etsend, ets_strlen( etsend ) );
 	BrowseRespond = 0;
 	printf( "Emitting WhoAmI\n" );
+#endif
 }
 
 
 static void ICACHE_FLASH_ATTR EmitBrowseNow( )
 {
+#ifndef DISABLE_SERVICE_UDP
 	char etsend[32];
 	ets_sprintf( etsend, "BQ%s", BrowsingService );
 	uint32_to_IP4( ((uint32_t)0xffffffff), pUdpServer->proto.udp->remote_ip );
 	pUdpServer->proto.udp->remote_port = BACKEND_PORT;
 	espconn_sent( (struct espconn *)pUdpServer, etsend, ets_strlen( etsend ) );
+#endif
 }
 
 
@@ -159,6 +169,9 @@ static void ICACHE_FLASH_ATTR EmitBrowseNow( )
 
 CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char * buffend)
 {
+#ifdef DISABLE_SERVICE_UDP
+	return 0;
+#else
 	if( len <= 1 ) return -1;
 	char * srv = ParamCaptureAndAdvance();
 	char * nam = ParamCaptureAndAdvance();
@@ -248,6 +261,7 @@ CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char 
 	}
 
 	return buffend - buffer;
+#endif
 } // END: cmd_Browse(...)
 
 
@@ -763,6 +777,8 @@ void ICACHE_FLASH_ATTR CSPreInit()
 
 void ICACHE_FLASH_ATTR CSInit()
 {
+
+#ifndef DISABLE_SERVICE_UDP
     pUdpServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
 	ets_memset( pUdpServer, 0, sizeof( struct espconn ) );
 	pUdpServer->type = ESPCONN_UDP;
@@ -770,9 +786,11 @@ void ICACHE_FLASH_ATTR CSInit()
 	pUdpServer->proto.udp->local_port = BACKEND_PORT;
 	espconn_regist_recvcb(pUdpServer, issue_command_udp);
 	espconn_create( pUdpServer );
+#endif
 
 	SetupMDNS();
 
+#ifndef DISABLE_HTTP
 	pHTTPServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
 	ets_memset( pHTTPServer, 0, sizeof( struct espconn ) );
 	espconn_create( pHTTPServer );
@@ -783,7 +801,7 @@ void ICACHE_FLASH_ATTR CSInit()
     espconn_regist_connectcb(pHTTPServer, httpserver_connectcb);
     espconn_accept(pHTTPServer);
     espconn_regist_time(pHTTPServer, 15, 0); //timeout
-
+#endif
 
 	//Setup GPIO0 and 2 for input.
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U,FUNC_GPIO2);

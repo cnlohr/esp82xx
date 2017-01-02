@@ -5,6 +5,11 @@
 #include "esp82xxutil.h"
 #include "esp8266_rom.h"
 
+#ifdef DISABLE_HTTP
+void ICACHE_FLASH_ATTR HTTPTick( uint8_t timed ){ }
+void ICACHE_FLASH_ATTR httpserver_connectcb(void *arg) { }
+#else
+
 #define HTDEBUG( x... ) printf( x )
 
 //#define ISKEEPALIVE "keep-alive"
@@ -647,3 +652,5 @@ uint8_t WSPOPMASK()
 	wsmaskplace = (wsmaskplace+1)&3;
 	return (*curdata++)^(mask);
 }
+#endif
+

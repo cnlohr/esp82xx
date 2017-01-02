@@ -9,6 +9,15 @@
 #include "esp82xxutil.h"
 #include "ip_addr.h"
 
+#ifdef DISABLE_MDNS
+int ICACHE_FLASH_ATTR JoinGropMDNS() { }
+void ICACHE_FLASH_ATTR SetupMDNS() { }
+void ICACHE_FLASH_ATTR AddMDNSService( const char * ServiceName, const char * Text, int port ) { }
+void ICACHE_FLASH_ATTR AddMDNSName( const char * ToDup ) { }
+void ICACHE_FLASH_ATTR ClearMDNSNames() { }
+
+#else
+
 #define MDNS_BRD 0xfb0000e0
 
 static char * MDNSNames[MAX_MDNS_NAMES];
@@ -470,4 +479,5 @@ int ICACHE_FLASH_ATTR JoinGropMDNS()
 	return 1;
 }
 
+#endif
 
