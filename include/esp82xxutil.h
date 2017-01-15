@@ -22,8 +22,9 @@
 //the SDK seems to misbehave when trying to send without a full
 //response packet.  XXX 2: This is not true.  By setting:
 //	espconn_set_opt(pespconn, 0x04);
-//It makes it so you can keep doing this.
-//#define SAFESEND
+//It makes it so you can keep doing this. 
+//As of 1.5.4 that appears to be gone.
+#define SAFESEND
 
 
 #define HTONS(x) ((((uint16_t)(x))>>8)|(((x)&0xff)<<8))
