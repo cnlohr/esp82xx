@@ -178,21 +178,9 @@ extern void charrx( uint8_t c );
 LOCAL void
 uart0_rx_intr_handler(void *para)
 {
-	static uint8_t history[4];
-	static uint8_t hhead;
-
 	uint8 uart_no = UART0;//UartDev.buff_uart_no;
 	volatile uint8_t v = READ_PERI_REG(UART_FIFO(uart_no)) & 0xFF;
     WRITE_PERI_REG(UART_INT_CLR(uart_no), UART_RXFIFO_FULL_INT_CLR);
-
-	history[hhead++] = v;
-	if( hhead > 3 ) hhead = 0;
-
-	//Detect a request to reboot into bootloader.
-	if( history[hhead&3] == 0xc2 && history[(hhead+1)&3] == 0x42 && history[(hhead+2)&3] == 0x56 && history[(hhead+3)&3] == 0xff )
-	{
-		system_restart();
-	}
 
 	charrx( v );
 
