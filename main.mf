@@ -44,8 +44,8 @@ ifneq ($(CUSTOMPP), 1)
 endif
 
 INCL = $(SDK)/include esp82xx/include .
-#LINKERSCRIPT ?= esp82xx/ld/linkerscript.ld
-LINKERSCRIPT ?= $(SDK)/ld/eagle.app.v6.ld
+LINKERSCRIPT ?= esp82xx/ld/linkerscript.ld
+#LINKERSCRIPT ?= $(SDK)/ld/eagle.app.v6.ld
 
 CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)'
 

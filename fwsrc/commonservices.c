@@ -419,10 +419,10 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 				if( passlen > 63 ) passlen = 63;
 
 				printf( "Switching to: \"%s\"/\"%s\" (%d/%d). BSSID_SET: %d [%c]\n", apname, password, aplen, passlen, bssid_set, pusrdata[1] );
+				wifi_station_disconnect();
 
 				if( pusrdata[1] == '1' ) {
 					struct station_config stationConf;
-					wifi_station_connect();
 					wifi_station_get_config(&stationConf);
 
 					os_memcpy(&stationConf.ssid, apname, aplen);
