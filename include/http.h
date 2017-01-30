@@ -32,7 +32,7 @@ extern uint16  curlen;
 extern uint8   wsmask[4];
 extern uint8   wsmaskplace;
 
-uint8_t WSPOPMASK();
+uint8_t ICACHE_FLASH_ATTR WSPOPMASK();
 #define HTTPPOP (*curdata++)
 
 #define HTTP_STATE_NONE        0
@@ -84,7 +84,7 @@ struct HTTPConnection
 
 void ICACHE_FLASH_ATTR httpserver_connectcb(void *arg);
 
-void HTTPTick( uint8_t timedtick ); 
+void ICACHE_FLASH_ATTR HTTPTick( uint8_t timedtick ); 
 //you can call this a LOT if you want fast transfers, but be sure only to call it with a 1 at the update tick rate.
 
 int ICACHE_FLASH_ATTR URLDecode( char * decodeinto, int maxlen, const char * buf );
