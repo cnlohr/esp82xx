@@ -155,7 +155,7 @@ SECTIONS
     _irom0_text_start = ABSOLUTE(.);
 
     *libmbedtls.a:(.literal .text .literal.* .text.*)
-/*    *liblwip.a:(.literal .text .literal.* .text.*)  */
+    *liblwip.a:(.literal .text .literal.* .text.*) 
 
     *(.irom0.literal .irom.literal .irom.text.literal .irom0.text .irom.text)
     _irom0_text_end = ABSOLUTE(.);
