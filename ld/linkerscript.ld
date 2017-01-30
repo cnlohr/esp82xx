@@ -73,6 +73,8 @@ SECTIONS
   .data : ALIGN(4)
   {
     _data_start = ABSOLUTE(.);
+	_Pri_3_HandlerAddress = ABSOLUTE(.); /* http://www.esp8266.com/viewtopic.php?f=6&t=4675&start=48 */
+	. = ABSOLUTE(4);
     *(.data)
     *(.data.*)
     *(.gnu.linkonce.d.*)
