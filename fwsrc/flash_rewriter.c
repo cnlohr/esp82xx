@@ -27,46 +27,59 @@ void ICACHE_FLASH_ATTR HEX16Convert( char * out, uint8_t * in )
 }
 
 //Must reside in iram.
-static void FinalFlashRewrite( uint32_t from1, uint32_t to1, uint32_t size1, uint32_t from2, uint32_t to2, uint32_t size2 )
+
+extern void Cache_Read_Disable(void);
+
+static void FinalFlashRewrite( uint32_t from1, uint32_t to1, uint32_t size1, uint32_t from2, uint32_t to2, uint32_t size2, uint32_t firstfour )
 {
 	uint32 buf[SRCSIZE/4] __attribute__((aligned(32)));
+	Kuart0_sendStr( "B\n" );
 
 	int i, j;
 	int ipl;
 	int p;
+	Cache_Read_Disable();
 
 	// I know this syntax looks odd, but it really makes the code smaller!
 	for( j = 2; j; j-- )
 	{
+		Kuart0_sendStr( "C\n" );
 		p = to1/SRCSIZE;
 		ipl = (size1/SRCSIZE)+1;
 		for( i = ipl; i; i-- )
 		{
-			spi_flash_read( from1, buf, SRCSIZE );
+			Kuart0_sendStr( "." );
+			SPIRead( from1, buf, SRCSIZE );
+			Kuart0_sendStr( "-" );
 			if( to1 == 0 )
 			{
 				//Tricky: if first sector, must overwrite out our flash control bits.  This sets things like din, dio, qio, as well as configuration points.
-				buf[0] = *(uint32_t*)(0x40200000);
+				buf[0] = firstfour;
 			}
-			spi_flash_erase_sector( p++ );
-			spi_flash_write( to1, buf, SRCSIZE );
+			Kuart0_sendStr( "#" );
+			//spi_flash_erase_sector( p++ );
+			SPIEraseSector( p++ );
+			Kuart0_sendStr( "$" );
+			SPIWrite( to1, buf, SRCSIZE );
+			Kuart0_sendStr( "!\n" );
 			to1 += SRCSIZE;
 			from1 += SRCSIZE;
 		}
 		from1 = from2;
 		to1 = to2;
 		size1 = size2;
+		Kuart0_sendStr( "D\n" );
 	}
 
 	ets_wdt_enable();  //In case the system restart doesn't hit us... Not sure why it doesn't sometimes.
-	Kuart0_sendStr( "D\n" );
+	Kuart0_sendStr( "E\n" );
 	system_restart();  //This seems to not always trigger.
 
 //	void(*rebootme)() = (void(*)())0x40000080;
 //	rebootme();
 }
 
-void (*LocalFlashRewrite)( uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t ) = FinalFlashRewrite;
+void (*LocalFlashRewrite)( uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t ) = FinalFlashRewrite;
 
 
 
@@ -84,7 +97,6 @@ int ICACHE_FLASH_ATTR FlashRewriter( char * command, int commandlen )
 	ets_wdt_disable();
 
 	paramcount = 0;
-
 	uint32_t from1 = ParamCaptureAndAdvanceInt();
 	uint32_t to1 =   ParamCaptureAndAdvanceInt();
 	int32_t  size1 = ParamCaptureAndAdvanceInt();
@@ -93,6 +105,7 @@ int ICACHE_FLASH_ATTR FlashRewriter( char * command, int commandlen )
 	uint32_t to2 =   ParamCaptureAndAdvanceInt();
 	int32_t  size2 = ParamCaptureAndAdvanceInt();
 	char *   md52  = ParamCaptureAndAdvance();
+	uint32_t firstfour = *(uint32_t*)(0x40200000);
 
 	{
 		//Keep scope in here so all of these are not on the stack when entering the final call.
@@ -190,9 +203,12 @@ int ICACHE_FLASH_ATTR FlashRewriter( char * command, int commandlen )
 
 
 	//Disable all interrupts.
-	ets_intr_lock();
+	//ets_intr_lock();
+	//__asm__ __volatile__("rsil %%0," __STRINGIFY(level) : "=a" (state));
+	uint32_t interruptsState;
+	__asm__ __volatile__("rsil %0,15" : "=a" (interruptsState));
 	uart_tx_one_char( 'A' );
-	LocalFlashRewrite( from1, to1, size1, from2, to2, size2 );
+	LocalFlashRewrite( from1, to1, size1, from2, to2, size2, firstfour );
 
 	return 0; //Will never get here.
 

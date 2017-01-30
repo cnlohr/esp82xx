@@ -124,6 +124,10 @@ $(BIN_TARGET): $(FW_FILE1) $(FW_FILE2)
 	 && cd ..
 	zip $@ $(FW_FILE1) $(FW_FILE2) web/execute_reflash web/mfsmaker web/pushtodev web/page.mpfs
 
+wipechip :
+	dd if=/dev/zero of=/tmp/zeroes bs=1M count=1
+	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) write_flash 0x0 /tmp/zeroes)||(true)
+
 getips:
 	$(info Detecting possible IPs for ESP82XX modules...)
 	$(info Needs 'nmap' and takes some time especiallay if none are connected)
