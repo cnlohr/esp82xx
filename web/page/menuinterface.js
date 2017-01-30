@@ -44,9 +44,11 @@ function QueueOperation( command, callback )
 	workqueue.push( vp );
 }
 
-
+did_init = false;
 function init()
 {
+	if( did_init ) return;
+	did_init = true;
 	GPIOlines = '';
 	for(var i=0; i<16; ++i)
 		GPIOlines += "<td align=center>"+ i

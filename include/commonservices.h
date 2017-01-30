@@ -44,7 +44,7 @@ struct CommonSettings
 	char UserData[USERDATA_SIZE];
 };
 
-extern struct CommonSettings SETTINGS;
+extern struct CommonSettings SETTINGS __attribute__ ((aligned (16)));
 
 
 //You must provide:

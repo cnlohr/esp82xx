@@ -342,7 +342,9 @@ CMD_RET_TYPE cmd_Info(char * buffer, int retsize, char * pusrdata, char * buffen
 		case 'n': case 'N':
 		{
 			char * dn = ParamCaptureAndAdvance();
-			for( i = 0; i < sizeof( SETTINGS.DeviceName )-1; i++ ) {
+			int ll = ets_strlen( dn );
+			if( ll >= MAX_DEVICE_NAME ) ll = MAX_DEVICE_NAME-1;
+			for( i = 0; i < ll; i++ ) {
 				char ci = *(dn++);
 				if( ci >= 33 && ci <= 'z' )
 					SETTINGS.DeviceName[i] = ci;
@@ -355,7 +357,9 @@ CMD_RET_TYPE cmd_Info(char * buffer, int retsize, char * pusrdata, char * buffen
 		case 'd': case 'D':
 		{
 			char * dn = ParamCaptureAndAdvance();
-			for( i = 0; i < sizeof( SETTINGS.DeviceDescription )-1; i++ ) {
+			int ll = ets_strlen( dn );
+			if( ll >= MAX_DEVICE_NAME ) ll = MAX_DEVICE_NAME-1;
+			for( i = 0; i < ll; i++ ) {
 				char ci = *(dn++);
 				if( ci >= 32 && ci <= 'z' )
 					SETTINGS.DeviceDescription[i] = ci;
@@ -418,6 +422,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 
 				if( pusrdata[1] == '1' ) {
 					struct station_config stationConf;
+					wifi_station_connect();
 					wifi_station_get_config(&stationConf);
 
 					os_memcpy(&stationConf.ssid, apname, aplen);
@@ -439,8 +444,8 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					wifi_station_connect();
 					wifi_station_set_config(&stationConf);  //I don't know why, doing this twice seems to make it store more reliably.
 					ExitCritical();
+					printed_ip = 0;
 					//wifi_station_get_config( &stationConf );
-
 					buffprint( "W1\r\n" );
 					printf( "Switching.\n" );
 				} else {
@@ -470,6 +475,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					//printf( "Mode now. %s %s %d %d %d %d %d\n", config.ssid, config.password, config.ssid_len, config.channel, config.authmode, config.max_connection );
 					//printf( "Mode Set. %d\n", wifi_get_opmode() );
 
+					printed_ip = 0;
 					EnterCritical();
 					wifi_softap_set_config(&config);
 					wifi_set_opmode( 2 );
@@ -745,7 +751,6 @@ void ICACHE_FLASH_ATTR issue_command_udp(void *arg, char *pusrdata, unsigned sho
 static void ICACHE_FLASH_ATTR SwitchToSoftAP( )
 {
 	EnterCritical();
-	wifi_set_opmode_current( SOFTAP_MODE ); // SOFTAP_MODE = 0x02
 	struct softap_config sc;
 	wifi_softap_get_config(&sc);
 	printed_ip = 0;
@@ -810,18 +815,47 @@ void ICACHE_FLASH_ATTR CSInit()
 	PIN_OUT_CLEAR = _BV(2);
 }
 
+static int GPIO0Down = 0;
+
+static void ICACHE_FLASH_ATTR GoAP( int always )
+{
+	struct softap_config config;
+	wifi_softap_get_config(&config);
+	config.ssid_len = ets_strlen(SETTINGS.DeviceName);
+	os_memcpy( &config.ssid, SETTINGS.DeviceName, config.ssid_len+1 );
+	os_memcpy( &config.password, "", 1 );
+	config.channel = 1;
+	config.authmode = 0;
+	config.ssid_hidden = 0;
+	config.max_connection = 4;
+	config.beacon_interval = 100;
+	if( always )
+	{
+		wifi_softap_set_config(&config);
+		wifi_set_opmode( 2 );
+	}
+	else
+	{
+		wifi_softap_set_config_current(&config);
+		wifi_set_opmode_current( 2 );
+	}
+}
+
 static void ICACHE_FLASH_ATTR RestoreAndReboot( )
 {
+	printf( "Restoring and rebooting\n" );
+	CSSettingsLoad(1);
 	PIN_DIR_OUTPUT = _BV(2); //Turn GPIO2 light off.
-	system_restore();
+	//system_restore(); 	//Don't do this. Seems to permanantly break sector for settings.
+	GoAP(1);
+
 	ets_delay_us(1000000);
 	system_restart();
+	GPIO0Down = 0;
 }
 
 static void ICACHE_FLASH_ATTR SlowTick( int opm )
 {
-	static int GPIO0Down = 0;
-
 	if( (PIN_IN & _BV(0)) == 0 )
 	{
 		if( GPIO0Down++ > (5000 / SLOWTICK_MS) )
@@ -863,11 +897,11 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 		if( stat == STATION_WRONG_PASSWORD || stat == STATION_NO_AP_FOUND || stat == STATION_CONNECT_FAIL ) {
 			wifi_station_disconnect();
 			wifi_fail_connects++;
-			printf( "Connection failed with code %d... Retrying, try: ", stat, wifi_fail_connects );
+			printf( "Connection failed with code %d... Retrying, try: %d\n", stat, wifi_fail_connects );
 #ifdef MAX_CONNECT_FAILURES_BEFORE_SOFTAP
 			if( wifi_fail_connects > MAX_CONNECT_FAILURES_BEFORE_SOFTAP )
 			{
-				RestoreAndReboot();
+				GoAP( 0 );
 			}
 #endif
 			wifi_station_connect();
@@ -948,6 +982,10 @@ void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 {
 	ets_memset( &SETTINGS, 0, sizeof( SETTINGS) );
 	system_param_load( 0x3A, 0, &SETTINGS, sizeof( SETTINGS ) );
+
+//	printf( "About to read\n" );
+//	int res = spi_flash_read( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );		
+//	printf( "RES: %d\n", res );
 	printf( "Loading Settings: %02x / %d / %d / %d\n", SETTINGS.settings_key, force_reinit, SETTINGS.DeviceName[0], SETTINGS.DeviceName[0] );
 	if( SETTINGS.settings_key != 0xAF || force_reinit || SETTINGS.DeviceName[0] == 0x00 || SETTINGS.DeviceName[0] == 0xFF ) {
 		ets_memset( &SETTINGS, 0, sizeof( SETTINGS ) );
@@ -974,8 +1012,12 @@ void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 void ICACHE_FLASH_ATTR CSSettingsSave()
 {
 	SETTINGS.settings_key = 0xAF;
+//	spi_flash_erase_sector( 0x3a );
+//	spi_flash_write( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );		
 	system_param_save_with_protect( 0x3A, &SETTINGS, sizeof( SETTINGS ) );
+	printf( "Saving\n" );
+
 }
 
 
-struct CommonSettings SETTINGS;
+struct CommonSettings SETTINGS __attribute__ ((aligned (16)));

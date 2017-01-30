@@ -44,7 +44,8 @@ ifneq ($(CUSTOMPP), 1)
 endif
 
 INCL = $(SDK)/include esp82xx/include .
-LINKERSCRIPT ?= esp82xx/ld/linkerscript.ld
+#LINKERSCRIPT ?= esp82xx/ld/linkerscript.ld
+LINKERSCRIPT ?= $(SDK)/ld/eagle.app.v6.ld
 
 CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)'
 
@@ -71,7 +72,7 @@ help :
 all : $(FW_FILE1) $(FW_FILE2)
 
 $(FW_FILE1) $(FW_FILE2) : $(TARGET)
-	PATH=$(PATH):$(FOLDERPREFIX) $(ESPTOOL_PY) elf2image --version=1 $(TARGET)
+	PATH=$(PATH):$(FOLDERPREFIX) $(ESPTOOL_PY) elf2image $(TARGET)
 	@#no need to set things like dout, and memory size.  This data is copied from the ESP back to itself on write.
 
 $(TARGET) : $(SRCS) Makefile
