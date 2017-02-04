@@ -1,5 +1,4 @@
-/* This linker script generated from xt-genldscripts.tpp for LSP . */
-/* Linker Script for ld -N */
+/* This linker script was taken from an amalgum of the ESP-NONOS-SDKs. */
 MEMORY
 {
   dport0_0_seg :                        org = 0x3FF00000, len = 0x10
