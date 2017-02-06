@@ -20,6 +20,7 @@ CC           = $(PREFIX)gcc
 LD           = $(PREFIX)ld
 AR           = $(PREFIX)ar
 CP           = cp
+RM           = 2>/dev/null rm
 
 SLOWTICK_MS ?= 50
 
@@ -39,9 +40,9 @@ ifeq ($(strip $(ESP_ROOT)),)
 endif
 
 # Version related stuff
-VERSION := $(shell git describe --abbrev=5 --dirty=-dev --always --tags)
+VERSION := $(shell git describe --abbrev=5 --dirty=-dev --always --tags 2>/dev/null)
 VERSSTR := "Version: $(VERSION) - Build $(shell date -R) with $(OPTS)"
-PROJECT_NAME := $(notdir $(shell git rev-parse --show-toplevel))
+PROJECT_NAME := $(notdir $(shell git rev-parse --show-toplevel 2>/dev/null))
 PROJECT_URL := $(subst .com:,.com/,$(subst .git,,$(subst git@,https://,$(shell git config --get remote.origin.url))))
 
 # Newline and space hacks

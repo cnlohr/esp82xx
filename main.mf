@@ -13,6 +13,7 @@ netburn .. Same as 'burn' but transfer firmware over the network rather
 netweb ... Same as 'burnweb' but transfer data over network if supported
            by firmware currently on the chip
 getips ... Get a list with IPs of esp82xxs connected to your network
+project .. Make the current working direcotry an esp82xx project
 usbburn .. Burn via PRE-RELEASE USB loader (will probably change)
 usbweb ... Burn webpage by PRE-RELEASE USB loader (will probably change)
 
@@ -20,7 +21,7 @@ usbweb ... Burn webpage by PRE-RELEASE USB loader (will probably change)
 More commands: all, clean, purge, dumprom
 endef
 
-.PHONY : all clean cleanall netburn burnweb burn $(BIN_TARGET) netweb getips help
+.PHONY : all clean cleanall netburn burnweb burn $(BIN_TARGET) netweb getips help project
 
 FW_FILE1 = image.elf-0x00000.bin
 FW_FILE2 = image.elf-0x40000.bin
@@ -146,3 +147,17 @@ purge : clean
 bump_submodule :
 	cd esp82xx; git pull origin master; cd ..
 
+project :
+	if [ "$$(basename $$(pwd))" == "esp82xx" ]; then \
+	cp Makefile.example ../Makefile; \
+	cd ..; \
+	fi; \
+	cp esp82xx/user.cfg.example user.cfg; \
+	mkdir -p web/page user; \
+	cp esp82xx/web/page/index.html esp82xx/web/page/example.js web/page; \
+	ln -s $(patsubst %,../../%,$(wildcard esp82xx/web/page/jquery-*)) ../../esp82xx/web/page/menuinterface.js web/page/;
+	ln -s $(patsubst %,../%,$(wildcard esp82xx/web/*)) web/ 2>/dev/null; \
+	cp -r esp82xx/fwsrc/user/ .;
+
+cleanproject :
+	$(RM) -rf use* web/

@@ -1,16 +1,18 @@
 # esp82xx
 
 Useful ESP8266 C Environment.
-Includes useful libraries and some basic functionality such as a Web-GUI, flashing firmware and web-data over network and basic GPIO functions.
+Includes libraries and some basic functionality such as a Web-GUI, flashing firmware and web-data over network as well as basic GPIO functions.
 Intended to be included as sub-module in derivate projects.
 
 - [Usage](#usage)
-    - [Create File Structure](#create-file-structure)
+    - [Requirements](#requirements)
+    - [Start a new Project](#start-a-new-project)
     - [Specify SDK](#specify-sdk)
     - [Burn Firmware](#burn-firmware)
     - [Connect to your Module](#connect-to-your-module)
 - [List of projects using esp82xx](#list-of-projects-using-esp82xx)
 - [Notes](#notes)
+    - [Create File Structure by hand](#create-file-structure)
     - [Branches](#branches)
     - [Submodule Updates](#submodule-updates)
     - [Include Binaries](#include-binaries)
@@ -20,39 +22,45 @@ Intended to be included as sub-module in derivate projects.
 
 ## Usage
 
-### Create File Structure
+### Requirements
 
-First, check out a project that uses esp82xx
+You will need the following:
 
-    git clone --recursive https://github.com/con-f-use/esp82XX-basic
+ - [Espressif](https://espressif.com) toolchain for the esp82xx-series chips
+ - [Libusb](http://libusb.info) 1.0 (`sudo apt-get install libusb-1.0-0-dev`)
+ - GNUMake
+ - GNU Compiler Collection
+ - Possible more
 
-or create your own
+We recommend the excellent [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk) by @pfalcon to download and install the Espressif toolchain.
+Here is a shell script to [download and build](https://gist.github.com/con-f-use/d086ca941c2c80fbde6d8996b8a50761) a version known to work.
+It runs under Ubuntu (and possible other Debina-like OSes).
+ You should read and understand it, beofre running it.
 
-    git init project_name
-    cd project_name
-    git submodule add git@github.com:cnlohr/esp82xx.git
-    cp esp82xx/user.cfg.example user.cfg
+Some versions of the SDK are somewhat problematic, e.g. with SDK versions greater than 1.5.2, Espressif changed the IRAM management, so some projects began to hit size restrictions and would not compile.
+A solution to that could be our [patched version](https://github.com/cnlohr/esp_nonos_sdk).
+
+Most of this is written having a Debian-like Linux distribution in mind.
+You will need to use your immagination, if you want to build on other plattforms. Also look at open and closed issues to find help.
+
+### Start a new Project
+
+Starting a new project based on esp82xx is pretty easy:
+
+    mkdir my_new_esp_project
+    cd my_new_esp_project
+    git clone https://github.com/CNLohr/esp82XX
     cp esp82xx/Makefile.example Makefile
-    mkdir -p web/page user
-    ln -s esp82xx/web/Makefile web/
-    # ... link or copy more files depending on how much you want to change ...
+    make project
 
-After you have the basic file structure in place, you should edit `user.cfg` in the top level.
+After that, the basic file structure should be in place in place.
 **Do not** edit files in `./esp82xx`.
 You should rather copy them to top-level directories and edit/include the copies where necessary.
-The basic Makefile for the firmware is `./esp82xx/main.mf`.
-Most things can be achieved by including it and changing some make variables like this:
 
-    include esp82xx/main.mf
-
-    SRCS += more_sources.c # Add your project specific sources
-
+Edit `user.cfg` in the top level to specify thinks like the location of the Espressif toolchain.
 The file  `user.cfg` specifies the most important configuration variables.
 Most notably the location of the Espressif SDK for building the firmware.
 You will need a working copy of that.
-We recommend the excellent [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk) by @pfalcon to download and install all necessary tools.
-Here is a shell script to [download and build](https://gist.github.com/con-f-use/d086ca941c2c80fbde6d8996b8a50761) a version known to work.
-Some versions of the SDK are somewhat problematic, e.g. with SDK versions greater than 1.5.2, Espressif changed the IRAM management, so some projects began to hit size restrictions and would not compile.
 
 ### Specify SDK
 
@@ -119,6 +127,31 @@ It is excellent!
 This section should mostly concern developers and contributors to this project.
 We try to keep the generally interesting stuff on top.
 
+### Create File Structure
+
+You can create the file structure of a basic program by hand or based on another project, instead of running `make project`.
+To do that first, check out a project that uses esp82xx
+
+    git clone --recursive https://github.com/con-f-use/esp82XX-basic
+
+or create your own
+
+    git init project_name
+    cd project_name
+    git submodule add git@github.com:cnlohr/esp82xx.git
+    cp esp82xx/user.cfg.example user.cfg
+    cp esp82xx/Makefile.example Makefile
+    mkdir -p web/page user
+    ln -s ../esp82xx/web/Makefile web/
+    # ... link or copy more files depending on how much you want to change ...
+
+The basic Makefile for the firmware is `./esp82xx/main.mf`.
+Most things can be achieved by including it and changing some make variables like this:
+
+    include esp82xx/main.mf
+
+    SRCS += more_sources.c # Add your project specific sources
+
 ### Gibberish Serial Data right after Boot
 
 If you get weird data at the start of your serial communication with the esp, don't forsake!
@@ -182,4 +215,5 @@ To make the zip file invoke `make projectname-version-binaries.tgz` (Tab-autocom
 ## ToDo
 
  - Include libraries for usb, ws2812s and ethernet as soon as they are stable
-
+ - Expand the "Requirements" section
+ - Add some more info on building and downloading the SDK
