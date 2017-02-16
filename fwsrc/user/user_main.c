@@ -21,7 +21,9 @@ usr_conf_t * UsrCfg = (usr_conf_t*)(SETTINGS.UserData);
 
 //int ICACHE_FLASH_ATTR StartMDNS();
 
+
 void user_rf_pre_init(void) { /*nothing*/ }
+void user_rf_cal_sector_set() { /*nothing*/ }
 
 
 char * strcat( char * dest, char * src )
