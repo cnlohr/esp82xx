@@ -20,7 +20,7 @@ CC           = $(PREFIX)gcc
 LD           = $(PREFIX)ld
 AR           = $(PREFIX)ar
 CP           = cp
-RM           = 2>/dev/null rm
+RM           = 2>/dev/null rm -rf
 
 SLOWTICK_MS ?= 50
 

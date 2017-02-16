@@ -21,7 +21,7 @@ usbweb ... Burn webpage by PRE-RELEASE USB loader (will probably change)
 More commands: all, clean, purge, dumprom
 endef
 
-.PHONY : all clean cleanall netburn burnweb burn $(BIN_TARGET) netweb getips help project
+.PHONY : all clean purge netburn burnweb burn $(BIN_TARGET) netweb getips help project
 
 FW_FILE1 = image.elf-0x00000.bin
 FW_FILE2 = image.elf-0x40000.bin
@@ -160,4 +160,4 @@ project :
 	cp -r esp82xx/fwsrc/user/ .;
 
 cleanproject :
-	$(RM) -rf use* web/
+	$(RM) use* web/
