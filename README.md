@@ -30,11 +30,14 @@ or create your own
 
     git init project_name
     cd project_name
-    git submodule add git@github.com:cnlohr/esp82xx.git
+    git submodule add https://github.com/cnlohr/esp82xx.git
     cp esp82xx/user.cfg.example user.cfg
     cp esp82xx/Makefile.example Makefile
     mkdir -p web/page user
     ln -s esp82xx/web/Makefile web/
+    git add .
+    git commit -m "Initial commit"
+
     # ... link or copy more files depending on how much you want to change ...
 
 After you have the basic file structure in place, you should edit `user.cfg` in the top level.
