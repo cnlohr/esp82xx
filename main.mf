@@ -1,27 +1,32 @@
 define USAGE
 Usage: make [command] [VARIABLES]
 
-all....... Build the binaries
-debug..... Build a .map and .lst file.  Useful for seeing what's going on
-           behind the scenes.
-burn ..... Write firmware to chip using a regular serial port
-burnweb .. Write data for the Web-GUI to chip using a regular serial
-           port
-netburn .. Same as 'burn' but transfer firmware over the network rather
-           than the serial port (if supported by the existing firmware
-           on the chip)
-netweb ... Same as 'burnweb' but transfer data over network if supported
-           by firmware currently on the chip
-getips ... Get a list with IPs of esp82xxs connected to your network
-project .. Make the current working direcotry an esp82xx project
-usbburn .. Burn via PRE-RELEASE USB loader (will probably change)
-usbweb ... Burn webpage by PRE-RELEASE USB loader (will probably change)
+all......... Build the binaries
+debug....... Build a .map and .lst file.  Useful for seeing what's going on
+             behind the scenes.
+burn ....... Write firmware to chip using a regular serial port
+burnweb .... Write data for the Web-GUI to chip using a regular serial
+             port
+netburn .... Same as 'burn' but transfer firmware over the network rather
+             than the serial port (if supported by the existing firmware
+             on the chip)
+netweb ..... Same as 'burnweb' but transfer data over network if supported
+             by firmware currently on the chip
+getips ..... Get a list with IPs of esp82xxs connected to your network
+project .... Make the current working direcotry an esp82xx project
+gitproject . Same as 'make project' but also initialiezes the current folder
+             as git repository and pushes it to GIT_ORIGIN. Example:
+                 make gitproject GIT_ORIGIN=https://github.com/YOUR_USER/YOUR_NEW_REPO.git
+usbburn .... Burn via PRE-RELEASE USB loader (will probably change)
+usbweb ..... Burn webpage by PRE-RELEASE USB loader (will probably change)
 
 
-More commands: all, clean, purge, dumprom
+More commands: all, clean, purge, dumprom, cleanproject
 endef
 
-.PHONY : all clean purge netburn burnweb burn $(BIN_TARGET) netweb getips help project
+.PHONY : all clean purge netburn burnweb burn $(BIN_TARGET) netweb getips help project gitproject cleanproject
+
+SHELL=/bin/bash
 
 FW_FILE1 = image.elf-0x00000.bin
 FW_FILE2 = image.elf-0x40000.bin
@@ -129,7 +134,7 @@ wipechip :
 	dd if=/dev/zero of=/tmp/zeroes bs=1M count=1
 	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) write_flash 0x0 /tmp/zeroes)||(true)
 
-getips:
+getips :
 	$(info Detecting possible IPs for ESP82XX modules...)
 	$(info Needs 'nmap' and takes some time especiallay if none are connected)
 	sudo nmap -sP 192.168.0.0/24 | grep -iP "espressif|esp" -B2 | grep -oP "(\d{1,3}\.){3,3}\d\d{1,3}"
@@ -148,16 +153,22 @@ bump_submodule :
 	cd esp82xx; git pull origin master; cd ..
 
 project :
-	if [ "$$(basename $$(pwd))" == "esp82xx" ]; then \
-	cp Makefile.example ../Makefile; \
-	cd ..; \
-	fi; \
-	cp esp82xx/user.cfg.example user.cfg; \
-	mkdir -p web/page user; \
-	cp esp82xx/web/page/index.html esp82xx/web/page/example.js web/page; \
-	ln -s $(patsubst %,../../%,$(wildcard esp82xx/web/page/jquery-*)) ../../esp82xx/web/page/menuinterface.js web/page/;
-	ln -s $(patsubst %,../%,$(wildcard esp82xx/web/*)) web/ 2>/dev/null; \
-	cp -r esp82xx/fwsrc/user/ .;
+    [ "$$(basename $$(pwd))" == "esp82xx" ] && cd .. \
+    mkdir -p web/page user; \
+    for fl in Makefile.example user.cfg.example web/page/index.html web/page/example.js; do \
+        cp -n esp82xx/$$fl $${fl%%.example}; \
+    done; \
+    ln -s $$(patsubst %,../../%,$(wildcard esp82xx/web/page/jquery-*)) ../../esp82xx/web/page/menuinterface.js web/page/ 2>/dev/null; \
+    ln -s $$(patsubst %,../%,$(wildcard esp82xx/web/*)) web/ 2>/dev/null; \
+    cp -rn esp82xx/fwsrc/user/ .;
+
+gitproject: project
+    [ "$$(basename $$(pwd))" == "esp82xx" ] && cd .. \
+    git init . \
+    git add . \
+    git git remote add origin $(GIT_ORIGIN) \
+    git commit -m 'Initial commit' \
+    git push
 
 cleanproject :
 	$(RM) use* web/

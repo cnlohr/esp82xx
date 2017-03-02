@@ -53,6 +53,10 @@ Starting a new project based on esp82xx is pretty easy:
     cp esp82xx/Makefile.example Makefile
     make project
 
+Replace the last line by the flollowing if you also want to initialize the folder as a new git repo and upload it to a remote location:
+
+    make gitproject GIT_ORIGIN=https://github.com/YOUR_USER/YOUR_NEW_REPO.git
+
 After that, the basic file structure should be in place in place.
 **Do not** edit files in `./esp82xx`.
 You should rather copy them to top-level directories and edit/include the copies where necessary.
@@ -138,15 +142,23 @@ or create your own
 
     git init project_name
     cd project_name
-    git submodule add git@github.com:cnlohr/esp82xx.git
+    git submodule add https://github.com/cnlohr/esp82xx.git
     cp esp82xx/user.cfg.example user.cfg
     cp esp82xx/Makefile.example Makefile
     mkdir -p web/page user
     ln -s ../esp82xx/web/Makefile web/
     # ... link or copy more files depending on how much you want to change ...
 
+After that, you can push it a freshly created remote repository with the usual git commands:
+
+    git init .
+    git add .
+    git git remote add origin https://github.com/YOUR_USER/YOUR_NEW_REPO.git
+    git commit -m 'Initial commit'
+    git push
+
 The basic Makefile for the firmware is `./esp82xx/main.mf`.
-Most things can be achieved by including it and changing some make variables like this:
+Most things can be achieved by including it in your top-level Makefile and changing some make variables.
 
     include esp82xx/main.mf
 
