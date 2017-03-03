@@ -1,0 +1,3 @@
+[submodule "toolchain/esp_nonos_sdk"]
+	path = toolchain/esp_nonos_sdk
+	url = https://github.com/cnlohr/esp_nonos_sdk.git

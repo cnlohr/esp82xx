@@ -1,27 +1,31 @@
 define USAGE
 Usage: make [command] [VARIABLES]
 
-all....... Build the binaries
-debug..... Build a .map and .lst file.  Useful for seeing what's going on
-           behind the scenes.
-burn ..... Write firmware to chip using a regular serial port
-burnweb .. Write data for the Web-GUI to chip using a regular serial
-           port
-netburn .. Same as 'burn' but transfer firmware over the network rather
-           than the serial port (if supported by the existing firmware
-           on the chip)
-netweb ... Same as 'burnweb' but transfer data over network if supported
-           by firmware currently on the chip
-getips ... Get a list with IPs of esp82xxs connected to your network
-project .. Make the current working direcotry an esp82xx project
-usbburn .. Burn via PRE-RELEASE USB loader (will probably change)
-usbweb ... Burn webpage by PRE-RELEASE USB loader (will probably change)
+all......... Build the binaries
+debug....... Build a .map and .lst file.  Useful for seeing what's going on
+             behind the scenes.
+burn ....... Write firmware to chip using a regular serial port
+burnweb .... Write data for the Web-GUI to chip using a regular serial
+             port
+netburn .... Same as 'burn' but transfer firmware over the network rather
+             than the serial port (if supported by the existing firmware
+             on the chip)
+netweb ..... Same as 'burnweb' but transfer data over network if supported
+             by firmware currently on the chip
+getips ..... Get a list with IPs of esp82xxs connected to your network
+project .... Make the current working direcotry an esp82xx project
+gitproject . Same as 'make project' but also initialiezes the current folder
+             as git repository and pushes it to GIT_ORIGIN.
+             Example:
+                 make gitproject GIT_ORIGIN=https://github.com/USER/YREPO.git
+usbburn .... Burn via PRE-RELEASE USB loader (will probably change)
+usbweb ..... Burn webpage by PRE-RELEASE USB loader (will probably change)
 
-
-More commands: all, clean, purge, dumprom
+More commands: all, clean, purge, dumprom, cleanproject
 endef
 
-.PHONY : all clean purge netburn burnweb burn $(BIN_TARGET) netweb getips help project
+.PHONY : all clean purge netburn burnweb burn $(BIN_TARGET) netweb getips help project gitproject cleanproject
+
 
 FW_FILE1 = image.elf-0x00000.bin
 FW_FILE2 = image.elf-0x40000.bin
@@ -45,8 +49,6 @@ ifneq ($(CUSTOMPP), 1)
 endif
 
 INCL = $(SDK)/include esp82xx/include .
-LINKERSCRIPT ?= esp82xx/ld/linkerscript.ld
-#LINKERSCRIPT ?= $(SDK)/ld/eagle.app.v6.ld
 
 CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)'
 
@@ -129,7 +131,7 @@ wipechip :
 	dd if=/dev/zero of=/tmp/zeroes bs=1M count=1
 	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) write_flash 0x0 /tmp/zeroes)||(true)
 
-getips:
+getips :
 	$(info Detecting possible IPs for ESP82XX modules...)
 	$(info Needs 'nmap' and takes some time especiallay if none are connected)
 	sudo nmap -sP 192.168.0.0/24 | grep -iP "espressif|esp" -B2 | grep -oP "(\d{1,3}\.){3,3}\d\d{1,3}"
@@ -147,17 +149,27 @@ purge : clean
 bump_submodule :
 	cd esp82xx; git pull origin master; cd ..
 
-project :
-	if [ "$$(basename $$(pwd))" == "esp82xx" ]; then \
-	cp Makefile.example ../Makefile; \
-	cd ..; \
-	fi; \
-	cp esp82xx/user.cfg.example user.cfg; \
+Makefile : esp82xx/Makefile.example
+user.cfg : esp82xx/user.cfg.example
+web/page/index.html : esp82xx/web/page/index.html
+web/page/example.js : esp82xx/web/page/example.js
+
+Makefile user.cfg web/page/index.html web/page/example.js :
 	mkdir -p web/page user; \
-	cp esp82xx/web/page/index.html esp82xx/web/page/example.js web/page; \
-	ln -s $(patsubst %,../../%,$(wildcard esp82xx/web/page/jquery-*)) ../../esp82xx/web/page/menuinterface.js web/page/;
+	cp -n $< $@; \
+	touch $@
+
+project : Makefile user.cfg web/page/index.html web/page/example.js
+	ln -s $(patsubst %,../../%,$(wildcard esp82xx/web/page/jquery-*)) ../../esp82xx/web/page/menuinterface.js web/page/ 2>/dev/null; \
 	ln -s $(patsubst %,../%,$(wildcard esp82xx/web/*)) web/ 2>/dev/null; \
-	cp -r esp82xx/fwsrc/user/ .;
+	cp -rn esp82xx/fwsrc/user/ .;
+
+gitproject: project
+	git init .
+	git add .
+	git remote add origin $(GIT_ORIGIN)
+	git commit -m 'Initial commit'
+	git push
 
 cleanproject :
-	$(RM) use* web/
+	$(RM) -r use* web/

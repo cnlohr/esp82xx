@@ -10,7 +10,7 @@
 
 GCC_FOLDER = $(ESP_ROOT)/xtensa-lx106-elf
 ESPTOOL_PY = $(ESP_ROOT)/esptool/esptool.py
-SDK       ?= $(ESP_ROOT)/sdk
+SDK       ?= $(PWD)/esp82xx/toolchain/esp_nonos_sdk
 
 XTLIB        = $(SDK)/lib
 XTGCCLIB     = $(GCC_FOLDER)/lib/gcc/xtensa-lx106-elf/$(ESP_GCC_VERS)/libgcc.a
@@ -20,7 +20,8 @@ CC           = $(PREFIX)gcc
 LD           = $(PREFIX)ld
 AR           = $(PREFIX)ar
 CP           = cp
-RM           = 2>/dev/null rm -rf
+LINKERSCRIPT ?= esp82xx/toolchain/ld/linkerscript.ld
+#LINKERSCRIPT ?= $(SDK)/ld/eagle.app.v6.ld
 
 SLOWTICK_MS ?= 50
 
@@ -31,19 +32,19 @@ SLOWTICK_MS ?= 50
 OPTS += -DWEB_PORT=$(WEB_PORT) -DCOM_PORT=$(COM_PORT) -DBACKEND_PORT=$(BACKEND_PORT) $(EXTRAOPTS) -DSLOWTICK_MS=$(SLOWTICK_MS)
 PAGE_SCRIPTS?=$(wildcard web/page/*.js)
 
-# Mechanism for getting SDK/xtensa compiler paths from shell variables
-SDK_DEFAULT = $(HOME)/esp8266/esp-open-sdk
+# Getting xtensa compiler paths from shell variables
+ESP_DEFAULT = $(HOME)/esp8266/esp-open-sdk
 ESP_ROOT := $(shell echo "$$ESP_ROOT")
 ifeq ($(strip $(ESP_ROOT)),)
-    $(warning Warning: No shell variable 'ESP_ROOT', using '$(SDK_DEFAULT)')
-    ESP_ROOT := $(SDK_DEFAULT)
+    $(warning Warning: No shell variable 'ESP_ROOT', using '$(ESP_DEFAULT)')
+    ESP_ROOT := $(ESP_DEFAULT)
 endif
 
 # Version related stuff
-VERSION := $(shell git describe --abbrev=5 --dirty=-dev --always --tags 2>/dev/null)
+VERSION := $(shell git describe --abbrev=5 --dirty=-dev --always --tags 2>/dev/null || echo "unknown")
 VERSSTR := "Version: $(VERSION) - Build $(shell date -R) with $(OPTS)"
-PROJECT_NAME := $(notdir $(shell git rev-parse --show-toplevel 2>/dev/null))
-PROJECT_URL := $(subst .com:,.com/,$(subst .git,,$(subst git@,https://,$(shell git config --get remote.origin.url))))
+PROJECT_NAME := $(notdir $(shell git rev-parse --show-toplevel 2>/dev/null || echo "exp82xx-project"))
+PROJECT_URL := $(subst .com:,.com/,$(subst .git,,$(subst git@,https://,$(shell git config --get remote.origin.url 2>/dev/null || echo "https://github.com/con-f-use/esp82xx-basic.git"))))
 
 # Newline and space hacks
 define \n

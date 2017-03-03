@@ -4,6 +4,8 @@ Useful ESP8266 C Environment.
 Includes libraries and some basic functionality such as a Web-GUI, flashing firmware and web-data over network as well as basic GPIO functions.
 Intended to be included as sub-module in derivate projects.
 
+Please read the notes closely, if you want to contribute (e.g. [Branches](#branches) and [Include Binaries](#include-binaries)).
+
 - [Usage](#usage)
     - [Requirements](#requirements)
     - [Start a new Project](#start-a-new-project)
@@ -18,8 +20,6 @@ Intended to be included as sub-module in derivate projects.
     - [Include Binaries](#include-binaries)
 - [ToDo](#todo)
 
-<!-- toc generated with https://gist.github.com/ttscoff/c56fa651974ae6d86eee -->
-
 ## Usage
 
 ### Requirements
@@ -29,19 +29,18 @@ You will need the following:
  - [Espressif](https://espressif.com) toolchain for the esp82xx-series chips
  - [Libusb](http://libusb.info) 1.0 (`sudo apt-get install libusb-1.0-0-dev`)
  - GNUMake
- - GNU Compiler Collection
+ - GNU Compiler Collection and build essentials
  - Possible more
 
 We recommend the excellent [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk) by @pfalcon to download and install the Espressif toolchain.
 Here is a shell script to [download and build](https://gist.github.com/con-f-use/d086ca941c2c80fbde6d8996b8a50761) a version known to work.
-It runs under Ubuntu (and possible other Debina-like OSes).
- You should read and understand it, beofre running it.
+You should read and understand it, beofre running it.
 
 Some versions of the SDK are somewhat problematic, e.g. with SDK versions greater than 1.5.2, Espressif changed the IRAM management, so some projects began to hit size restrictions and would not compile.
-A solution to that could be our [patched version](https://github.com/cnlohr/esp_nonos_sdk).
+For that reason, the Makefile is set up to use a [customized version](https://github.com/cnlohr/esp_nonos_sdk) of the sdk.
 
-Most of this is written having a Debian-like Linux distribution in mind.
-You will need to use your immagination, if you want to build on other plattforms. Also look at open and closed issues to find help.
+**Most of this is written having a Debian-like Linux distribution in mind.
+You will need to use your immagination, if you want to build on other plattforms. Also look at open and closed issues to find help.**
 
 ### Start a new Project
 
@@ -49,11 +48,15 @@ Starting a new project based on esp82xx is pretty easy:
 
     mkdir my_new_esp_project
     cd my_new_esp_project
-    git clone https://github.com/CNLohr/esp82XX
+    git clone --recursive https://github.com/CNLohr/esp82XX
     cp esp82xx/Makefile.example Makefile
     make project
 
-After that, the basic file structure should be in place in place.
+Replace the last line by the line below, if you also want to initialize the folder as a new git repo and upload it to a remote location:
+
+    make gitproject GIT_ORIGIN=https://github.com/YOUR_USER/YOUR_NEW_REPO.git
+
+After the above commands, the basic file structure should be in place in place.
 **Do not** edit files in `./esp82xx`.
 You should rather copy them to top-level directories and edit/include the copies where necessary.
 
@@ -138,15 +141,23 @@ or create your own
 
     git init project_name
     cd project_name
-    git submodule add git@github.com:cnlohr/esp82xx.git
+    git submodule add https://github.com/cnlohr/esp82xx.git
     cp esp82xx/user.cfg.example user.cfg
     cp esp82xx/Makefile.example Makefile
     mkdir -p web/page user
     ln -s ../esp82xx/web/Makefile web/
     # ... link or copy more files depending on how much you want to change ...
 
+After that, you can push it a freshly created remote repository with the usual git commands:
+
+    git init .
+    git add .
+    git git remote add origin https://github.com/YOUR_USER/YOUR_NEW_REPO.git
+    git commit -m 'Initial commit'
+    git push
+
 The basic Makefile for the firmware is `./esp82xx/main.mf`.
-Most things can be achieved by including it and changing some make variables like this:
+Most things can be achieved by including it in your top-level Makefile and changing some make variables.
 
     include esp82xx/main.mf
 
