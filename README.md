@@ -48,7 +48,7 @@ Starting a new project based on esp82xx is pretty easy:
 
     mkdir my_new_esp_project
     cd my_new_esp_project
-    git clone https://github.com/CNLohr/esp82XX
+    git clone --recursive https://github.com/CNLohr/esp82XX
     cp esp82xx/Makefile.example Makefile
     make project
 
