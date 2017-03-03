@@ -10,7 +10,7 @@
 
 GCC_FOLDER = $(ESP_ROOT)/xtensa-lx106-elf
 ESPTOOL_PY = $(ESP_ROOT)/esptool/esptool.py
-SDK       ?= $(ESP_ROOT)/sdk
+SDK       ?= $(PWD)/toolchain/esp_nonos_sdk
 
 XTLIB        = $(SDK)/lib
 XTGCCLIB     = $(GCC_FOLDER)/lib/gcc/xtensa-lx106-elf/$(ESP_GCC_VERS)/libgcc.a
@@ -20,6 +20,8 @@ CC           = $(PREFIX)gcc
 LD           = $(PREFIX)ld
 AR           = $(PREFIX)ar
 CP           = cp
+LINKERSCRIPT ?= esp82xx/toolchain/ld/linkerscript.ld
+#LINKERSCRIPT ?= $(SDK)/ld/eagle.app.v6.ld
 
 SLOWTICK_MS ?= 50
 
@@ -30,7 +32,7 @@ SLOWTICK_MS ?= 50
 OPTS += -DWEB_PORT=$(WEB_PORT) -DCOM_PORT=$(COM_PORT) -DBACKEND_PORT=$(BACKEND_PORT) $(EXTRAOPTS) -DSLOWTICK_MS=$(SLOWTICK_MS)
 PAGE_SCRIPTS?=$(wildcard web/page/*.js)
 
-# Mechanism for getting SDK/xtensa compiler paths from shell variables
+# Getting xtensa compiler paths from shell variables
 ESP_DEFAULT = $(HOME)/esp8266/esp-open-sdk
 ESP_ROOT := $(shell echo "$$ESP_ROOT")
 ifeq ($(strip $(ESP_ROOT)),)

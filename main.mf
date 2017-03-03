@@ -26,7 +26,6 @@ endef
 
 .PHONY : all clean purge netburn burnweb burn $(BIN_TARGET) netweb getips help project gitproject cleanproject
 
-SHELL=/bin/bash
 
 FW_FILE1 = image.elf-0x00000.bin
 FW_FILE2 = image.elf-0x40000.bin
@@ -50,8 +49,6 @@ ifneq ($(CUSTOMPP), 1)
 endif
 
 INCL = $(SDK)/include esp82xx/include .
-LINKERSCRIPT ?= esp82xx/ld/linkerscript.ld
-#LINKERSCRIPT ?= $(SDK)/ld/eagle.app.v6.ld
 
 CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)'
 
@@ -152,12 +149,19 @@ purge : clean
 bump_submodule :
 	cd esp82xx; git pull origin master; cd ..
 
-project :
-    [ "$$(basename $$(pwd))" == "esp82xx" ] && cd .. \
+Makefile : esp82xx/Makefile.example
+user.cfg : esp82xx/user.cfg.example
+web/page/index.html : esp82xx/web/page/index.html
+web/page/example.js : esp82xx/web/page/example.js
+
+Makefile user.cfg web/page/index.html web/page/example.js :
+    [ "$$(basename $$(pwd))" == "esp82xx" ] && cd ..; \
     mkdir -p web/page user; \
-    for fl in Makefile.example user.cfg.example web/page/index.html web/page/example.js; do \
-        cp -n esp82xx/$$fl $${fl%%.example}; \
-    done; \
+    cp -n $< $@; \
+    touch $@
+
+project : Makefile user.cfg web/page/index.html web/page/example.js
+    [ "$$(basename $$(pwd))" == "esp82xx" ] && cd ..; \
     ln -s $$(patsubst %,../../%,$(wildcard esp82xx/web/page/jquery-*)) ../../esp82xx/web/page/menuinterface.js web/page/ 2>/dev/null; \
     ln -s $$(patsubst %,../%,$(wildcard esp82xx/web/*)) web/ 2>/dev/null; \
     cp -rn esp82xx/fwsrc/user/ .;
