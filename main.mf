@@ -155,24 +155,24 @@ web/page/index.html : esp82xx/web/page/index.html
 web/page/example.js : esp82xx/web/page/example.js
 
 Makefile user.cfg web/page/index.html web/page/example.js :
-    [ "$$(basename $$(pwd))" == "esp82xx" ] && cd ..; \
-    mkdir -p web/page user; \
-    cp -n $< $@; \
-    touch $@
+	[ "$$(basename $$(pwd))" == "esp82xx" ] && cd ..; \
+	mkdir -p web/page user; \
+	cp -n $< $@; \
+	touch $@
 
 project : Makefile user.cfg web/page/index.html web/page/example.js
-    [ "$$(basename $$(pwd))" == "esp82xx" ] && cd ..; \
-    ln -s $$(patsubst %,../../%,$(wildcard esp82xx/web/page/jquery-*)) ../../esp82xx/web/page/menuinterface.js web/page/ 2>/dev/null; \
-    ln -s $$(patsubst %,../%,$(wildcard esp82xx/web/*)) web/ 2>/dev/null; \
-    cp -rn esp82xx/fwsrc/user/ .;
+	[ "$$(basename $$(pwd))" == "esp82xx" ] && cd ..; \
+	ln -s $$(patsubst %,../../%,$(wildcard esp82xx/web/page/jquery-*)) ../../esp82xx/web/page/menuinterface.js web/page/ 2>/dev/null; \
+	ln -s $$(patsubst %,../%,$(wildcard esp82xx/web/*)) web/ 2>/dev/null; \
+	cp -rn esp82xx/fwsrc/user/ .;
 
 gitproject: project
-    [ "$$(basename $$(pwd))" == "esp82xx" ] && cd .. \
-    git init . \
-    git add . \
-    git git remote add origin $(GIT_ORIGIN) \
-    git commit -m 'Initial commit' \
-    git push
+	[ "$$(basename $$(pwd))" == "esp82xx" ] && cd .. \
+	git init . \
+	git add . \
+	git git remote add origin $(GIT_ORIGIN) \
+	git commit -m 'Initial commit' \
+	git push
 
 cleanproject :
 	$(RM) use* web/
