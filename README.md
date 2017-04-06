@@ -69,12 +69,12 @@ You will need a working copy of that.
 
 There are many ways to [let Make know where your SDK is](https://github.com/cnlohr/esp82xx/issues/19#issuecomment-241756095) located.
 You can edit `DEFAULT_SDK` in `./user.cfg` to reflect your specific SDK path or **even better** define a shell variable.
-The letter is done with
+The latter is done with
 
     # Add this in ~/.bashrc or similar
     export ESP_ROOT=/path/to/sdk
 
-in your `.bashrc`, `.profile` or what-ever is used in your shell.
+in your `.bashrc`, `.profile` or whatever is used in your shell.
 
 You can also pass the location as an argument to make:
 
@@ -83,7 +83,7 @@ You can also pass the location as an argument to make:
 ### Burn Firmware
 
 If you did everything correctly, flashing your esp should work.
-Just connect it to an USB to serial adaptor that uses 3.3V (you will fry your ESP with higer voltages) and place it in programming mode.
+Just connect it to an USB to serial adapter that uses 3.3V (you will fry your ESP with higer voltages) and place it in programming mode.
 Then you can run
 
     make burn
