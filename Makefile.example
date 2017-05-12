@@ -8,7 +8,7 @@ include user.cfg
 
 ifndef TARGET
 $(info Modules were not checked out... use git clone --recursive in the future. Pulling now.)
-$(shell git submodule update --init --recursive)
+$(shell git submodule update --init --recursive 2>/dev/null)
 endif
 
 # Example for a custom rule.
