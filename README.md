@@ -15,6 +15,7 @@ Make changes in the `dev` branch!
     - [Specify SDK](#specify-sdk)
     - [Burn Firmware](#burn-firmware)
     - [Connect to your Module](#connect-to-your-module)
+    - [Commands][#commands]
 - [List of projects using esp82xx](#list-of-projects-using-esp82xx)
 - [Notes](#notes)
     - [Create File Structure by hand](#create-file-structure)
@@ -35,10 +36,10 @@ You will need the following:
  - GNU Compiler Collection and build essentials
  - Possible more
 
-We recommend the excellent [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk) by @pfalcon. 
+We recommend the excellent [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk) by @pfalcon.
 It downloads and installs the Espressif toolchain.
 Here is a shell script to [download and build](https://gist.github.com/con-f-use/d086ca941c2c80fbde6d8996b8a50761) a version known to work.
-You should read and understand the script, beofre running it.
+You should read and understand the script, before running it.
 
 Some versions of the SDK are somewhat problematic, e.g. with SDK versions greater than 1.5.2, Espressif changed the IRAM management, so some projects began to hit size restrictions and would not compile.
 For that reason, the Makefile is set up to use a [customized version](https://github.com/cnlohr/esp_nonos_sdk) of the SDK.
@@ -62,8 +63,9 @@ Replace the last line by the line below, if you also want to initialize the fold
 
 After the above commands, the basic file structure should be in place. Most files will be symbolic links against files in `./esp82xx/`.
 **Do not** edit these files or anything in `./esp82xx/`.
-You should rather copy the files to the top-level directories and edit the copies where necessary. 
-I.e. if you want add a line of CSS that changes the font in the WebUI, copy `./esp82xx/web/page/intex.html` to `./web/page/` overwriting the symbolic link. Then make your edits. 
+You should rather copy the files to the top-level directories and edit the copies where necessary.
+I.e. if you want add a line of CSS that changes the font in the WebUI, copy `./esp82xx/web/page/intex.html` to `./web/page/` overwriting the symbolic link.
+Then make your edits.
 
 Edit `user.cfg` in the top level to specify things like the location of the Espressif toolchain (see [Requirements](#requirements)).
 The file  `user.cfg` specifies the most important configuration variables.
@@ -106,7 +108,7 @@ To find out the IP, see below.
 
 The ESP will print its connection info, including its current IP to the serial interface after reset/power-on.
 
-You can [connect to the ESP](http://cn8266.local) in your browser:
+You can [connect to the ESP](http://es82xx.local) in your browser:
 
     http://es82xx.local
 
@@ -120,6 +122,76 @@ You could find out your ESP's IP this way.
 
 For general troubleshooting hints, see [esptools troubleshooting page](https://github.com/themadinventor/esptool#troubleshooting).
 It is excellent!
+
+### Commands
+
+Most features of the WebUI can be used over network by sending an ASCII string to the flashed ESP.
+This way you can evoke a feature from a program, script or the shell (i.e. using `nc` a.k.a netcat).
+
+The command string to be send start with a letter signifying the command or family of commands.
+In case of a command family, the second letter defines the command.
+After that comes the first argument.
+Subsequent arguments are then usually followed by tab-characters.
+Most commands will also send a response packet containing information or error codes.
+The characters that specify the command to use are not case sensitive, i.e. `E1234` and `e1234` will be interpreted identically by the ESP.
+
+Here is an example to get a freshly flashed ESP to connect to a WiFi network named `MyWiFi`:
+```
+echo -ne "W1\tMyWiFi\t1234\ta1:b2:c3:d4:e5:f6\t1" | nc 192.168.4.1 7878  -u -w 1 | hexdump -C
+
+```
+The accesspoint has the mac `a1:b2:c3:d4:e5:f6` and password `1234`.
+The program `hexdump` is used to receive and display the ESP's answer.
+
+The commands are:
+
+| Family | Command | Description |
+| :----: | :-----: | ----------- |
+| **B**  |         | **Browse commands** |
+|        | q       | Probe |
+|        | s       | Service name |
+|        | l       | List ip, service, device name and description |
+|        | r       | Response |
+|        |         |  |
+| **G**  |         | **GPIO commands** |
+|        | 0/1     | Turn pin numbered same as the first argument on (if command is one) or of (if command is zero) |
+|        | i       | Make pin numbered same as the first argument an input |
+|        | f       | Toggle pin numbered same as the first argument |
+|        | g       | Get status of pin numbered same as the first argument |
+|        | s       | Get outputmask and rmask as base-ten numbers |
+| **E**  | .       | **Echo command string with all arguments (for test purposes)** |
+| **I**  |         | **Get info** |
+|        | b       | Restart system |
+|        | s       | Save CS-settings |
+|        | l       | Load CS-settings 1 |
+|        | r       | Load CS-settings 2 |
+|        | f       | Start finding devices or return list of found devices |
+|        | n       | Device name |
+|        | d       | Device description |
+|        | .    | General info: IP, device name, description, servie name, free heap |
+| **W**  |         | **Wifi commands** |
+|        | 0       | Have the ESP an AP. Arguments: AP name, password, mac, channel |
+|        | 1       | Connect to existing network AP. Same arguments as above |
+|        | i       | Get info on current Wifi settings |
+|        | x       | Get RSSI (if applicable) and current IP |
+|        | s       | Scan for WiFi stations |
+|        | r       | Return results of scan |
+| **F**  |         | **Flashing commands** |
+|        | e       | Erase sector |
+|        | b       | Erase block |
+|        | m       | Execute flash rewriter |
+|        | w       | Write given number of bytes to flash (binary) |
+|        | x       | Write given number (second argument) of hexadecimal bytes (third argument) to position in (first argument) in flash |
+|        | r       | Read a number of (second argument) from a sector (first argument) flash |
+|        |         |  |
+
+A dot `.` stands for an omitted character, i.e. nothing.
+It is not included in the command string.
+
+
+For more information on these commands, please conuslt the source code.
+The commands are implemented in `./esp82xx/fwsrc/commonservices.c`.
+You can add your own commands in `./user/custom_commands.c`.
 
 ## List of projects using esp82xx
 
@@ -187,7 +259,8 @@ You can merge or squash-merge them into `master` once they have been tested and 
     git merge --squash dev
     git commit
 
-It might be good to create feature brances to develop individual features and merge them to dev and then from there to master or a hotfix branch for important quick-fixes.
+It might be good to create feature branches to develop individual features and merge them to `dev`.
+Then merge them from there to master or a hotfix branch for important quick-fixes.
 
 ### Submodule Updates
 
@@ -201,10 +274,14 @@ Cope with submodules in top-level projects updates:
     git commit -m 'Your Message'
     git push
     ```
-    p.s. make sure you're in the 'dev' branch.  You can check that with ```git branch``` If you're not, make sure to ```git checkout dev``` first, BEFORE you make your changes.  You can also use ```git push origin dev
-``` to push just the dev branch.
+    Make sure you're in the 'dev' branch.
+    You can check that with `git branch`.
+    If you're not, make sure to `git checkout dev` first, BEFORE you make your changes.
+    You can also use `git push origin dev` to push just the dev branch.
 
-    When you're ready to push, first make sure 'master' is up to date... ```git push origin dev:master``` then to push to master, use this: ```git push origin dev:master```
+    When you're ready to push, first make sure 'master' is up to date with
+    `git push origin dev:master`.
+    Then to push to master, use `git push origin dev:master`
 
  - Then bump the version in the main project root folder:
 
@@ -217,13 +294,13 @@ Cope with submodules in top-level projects updates:
     git push
     ```
 
- - Make sure you reference the master branch of submoules and test against that, when youre about to merge a dev version of top-level projects. Master-branch top-level projects sould have master-branch submodules.
+ - Make sure you reference the master branch of submoules and test against that, when you're about to merge a dev version of top-level projects. Master-branch top-level projects sould have master-branch submodules.
 
  - You can clone the dev-branch directly:
 
     ```
     git clone --recursive -b dev https://github.com/cnlohr/esp82xx.git && cd esp82xx
-    ``` 
+    ```
 
    If you forgot and switched to `dev` via `git checkout dev`, you might not have the proper submodules. In that case run `git submodule update --init`
 
