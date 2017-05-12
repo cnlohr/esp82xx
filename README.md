@@ -1,10 +1,13 @@
 # esp82xx
 
-Useful ESP8266 C Environment.
-Includes libraries and some basic functionality such as a Web-GUI, flashing firmware and web-data over network as well as basic GPIO functions.
-Intended to be included as sub-module in derivate projects.
+Useful ESP8266/ESP8285 C Environment.
+Includes libraries and some basic functionality such as a Web-GUI, flashing firmware and changing the UI over network as well as basic GPIO functions.
 
-Please read the notes closely, if you want to contribute (e.g. [Branches](#branches) and [Include Binaries](#include-binaries)).
+You can use it as a template for your own ESP8266/ESP8285 projects.
+Just include it as sub-module in derivate projects.
+
+**Contributors,** please read the notes closely, if you want to contribute (e.g. [Branches](#branches) and [Include Binaries](#include-binaries)).
+Make changes in the `dev` branch!
 
 - [Usage](#usage)
     - [Requirements](#requirements)
@@ -32,15 +35,16 @@ You will need the following:
  - GNU Compiler Collection and build essentials
  - Possible more
 
-We recommend the excellent [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk) by @pfalcon to download and install the Espressif toolchain.
+We recommend the excellent [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk) by @pfalcon. 
+It downloads and installs the Espressif toolchain.
 Here is a shell script to [download and build](https://gist.github.com/con-f-use/d086ca941c2c80fbde6d8996b8a50761) a version known to work.
-You should read and understand it, beofre running it.
+You should read and understand the script, beofre running it.
 
 Some versions of the SDK are somewhat problematic, e.g. with SDK versions greater than 1.5.2, Espressif changed the IRAM management, so some projects began to hit size restrictions and would not compile.
-For that reason, the Makefile is set up to use a [customized version](https://github.com/cnlohr/esp_nonos_sdk) of the sdk.
+For that reason, the Makefile is set up to use a [customized version](https://github.com/cnlohr/esp_nonos_sdk) of the SDK.
 
 **Most of this is written having a Debian-like Linux distribution in mind.
-You will need to use your immagination, if you want to build on other plattforms. Also look at open and closed issues to find help.**
+You will need to use your imagination, if you want to build on other platforms. Also look at open and closed issues to find help.**
 
 ### Start a new Project
 
@@ -56,14 +60,13 @@ Replace the last line by the line below, if you also want to initialize the fold
 
     make gitproject GIT_ORIGIN=https://github.com/YOUR_USER/YOUR_NEW_REPO.git
 
-After the above commands, the basic file structure should be in place in place.
-**Do not** edit files in `./esp82xx`.
-You should rather copy them to top-level directories and edit/include the copies where necessary.
+After the above commands, the basic file structure should be in place. Most files will be symbolic links against files in `./esp82xx/`.
+**Do not** edit these files or anything in `./esp82xx/`.
+You should rather copy the files to the top-level directories and edit the copies where necessary. 
+I.e. if you want add a line of CSS that changes the font in the WebUI, copy `./esp82xx/web/page/intex.html` to `./web/page/` overwriting the symbolic link. Then make your edits. 
 
-Edit `user.cfg` in the top level to specify thinks like the location of the Espressif toolchain.
+Edit `user.cfg` in the top level to specify things like the location of the Espressif toolchain (see [Requirements](#requirements)).
 The file  `user.cfg` specifies the most important configuration variables.
-Most notably the location of the Espressif SDK for building the firmware.
-You will need a working copy of that.
 
 ### Specify SDK
 
@@ -74,7 +77,7 @@ The latter is done with
     # Add this in ~/.bashrc or similar
     export ESP_ROOT=/path/to/sdk
 
-in your `.bashrc`, `.profile` or whatever is used in your shell.
+in your `.bashrc`, `.profile` or whatever is used by your shell. This way, the change will be persistent, even if you start many new esp82xx projects.
 
 You can also pass the location as an argument to make:
 
@@ -83,14 +86,14 @@ You can also pass the location as an argument to make:
 ### Burn Firmware
 
 If you did everything correctly, flashing your esp should work.
-Just connect it to an USB to serial adapter that uses 3.3V (you will fry your ESP with higer voltages) and place it in programming mode.
+Just connect it to an USB to serial adapter that uses 3.3V (**you will fry your ESP with voltages higher than 3.3 V**) and place it in programming mode.
 Then you can run
 
     make burn
-    make burnweb
+    make burnweb  # programming mode here too
 
 and your ESP is good to go.
-It should create its own WiFi Access Point called `ESPXXXX` or similar, where `XXXX` is some number.
+It should create its own WiFi Access Point called `ESPXXXX` or similar, where `XXXX` is some arbitrary code.
 From now on you can configure and burn new firmware/page data over the web interface in your browser (when connected to the esp's network or it is connected to yours).
 There are make targets to burn firmware and page data as well:
 
@@ -105,14 +108,15 @@ The ESP will print its connection info, including its current IP to the serial i
 
 You can [connect to the ESP](http://cn8266.local) in your browser:
 
-    http://cn8266.local
+    http://es82xx.local
 
 There is also a make-target called `getips` that scans for ESP modules and lists their IPs.
-This is basically a port-scan, that takes long (especially if no ESP is connected) and uses external tools.
+`make getips` is basically a port-scan, that uses external tools you might have to install and takes long (especially if no ESP is connected).
 
 The default IP of the ESP, when it operates as it's own access point, is **192.168.1.4**.
 When connected to an existing WiFi Network, it will ask your DHCP-Server for an IP.
 Most WiFi routers have an option in their Web-GUI to list all IPs, that their DHCP has given out.
+You could find out your ESP's IP this way.
 
 For general troubleshooting hints, see [esptools troubleshooting page](https://github.com/themadinventor/esptool#troubleshooting).
 It is excellent!
@@ -121,6 +125,7 @@ It is excellent!
 
  - [esp82XX-basic](https://github.com/con-f-use/esp82XX-basic)
  - [Colorchord](https://github.com/cnlohr/colorchord)
+ - [MAGFest Swag](https://youtu.be/DbjlStyMmaY?t=8m) [Badges 2017](https://github.com/cnlohr/swadges2017)
  - [esp8266ws2812i2c](https://github.com/cnlohr/esp8266ws2812i2s)
  - [espusb](https://github.com/cnlohr/espusb)
  - Migration of others in progress
@@ -213,6 +218,14 @@ Cope with submodules in top-level projects updates:
     ```
 
  - Make sure you reference the master branch of submoules and test against that, when youre about to merge a dev version of top-level projects. Master-branch top-level projects sould have master-branch submodules.
+
+ - You can clone the dev-branch directly:
+
+    ```
+    git clone --recursive -b dev https://github.com/cnlohr/esp82xx.git && cd esp82xx
+    ``` 
+
+   If you forgot and switched to `dev` via `git checkout dev`, you might not have the proper submodules. In that case run `git submodule update --init`
 
 ### Include Binaries
 
