@@ -15,7 +15,7 @@ Make changes in the `dev` branch!
     - [Specify SDK](#specify-sdk)
     - [Burn Firmware](#burn-firmware)
     - [Connect to your Module](#connect-to-your-module)
-    - [Commands][#commands]
+    - [Commands](#commands)
 - [List of projects using esp82xx](#list-of-projects-using-esp82xx)
 - [Notes](#notes)
     - [Create File Structure by hand](#create-file-structure)
