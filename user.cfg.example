@@ -10,14 +10,16 @@ COM_PORT     = 7777
 BACKEND_PORT = 7878
 PAGE_OFFSET  = 65536     # 1048576
 
+ESP_DEFAULT  = $(HOME)/esp8266/esp-open-sdk
 ESP_GCC_VERS = 4.8.5
+
+#FWBURNFLAGS  = -b 1000000  #uncomment if your programmer supports higher speeds.
 
 OPTS += -DICACHE_FLASH
 #OPTS += -DVERIFY_FLASH_WRITE
 #OPTS += -DDEBUG
 #OPTS += -DNET_MAXTRIES=10
 #OPTS += -DNET_TIMEOUT=3.0
-#OPTS += -DFREQ=12500
 
 PAGE_TITLE = esp82xx-basic
 PAGE_SCRIPTS = $(wildcard page/*.js) # include all javascrpts in ./web/page/

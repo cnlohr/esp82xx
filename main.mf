@@ -20,6 +20,9 @@ gitproject . Same as 'make project' but also initialiezes the current folder
                  make gitproject GIT_ORIGIN=https://github.com/USER/YREPO.git
 usbburn .... Burn via PRE-RELEASE USB loader (will probably change)
 usbweb ..... Burn webpage by PRE-RELEASE USB loader (will probably change)
+initdefault  Burn default initial data to ROM (may be needed after erase)
+init3v3 .... Burn default values to rom but for use with system_get_vdd33
+erase ...... Totally erase chip.
 
 More commands: all, clean, purge, dumprom, cleanproject
 endef
@@ -142,12 +145,21 @@ clean :
 dumprom :
 	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) read_flash 0 1048576 dump.bin)||(true)
 
+initdefault :
+	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash 0x3FC000 esp82xx/data/esp_init_data_default.bin
+
+init3v3 :
+	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash 0x3FC000 esp82xx/data/esp_init_data_adc33.bin
+
+erase:
+	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) erase_flash
+
 purge : clean
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean
 	$(RM) $(FW_FILE1) $(FW_FILE2) $(BIN_TARGET)
 
 bump_submodule :
-	cd esp82xx; git pull origin master; cd ..
+	cd esp82xx; git pull origin master; git submodule update --init --recursive; cd ..
 
 Makefile : esp82xx/Makefile.example
 user.cfg : esp82xx/user.cfg.example
