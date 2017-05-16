@@ -28,9 +28,11 @@ void user_rf_pre_init(void) { /*nothing*/ }
 
 char * strcat( char * dest, char * src )
 {
-    return strcat(dest, src );
+    char *rdest = dest;
+    while (*dest) dest++;
+    while (*dest++ = *src++);
+    return rdest;
 }
-
 
 
 //Tasks that happen all the time.

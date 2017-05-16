@@ -9,6 +9,7 @@ Just include it as sub-module in derivate projects.
 **Contributors,** please read the notes closely, if you want to contribute (e.g. [Branches](#branches) and [Include Binaries](#include-binaries)).
 Make changes in the `dev` branch!
 
+- [List of projects using esp82xx](#list-of-projects-using-esp82xx)
 - [Usage](#usage)
     - [Requirements](#requirements)
     - [Start a new Project](#start-a-new-project)
@@ -16,13 +17,21 @@ Make changes in the `dev` branch!
     - [Burn Firmware](#burn-firmware)
     - [Connect to your Module](#connect-to-your-module)
     - [Commands](#commands)
-- [List of projects using esp82xx](#list-of-projects-using-esp82xx)
 - [Notes](#notes)
     - [Create File Structure by hand](#create-file-structure)
     - [Branches](#branches)
     - [Submodule Updates](#submodule-updates)
     - [Include Binaries](#include-binaries)
 - [ToDo](#todo)
+
+## List of projects using esp82xx
+
+ - [esp82XX-basic](https://github.com/con-f-use/esp82XX-basic)
+ - [Colorchord](https://github.com/cnlohr/colorchord)
+ - [MAGFest Swag](https://youtu.be/DbjlStyMmaY?t=8m) [Badges 2017](https://github.com/cnlohr/swadges2017)
+ - [esp8266ws2812i2c](https://github.com/cnlohr/esp8266ws2812i2s)
+ - [espusb](https://github.com/cnlohr/espusb)
+ - Migration of others in progress
 
 ## Usage
 
@@ -128,19 +137,19 @@ It is excellent!
 Most features of the WebUI can be used over network by sending an ASCII string to the flashed ESP.
 This way you can evoke a feature from a program, script or the shell (i.e. using `nc` a.k.a netcat).
 
-The command string to be send start with a letter signifying the command or family of commands.
-In case of a command family, the second letter defines the command.
+The command string starts with a letter signifying the command or family of commands.
+In case of a command family, the second letter usually defines the command.
 After that comes the first argument.
-Subsequent arguments are then usually followed by tab-characters.
+Subsequent arguments after the first are usually followed by tab-characters.
 Most commands will also send a response packet containing information or error codes.
-The characters that specify the command to use are not case sensitive, i.e. `E1234` and `e1234` will be interpreted identically by the ESP.
+The character(s) that specify the command(-family) are not case sensitive, i.e. `E1234` and `e1234` will be interpreted identically.
 
 Here is an example to get a freshly flashed ESP to connect to a WiFi network named `MyWiFi`:
 ```
 echo -ne "W1\tMyWiFi\t1234\ta1:b2:c3:d4:e5:f6\t1" | nc 192.168.4.1 7878  -u -w 1 | hexdump -C
 
 ```
-The accesspoint has the mac `a1:b2:c3:d4:e5:f6` and password `1234`.
+The access point has the mac `a1:b2:c3:d4:e5:f6` and password `1234`.
 The program `hexdump` is used to receive and display the ESP's answer.
 
 The commands are:
@@ -159,7 +168,9 @@ The commands are:
 |        | f       | Toggle pin numbered same as the first argument |
 |        | g       | Get status of pin numbered same as the first argument |
 |        | s       | Get outputmask and rmask as base-ten numbers |
+|        |         |  |
 | **E**  | .       | **Echo command string with all arguments (for test purposes)** |
+|        |         |  |
 | **I**  |         | **Get info** |
 |        | b       | Restart system |
 |        | s       | Save CS-settings |
@@ -169,6 +180,7 @@ The commands are:
 |        | n       | Device name |
 |        | d       | Device description |
 |        | .    | General info: IP, device name, description, servie name, free heap |
+|        |         |  |
 | **W**  |         | **Wifi commands** |
 |        | 0       | Have the ESP an AP. Arguments: AP name, password, mac, channel |
 |        | 1       | Connect to existing network AP. Same arguments as above |
@@ -176,6 +188,7 @@ The commands are:
 |        | x       | Get RSSI (if applicable) and current IP |
 |        | s       | Scan for WiFi stations |
 |        | r       | Return results of scan |
+|        |         |  |
 | **F**  |         | **Flashing commands** |
 |        | e       | Erase sector |
 |        | b       | Erase block |
@@ -183,7 +196,12 @@ The commands are:
 |        | w       | Write given number of bytes to flash (binary) |
 |        | x       | Write given number (second argument) of hexadecimal bytes (third argument) to position in (first argument) in flash |
 |        | r       | Read a number of (second argument) from a sector (first argument) flash |
+| **C**  |         | ** Custom commands ** |
+|        | C       | Respond with 'CC' |
+|        | E       | Echo arguments to UART |
+|        | ...     | Your commands could go here |
 |        |         |  |
+
 
 A dot `.` stands for an omitted character, i.e. nothing.
 It is not included in the command string.
@@ -192,15 +210,6 @@ It is not included in the command string.
 For more information on these commands, please conuslt the source code.
 The commands are implemented in `./esp82xx/fwsrc/commonservices.c`.
 You can add your own commands in `./user/custom_commands.c`.
-
-## List of projects using esp82xx
-
- - [esp82XX-basic](https://github.com/con-f-use/esp82XX-basic)
- - [Colorchord](https://github.com/cnlohr/colorchord)
- - [MAGFest Swag](https://youtu.be/DbjlStyMmaY?t=8m) [Badges 2017](https://github.com/cnlohr/swadges2017)
- - [esp8266ws2812i2c](https://github.com/cnlohr/esp8266ws2812i2s)
- - [espusb](https://github.com/cnlohr/espusb)
- - Migration of others in progress
 
 ## Notes
 
@@ -247,7 +256,7 @@ The boot rom writes a log to the UART with the unusual timing of 74880 baud.
 
 ### Branches
 
-If you make small incremental changes and/or experimental ones, push to the `dev` branch rahter than to origin/master:
+If you make small incremental changes and/or experimental ones, push to the `dev` branch rather than to origin/master:
 
     git push origin dev
 
@@ -294,7 +303,7 @@ Cope with submodules in top-level projects updates:
     git push
     ```
 
- - Make sure you reference the master branch of submoules and test against that, when you're about to merge a dev version of top-level projects. Master-branch top-level projects sould have master-branch submodules.
+ - Make sure you reference the master branch of submodules and test against that, when you're about to merge a dev version of top-level projects. Master-branch top-level projects should have master-branch submodules.
 
  - You can clone the dev-branch directly:
 
@@ -315,6 +324,5 @@ To make the zip file invoke `make projectname-version-binaries.tgz` (Tab-autocom
 
 ## ToDo
 
- - Include libraries for usb, ws2812s and ethernet as soon as they are stable
+ - Include libraries for usb, ws2812s and ethernet
  - Expand the "Requirements" section
- - Add some more info on building and downloading the SDK
