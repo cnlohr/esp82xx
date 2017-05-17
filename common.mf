@@ -41,7 +41,7 @@ ifeq ($(strip $(ESP_ROOT)),)
 endif
 
 # Version related stuff
-VERSION := $(shell git describe --abbrev=5 --dirty=-dev --always --tags 2>/dev/null || echo "unknown")
+VERSION := $(shell git describe --abbrev=5 --dirty=-dev --always --tags 2>/dev/null || { cd esp82xx; git describe --abbrev=5 --dirty=-dev --always --tags 2>/dev/null; } ||  echo "unknown")
 VERSSTR := "Version: $(VERSION) - Build $(shell date -R) with $(OPTS)"
 PROJECT_NAME := $(notdir $(shell git rev-parse --show-toplevel 2>/dev/null || echo "exp82xx-project"))
 PROJECT_URL := $(subst .com:,.com/,$(subst .git,,$(subst git@,https://,$(shell git config --get remote.origin.url 2>/dev/null || echo "https://github.com/con-f-use/esp82xx-basic.git"))))
