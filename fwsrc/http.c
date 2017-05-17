@@ -631,7 +631,7 @@ void ICACHE_FLASH_ATTR WebSocketTickInternal()
 void ICACHE_FLASH_ATTR WebSocketSend( uint8_t * data, int size )
 {
 	START_PACK;
-	PushByte( 0x81 );
+	PushByte( 0x82 );
 	if( size >= 126 )
 	{
 		PushByte( 0x00 | 126 );
