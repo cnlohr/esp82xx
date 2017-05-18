@@ -6,17 +6,18 @@ Includes libraries and some basic functionality such as a Web-GUI, flashing firm
 You can use it as a template for your own ESP8266/ESP8285 projects.
 Just include it as sub-module in derivate projects.
 
-**Contributors,** please read the notes closely, if you want to contribute (e.g. [Branches](#branches) and [Include Binaries](#include-binaries)).
+**Contributors,** please read the notes closely before you start (e.g. [Branches](#branches) and [Include Binaries](#include-binaries)).
 Make changes in the `dev` branch!
 
 - [List of projects using esp82xx](#list-of-projects-using-esp82xx)
 - [Usage](#usage)
     - [Requirements](#requirements)
+      - [Specify SDK](#specify-sdk)
     - [Start a new Project](#start-a-new-project)
-    - [Specify SDK](#specify-sdk)
     - [Burn Firmware](#burn-firmware)
     - [Connect to your Module](#connect-to-your-module)
     - [Commands](#commands)
+    - [Troubleshooting](#troubleshooting)
 - [Notes](#notes)
     - [Create File Structure by hand](#create-file-structure)
     - [Branches](#branches)
@@ -37,6 +38,12 @@ Make changes in the `dev` branch!
 
 ### Requirements
 
+*Most of this is written having a Debian-like Linux distribution in mind.
+You will need to use your imagination, if you want to build on other platforms.
+People have done it on OSX and Win 7/8.
+Look at open and closed issues and internet resources on the SDK such as the
+ [esp-forum](http://www.esp8266.com/search.php?search_id=active_topic) to find help.*
+
 You will need the following:
 
  - [Espressif](https://espressif.com) toolchain for the esp82xx-series chips
@@ -49,12 +56,26 @@ We recommend the excellent [esp-open-sdk](https://github.com/pfalcon/esp-open-sd
 It downloads and installs the Espressif toolchain.
 Here is a shell script to [download and build](https://gist.github.com/con-f-use/d086ca941c2c80fbde6d8996b8a50761) a version known to work.
 You should read and understand the script, before running it.
+It will take some time and GBs of disk space to build the toolchain.
 
 Some versions of the SDK are somewhat problematic, e.g. with SDK versions greater than 1.5.2, Espressif changed the IRAM management, so some projects began to hit size restrictions and would not compile.
-For that reason, the Makefile is set up to use a [customized version](https://github.com/cnlohr/esp_nonos_sdk) of the SDK.
+Also some SDKs use different initial data (the flash has to have some SDK-related settings stored that are not userspace and aren't flashed along with the firmware).
+For that reason, the Makefile is set up to use a [customized version](https://github.com/cnlohr/esp_nonos_sdk) of the SDK and ships with proven initial data.
 
-**Most of this is written having a Debian-like Linux distribution in mind.
-You will need to use your imagination, if you want to build on other platforms. Also look at open and closed issues to find help.**
+#### Specify SDK
+
+There are many ways to [let Make know where your SDK is](https://github.com/cnlohr/esp82xx/issues/19#issuecomment-241756095) located.
+You can edit `DEFAULT_SDK` in `./user.cfg` to reflect your specific SDK path or **even better** define a shell variable.
+The latter is done with
+
+    # Add this in ~/.bashrc or similar
+    export ESP_ROOT=/path/to/sdk
+
+in your `.bashrc`, `.profile` or whatever is used by your shell. This way, the change will be persistent, even if you start many new esp82xx projects.
+
+You can also pass the location as an argument to make:
+
+    make all ESP_ROOT=path/to/sdk
 
 ### Start a new Project
 
@@ -70,7 +91,8 @@ Replace the last line by the line below, if you also want to initialize the fold
 
     make gitproject GIT_ORIGIN=https://github.com/YOUR_USER/YOUR_NEW_REPO.git
 
-After the above commands, the basic file structure should be in place. Most files will be symbolic links against files in `./esp82xx/`.
+After the above commands, provided you have [specified the SDK](#specify-sdk), the basic file structure should be in place.
+Most files will be symbolic links against files in `./esp82xx/`.
 **Do not** edit these files or anything in `./esp82xx/`.
 You should rather copy the files to the top-level directories and edit the copies where necessary.
 I.e. if you want add a line of CSS that changes the font in the WebUI, copy `./esp82xx/web/page/intex.html` to `./web/page/` overwriting the symbolic link.
@@ -78,21 +100,6 @@ Then make your edits.
 
 Edit `user.cfg` in the top level to specify things like the location of the Espressif toolchain (see [Requirements](#requirements)).
 The file  `user.cfg` specifies the most important configuration variables.
-
-### Specify SDK
-
-There are many ways to [let Make know where your SDK is](https://github.com/cnlohr/esp82xx/issues/19#issuecomment-241756095) located.
-You can edit `DEFAULT_SDK` in `./user.cfg` to reflect your specific SDK path or **even better** define a shell variable.
-The latter is done with
-
-    # Add this in ~/.bashrc or similar
-    export ESP_ROOT=/path/to/sdk
-
-in your `.bashrc`, `.profile` or whatever is used by your shell. This way, the change will be persistent, even if you start many new esp82xx projects.
-
-You can also pass the location as an argument to make:
-
-    make all ESP_ROOT=path/to/sdk
 
 ### Burn Firmware
 
@@ -159,13 +166,14 @@ The commands are:
 | **B**  |         | **Browse commands** |
 |        | q       | Probe |
 |        | s       | Service name |
-|        | l       | List ip, service, device name and description |
+|        | l       | List IP, service, device name and description |
 |        | r       | Response |
 |        |         |  |
 | **G**  |         | **GPIO commands** |
-|        | 0/1     | Turn pin numbered same as the first argument on (if command is one) or of (if command is zero) |
+|        | 0       | Turn pin with the same number as the first argument on |
+|        | 1       | Turn pin with the same number as the first argument off |
 |        | i       | Make pin numbered same as the first argument an input |
-|        | f       | Toggle pin numbered same as the first argument |
+|        | f       | Toggle pin number specified by the first argument |
 |        | g       | Get status of pin numbered same as the first argument |
 |        | s       | Get outputmask and rmask as base-ten numbers |
 |        |         |  |
@@ -179,7 +187,7 @@ The commands are:
 |        | f       | Start finding devices or return list of found devices |
 |        | n       | Device name |
 |        | d       | Device description |
-|        | .    | General info: IP, device name, description, servie name, free heap |
+|        | .       | General info: IP, device name, description, servie name, free heap |
 |        |         |  |
 | **W**  |         | **Wifi commands** |
 |        | 0       | Have the ESP an AP. Arguments: AP name, password, mac, channel |
@@ -195,7 +203,7 @@ The commands are:
 |        | m       | Execute flash rewriter |
 |        | w       | Write given number of bytes to flash (binary) |
 |        | x       | Write given number (second argument) of hexadecimal bytes (third argument) to position in (first argument) in flash |
-|        | r       | Read a number of (second argument) from a sector (first argument) flash |
+|        | r       | Read a number of bytes (second argument) from a sector (first argument) flash |
 | **C**  |         | ** Custom commands ** |
 |        | C       | Respond with 'CC' |
 |        | E       | Echo arguments to UART |
@@ -210,6 +218,32 @@ It is not included in the command string.
 For more information on these commands, please conuslt the source code.
 The commands are implemented in `./esp82xx/fwsrc/commonservices.c`.
 You can add your own commands in `./user/custom_commands.c`.
+
+## Troubleshooting
+
+### Caught in Reset loop
+
+Most of endless resets are caused by one of the following:
+ - Power supply too weak (the esp can draw 300mA)
+ - Not enough decoupling capacitance (a combination of 100uF and  100nF work)
+ - Wonky connection (worn out, loose or dirty contacts
+ - Initial flash data faulty (see [Specify SDK](#specify-sdk)), in which case this might help:
+ ```
+ make erase
+ make initdefault #init3v3
+ ```
+
+### Gibberish Serial Data right after Boot
+
+If you get weird data at the start of your serial communication with the esp, don't forsake!
+The boot ROM writes a log to the UART with the unusual timing of 74880 baud.
+It's normal.
+
+### Useful Links
+
+ - [esp8266 Getting Started Guide](https://espressif.com/en/support/explore/get-started/esp8266/getting-started-guide)
+ - [esp-forum](http://www.esp8266.com/search.php?search_id=active_topic)
+ - [NodeMCU docs](https://nodemcu.readthedocs.io/en/master/en/flash/)
 
 ## Notes
 
@@ -249,11 +283,6 @@ Most things can be achieved by including it in your top-level Makefile and chang
 
     SRCS += more_sources.c # Add your project specific sources
 
-### Gibberish Serial Data right after Boot
-
-If you get weird data at the start of your serial communication with the esp, don't forsake!
-The boot rom writes a log to the UART with the unusual timing of 74880 baud.
-
 ### Branches
 
 If you make small incremental changes and/or experimental ones, push to the `dev` branch rather than to origin/master:
@@ -268,18 +297,17 @@ You can merge or squash-merge them into `master` once they have been tested and 
     git merge --squash dev
     git commit
 
-It might be good to create feature branches to develop individual features and merge them to `dev`.
-Then merge them from there to master or a hotfix branch for important quick-fixes.
+It might be good to create feature branches to develop individual features and merge them into `dev`.
 
 ### Submodule Updates
 
-Cope with submodules in top-level projects updates:
+Cope with submodule changes in top-level project:
 
- - Changes in the submodule:
+ - You made changes in the submodule and want to push them:
 
     ```
-    cd esp82xx
-    # Make changes
+    cd esp82xx   # is the submodules
+    # Make changes in esp82xx
     git commit -m 'Your Message'
     git push
     ```
@@ -292,9 +320,10 @@ Cope with submodules in top-level projects updates:
     `git push origin dev:master`.
     Then to push to master, use `git push origin dev:master`
 
- - Then bump the version in the main project root folder:
+ - Bump esp82xx version in the main project root folder:
 
     ```
+    # You're in the main project root folder
     cd esp82xx
     git pull
     cd ..
@@ -303,7 +332,8 @@ Cope with submodules in top-level projects updates:
     git push
     ```
 
- - Make sure you reference the master branch of submodules and test against that, when you're about to merge a dev version of top-level projects. Master-branch top-level projects should have master-branch submodules.
+ - Make sure you are using the master branch of your submodules, when you're about to merge a dev version of top-level projects.
+ I.e. just before you merge, checkout the master branch of submodules, so that when you merge, a Master-branch top-level projects uses the master-branch of all its submodules and not subodule dev-braches.
 
  - You can clone the dev-branch directly:
 
@@ -320,7 +350,7 @@ There is a make target that builds the binaries and creates a `.zip` file. Inclu
 To make a release, just tag a commit with `git tag -a 'v1.3.3.7' -m 'Your release caption'` and push the tag with `git push --tags`.
 
 After that, the github web-interface will allow you to make a release out of the new tag and include the binary file.
-To make the zip file invoke `make projectname-version-binaries.tgz` (Tab-autocomplete is your friend).
+To make the zip file invoke `make projectname-version-binaries.tgz` (Tab-autocompletion is your friend).
 
 ## ToDo
 
