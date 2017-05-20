@@ -147,6 +147,7 @@ function StartWebSocket()
 	workqueue = [];
 	lastitem = null;
 	websocket = new WebSocket(wsUri);
+	websocket.binaryType = 'arraybuffer';
 	websocket.onopen = function(evt) { onOpen(evt) };
 	websocket.onclose = function(evt) { onClose(evt) };
 	websocket.onmessage = function(evt) { onMessage(evt) };
@@ -210,19 +211,22 @@ function onMessage(evt)
 	}
 
 
+	var rawdat = new Uint8Array(evt.data)
+	var stringdata = String.fromCharCode.apply(null, rawdat);
+
 	if( lastitem )
 	{
 		if( lastitem.callback )
 		{
-			lastitem.callback( lastitem, evt.data );
+			lastitem.callback( lastitem, stringdata, rawdat );
 			lastitem = null;
 		}
 	}
 	else
 	{
-		if( evt.data.length > 2 )
+		if( stringdata.length > 2 )
 		{
-			var wxresp = evt.data.substr(2).split("\t");
+			var wxresp = stringdata.substr(2).split("\t");
 			output.innerHTML = "<p>Messages: " + msg + "</p><p>RSSI: " + wxresp[0] + " / IP: " + ((wxresp.length>1)?HexToIP( wxresp[1] ):"") + "</p>";
 		}
 	}
