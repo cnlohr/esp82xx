@@ -115,8 +115,8 @@ It should create its own WiFi Access Point called `ESPXXXX` or similar, where `X
 From now on you can configure and burn new firmware/page data over the web interface in your browser (when connected to the esp's network or it is connected to yours).
 There are make targets to burn firmware and page data as well:
 
-    make netburn IP=192.168.1.4  # default IP, change to whatever your ESP is set to
-    make netweb IP=192.168.1.4
+    make netburn IP=192.168.4.1  # default IP, change to whatever your ESP is set to
+    make netweb IP=192.168.4.1
 
 To find out the IP, see below.
 
