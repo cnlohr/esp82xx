@@ -83,7 +83,7 @@ Starting a new project based on esp82xx is pretty easy:
 
     mkdir my_new_esp_project
     cd my_new_esp_project
-    git clone --recursive https://github.com/CNLohr/esp82XX
+    git clone --recursive https://github.com/CNLohr/esp82xx
     cp esp82xx/Makefile.example Makefile
     make project
 
@@ -124,14 +124,14 @@ To find out the IP, see below.
 
 The ESP will print its connection info, including its current IP to the serial interface after reset/power-on.
 
-You can [connect to the ESP](http://es82xx.local) in your browser:
+You can [connect to the ESP](http://esp82xx.local) in your browser:
 
-    http://es82xx.local
+    http://es82pxx.local
 
 There is also a make-target called `getips` that scans for ESP modules and lists their IPs.
 `make getips` is basically a port-scan, that uses external tools you might have to install and takes long (especially if no ESP is connected).
 
-The default IP of the ESP, when it operates as it's own access point, is **192.168.1.4**.
+The default IP of the ESP, when it operates as it's own access point, is **192.168.4.1**.
 When connected to an existing WiFi Network, it will ask your DHCP-Server for an IP.
 Most WiFi routers have an option in their Web-GUI to list all IPs, that their DHCP has given out.
 You could find out your ESP's IP this way.
