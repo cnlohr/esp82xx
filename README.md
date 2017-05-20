@@ -126,7 +126,7 @@ The ESP will print its connection info, including its current IP to the serial i
 
 You can [connect to the ESP](http://esp82xx.local) in your browser:
 
-    http://es82pxx.local
+    http://esp82xx.local
 
 There is also a make-target called `getips` that scans for ESP modules and lists their IPs.
 `make getips` is basically a port-scan, that uses external tools you might have to install and takes long (especially if no ESP is connected).
