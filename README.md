@@ -6,6 +6,8 @@ Includes libraries and some basic functionality such as a Web-GUI, flashing firm
 You can use it as a template for your own ESP8266/ESP8285 projects.
 Just include it as sub-module in derivate projects.
 
+NOTE: If you are starting from another environment or from the factory, you should execute ```make erase initdefault``` this will set the flash up in a way compatible with the newer ESP NONOS SDK 2.x's.
+
 **Contributors,** please read the notes closely before you start (e.g. [Branches](#branches) and [Include Binaries](#include-binaries)).
 Make changes in the `dev` branch!
 
