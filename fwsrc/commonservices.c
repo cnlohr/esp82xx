@@ -1055,7 +1055,7 @@ uint32 ICACHE_FLASH_ATTR user_rf_cal_sector_set(void)
 
 
 //For some reason doesn't exist under modern GCC.
-char * strcat( char * dest, char * src )
+char * ICACHE_FLASH_ATTR strcat( char * dest, char * src )
 {
     char *rdest = dest;
     while (*dest) dest++;
