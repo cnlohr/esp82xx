@@ -627,14 +627,15 @@ CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned shor
 			//siz = size to write.
 			//colon2 = data start.
 			if( colon2 && (nr >= FLASH_PROTECTION_BOUNDARY || ( nr >= 0x10000 && nr < 0x30000 ) ) ) {
-				colon2++;
+				//colon2++;
                 debug( "FX%d\t%d", nr, siz );
 				int datlen = ((int)len - (colon2 - pusrdata))/2;
 				if( datlen > siz ) datlen = siz;
 
 				for( i = 0; i < datlen; i++ ) {
 					int8_t r1, r2;
-					r1 = r2 = fromhex1( *(colon2++) );
+					r1 = fromhex1( *(colon2++) );
+					r2 = fromhex1( *(colon2++) );
 					if( r1 == -1 || r2 == -1 ) goto failfx;
 					buffend[i] = (r1 << 4) | r2;
 				}
