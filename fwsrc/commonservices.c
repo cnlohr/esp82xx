@@ -90,7 +90,7 @@ static void ICACHE_FLASH_ATTR free_scan_array()
 static void ICACHE_FLASH_ATTR scandone(void *arg, STATUS status)
 {
 	free_scan_array();
-	scanarray = (struct totalscan_t **)os_malloc( sizeof(struct totalscan_t *) * MAX_STATIONS ); 
+	scanarray = (struct totalscan_t **)os_malloc( sizeof(struct totalscan_t *) * MAX_STATIONS );
 
 	scaninfo *c = arg;
 	struct bss_info *inf;
@@ -634,7 +634,8 @@ CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned shor
 
 				for( i = 0; i < datlen; i++ ) {
 					int8_t r1, r2;
-					r1 = r2 = fromhex1( *(colon2++) );
+					r1 = fromhex1( *(colon2++) );
+                    r2 = fromhex1( *(colon2++) );
 					if( r1 == -1 || r2 == -1 ) goto failfx;
 					buffend[i] = (r1 << 4) | r2;
 				}
@@ -984,7 +985,7 @@ void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 	system_param_load( 0x3A, 0, &SETTINGS, sizeof( SETTINGS ) );
 
 //	printf( "About to read\n" );
-//	int res = spi_flash_read( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );		
+//	int res = spi_flash_read( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );
 //	printf( "RES: %d\n", res );
 	printf( "Loading Settings: %02x / %d / %d / %d\n", SETTINGS.settings_key, force_reinit, SETTINGS.DeviceName[0], SETTINGS.DeviceName[0] );
 	if( SETTINGS.settings_key != 0xAF || force_reinit || SETTINGS.DeviceName[0] == 0x00 || SETTINGS.DeviceName[0] == 0xFF ) {
@@ -1013,7 +1014,7 @@ void ICACHE_FLASH_ATTR CSSettingsSave()
 {
 	SETTINGS.settings_key = 0xAF;
 //	spi_flash_erase_sector( 0x3a );
-//	spi_flash_write( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );		
+//	spi_flash_write( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );
 	system_param_save_with_protect( 0x3A, &SETTINGS, sizeof( SETTINGS ) );
 	printf( "Saving\n" );
 
