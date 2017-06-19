@@ -560,6 +560,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 
 
 CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned short len, char * buffend) {
+	uint32 chip_size_saved = flashchip->chip_size;
 	flashchip->chip_size = 0x01000000;
 	int nr = ParamCaptureAndAdvanceInt();
 
@@ -683,7 +684,7 @@ CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned shor
 		break;
 	}
 
-	flashchip->chip_size = 0x00080000;
+	flashchip->chip_size = chip_size_saved;;
 	return buffend - buffer;
 } // END: cmd_Flash(...)
 
