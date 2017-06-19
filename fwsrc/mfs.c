@@ -12,6 +12,7 @@ void ICACHE_FLASH_ATTR FindMPFS()
 {
 	uint32 mfs_check[2];
 	EnterCritical();
+	uint32 chip_size_saved = flashchip->chip_size;
 	flashchip->chip_size = 0x01000000;
 
 	spi_flash_read( MFS_START, mfs_check, sizeof( mfs_check ) );
@@ -26,7 +27,7 @@ void ICACHE_FLASH_ATTR FindMPFS()
 
 done:
 	printf( "MFS Found at: %08x\n", mfs_at );
-	flashchip->chip_size = 0x00080000;
+	flashchip->chip_size = chip_size_saved;;
 	ExitCritical();
 }
 
@@ -48,6 +49,7 @@ int8_t ICACHE_FLASH_ATTR MFSOpenFile( const char * fname, struct MFSFileInfo * m
 	}
 
 	EnterCritical();
+	uint32 chip_size_saved = flashchip->chip_size;
 	flashchip->chip_size = 0x01000000;
 	uint32 ptr = mfs_at;
 	struct MFSFileEntry e;
@@ -61,12 +63,12 @@ int8_t ICACHE_FLASH_ATTR MFSOpenFile( const char * fname, struct MFSFileInfo * m
 		{
 			mfi->offset = e.start;
 			mfi->filelen = e.len;
-			flashchip->chip_size = 0x00080000;
+			flashchip->chip_size = chip_size_saved;;
 			ExitCritical();
 			return 0;
 		}
 	}
-	flashchip->chip_size = 0x00080000;
+	flashchip->chip_size = chip_size_saved;;
 	ExitCritical();
 	return -1;
 }
@@ -83,9 +85,10 @@ int32_t ICACHE_FLASH_ATTR MFSReadSector( uint8_t* data, struct MFSFileInfo * mfi
 	if( toread > MFS_SECTOR ) toread = MFS_SECTOR;
 
 	EnterCritical();
+	uint32 chip_size_saved = flashchip->chip_size;
 	flashchip->chip_size = 0x01000000;
 	spi_flash_read( mfs_at+mfi->offset, (uint32*)data, MFS_SECTOR ); //TODO: should we make this toread?  maybe toread rounded up?
-	flashchip->chip_size = 0x00080000;
+	flashchip->chip_size = chip_size_saved;;
 	ExitCritical();
 
 	mfi->offset += toread;
