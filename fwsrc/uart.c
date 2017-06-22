@@ -44,7 +44,9 @@ uart_config(uint8 uart_no)
   else
   {
     /* rcv_buff size if 0x100 */
+#ifndef DISABLE_CHARRX
     ETS_UART_INTR_ATTACH(uart0_rx_intr_handler,  &(UartDev.rcv_buff));
+#endif
     PIN_PULLUP_DIS(PERIPHS_IO_MUX_U0TXD_U);
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0TXD_U, FUNC_U0TXD);
 //    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDO_U, FUNC_U0RTS);
@@ -66,6 +68,8 @@ uart_config(uint8 uart_no)
 //                 ((UartDev.rcv_buff.TrigLvl & UART_RXFIFO_FULL_THRHD) << UART_RXFIFO_FULL_THRHD_S) |
 //                 ((96 & UART_TXFIFO_EMPTY_THRHD) << UART_TXFIFO_EMPTY_THRHD_S) |
 //                 UART_RX_FLOW_EN);
+
+#ifndef DISABLE_CHARRX
   if (uart_no == UART0)
   {
     //set rx fifo trigger
@@ -79,11 +83,13 @@ uart_config(uint8 uart_no)
     WRITE_PERI_REG(UART_CONF1(uart_no),
                    ((UartDev.rcv_buff.TrigLvl & UART_RXFIFO_FULL_THRHD) << UART_RXFIFO_FULL_THRHD_S));
   }
-
+#endif
   //clear all interrupt
   WRITE_PERI_REG(UART_INT_CLR(uart_no), 0xffff);
+#ifndef DISABLE_CHARRX
   //enable rx_interrupt
   SET_PERI_REG_MASK(UART_INT_ENA(uart_no), UART_RXFIFO_FULL_INT_ENA);
+#endif
 }
 
 /******************************************************************************
@@ -93,7 +99,7 @@ uart_config(uint8 uart_no)
  * Parameters   : uint8 TxChar - character to tx
  * Returns      : OK
 *******************************************************************************/
-LOCAL STATUS 
+LOCAL STATUS ICACHE_FLASH_ATTR
 uart_tx_one_char(uint8 uart, uint8 TxChar)
 {
     while (true)
@@ -138,7 +144,7 @@ uart1_write_char(char c)
  *                uint16 len - buffer len
  * Returns      :
 *******************************************************************************/
-void 
+void ICACHE_FLASH_ATTR
 uart0_tx_buffer(uint8 *buf, uint16 len)
 {
   uint16 i;
@@ -172,6 +178,8 @@ void uart0_sendStr(const char *str)
  * Returns      : NONE
 *******************************************************************************/
 
+#ifndef DISABLE_CHARRX
+
 extern void charrx( uint8_t c );
 
 LOCAL void
@@ -184,6 +192,8 @@ uart0_rx_intr_handler(void *para)
 	charrx( v );
 
 }
+
+#endif
 
 /******************************************************************************
  * FunctionName : uart_init
