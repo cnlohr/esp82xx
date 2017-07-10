@@ -14,8 +14,13 @@
 static const char * key = "";
 static int keylen = 0;
 
+#ifdef QUIET_REFLASH
+#define Kets_sprintf
+#define Kuart0_sendStr
+#else
 #define Kets_sprintf ets_sprintf
 #define Kuart0_sendStr uart0_sendStr
+#endif
 
 void ICACHE_FLASH_ATTR HEX16Convert( char * out, uint8_t * in )
 {

@@ -90,7 +90,7 @@ static void ICACHE_FLASH_ATTR free_scan_array()
 static void ICACHE_FLASH_ATTR scandone(void *arg, STATUS status)
 {
 	free_scan_array();
-	scanarray = (struct totalscan_t **)os_malloc( sizeof(struct totalscan_t *) * MAX_STATIONS ); 
+	scanarray = (struct totalscan_t **)os_malloc( sizeof(struct totalscan_t *) * MAX_STATIONS );
 
 	scaninfo *c = arg;
 	struct bss_info *inf;
@@ -560,6 +560,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 
 
 CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned short len, char * buffend) {
+	uint32 chip_size_saved = flashchip->chip_size;
 	flashchip->chip_size = 0x01000000;
 	int nr = ParamCaptureAndAdvanceInt();
 
@@ -627,14 +628,15 @@ CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned shor
 			//siz = size to write.
 			//colon2 = data start.
 			if( colon2 && (nr >= FLASH_PROTECTION_BOUNDARY || ( nr >= 0x10000 && nr < 0x30000 ) ) ) {
-				colon2++;
-                debug( "FX%d\t%d", nr, siz );
+				//colon2++;
+				debug( "FX%d\t%d", nr, siz );
 				int datlen = ((int)len - (colon2 - pusrdata))/2;
 				if( datlen > siz ) datlen = siz;
 
 				for( i = 0; i < datlen; i++ ) {
 					int8_t r1, r2;
-					r1 = r2 = fromhex1( *(colon2++) );
+					r1 = fromhex1( *(colon2++) );
+					r2 = fromhex1( *(colon2++) );
 					if( r1 == -1 || r2 == -1 ) goto failfx;
 					buffend[i] = (r1 << 4) | r2;
 				}
@@ -682,7 +684,7 @@ CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned shor
 		break;
 	}
 
-	flashchip->chip_size = 0x00080000;
+	flashchip->chip_size = chip_size_saved;
 	return buffend - buffer;
 } // END: cmd_Flash(...)
 
@@ -984,7 +986,7 @@ void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 	system_param_load( 0x3A, 0, &SETTINGS, sizeof( SETTINGS ) );
 
 //	printf( "About to read\n" );
-//	int res = spi_flash_read( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );		
+//	int res = spi_flash_read( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );
 //	printf( "RES: %d\n", res );
 	printf( "Loading Settings: %02x / %d / %d / %d\n", SETTINGS.settings_key, force_reinit, SETTINGS.DeviceName[0], SETTINGS.DeviceName[0] );
 	if( SETTINGS.settings_key != 0xAF || force_reinit || SETTINGS.DeviceName[0] == 0x00 || SETTINGS.DeviceName[0] == 0xFF ) {
@@ -1013,7 +1015,7 @@ void ICACHE_FLASH_ATTR CSSettingsSave()
 {
 	SETTINGS.settings_key = 0xAF;
 //	spi_flash_erase_sector( 0x3a );
-//	spi_flash_write( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );		
+//	spi_flash_write( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );
 	system_param_save_with_protect( 0x3A, &SETTINGS, sizeof( SETTINGS ) );
 	printf( "Saving\n" );
 
@@ -1055,7 +1057,7 @@ uint32 ICACHE_FLASH_ATTR user_rf_cal_sector_set(void)
 
 
 //For some reason doesn't exist under modern GCC.
-char * strcat( char * dest, char * src )
+char * ICACHE_FLASH_ATTR strcat( char * dest, char * src )
 {
     char *rdest = dest;
     while (*dest) dest++;
