@@ -438,12 +438,13 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 
 					EnterCritical();
 					//wifi_station_set_config(&stationConf);
-					wifi_set_opmode_current( 1 );
+					wifi_set_opmode_current( 1 ); // This is probably not needed
 					wifi_set_opmode( 1 );
 					wifi_station_set_config(&stationConf);
 					wifi_station_connect();
+					// this configuring again may not be needed
 					wifi_station_set_config(&stationConf);  //I don't know why, doing this twice seems to make it store more reliably.
-					ExitCritical();
+					//ExitCritical(); // too soon, need to wait till connected
 					printed_ip = 0;
 					//wifi_station_get_config( &stationConf );
 					buffprint( "W1\r\n" );
@@ -458,7 +459,9 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					os_memcpy( &config.ssid, apname, aplen );
 					os_memcpy( &config.password, password, passlen );
 					config.ssid_len = aplen;
-    				#if 0 //We don't support encryption.
+					config.ssid[aplen] = 0;
+					config.password[passlen] = 0;
+				#if 0 //We don't support encryption.
 					config.ssid[c1l] = 0;  config.password[c2l] = 0;   config.authmode = 0;
 					if( encr ) {
 						int k;
@@ -477,12 +480,12 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 
 					printed_ip = 0;
 					EnterCritical();
+					wifi_set_opmode( 2 ); // before softap_set or doesn't remember config
 					wifi_softap_set_config(&config);
-					wifi_set_opmode( 2 );
-					ExitCritical();
 					printf( "Switching SoftAP: %d %d.\n", chan, config.authmode );
 
 					buffprint( "W2\r\n" );
+					ExitCritical(); // after prints to give more time
 				}
 			}
 		break;
@@ -756,7 +759,10 @@ static void ICACHE_FLASH_ATTR SwitchToSoftAP( )
 	struct softap_config sc;
 	wifi_softap_get_config(&sc);
 	printed_ip = 0;
-	printf( "SoftAP mode: \"%s\":\"%s\" @ %d %d/%d\n", sc.ssid, sc.password, wifi_get_channel(), sc.ssid_len, wifi_softap_dhcps_status() );
+	printf( "After scan back to SoftAP mode: \"%s\":\"%s\" @ %d %d/%d\n", sc.ssid, sc.password, wifi_get_channel(), sc.ssid_len, wifi_softap_dhcps_status() );
+	wifi_set_opmode( 2 );
+//	wifi_softap_set_config(&sc);
+//	wifi_station_connect();
 	ExitCritical();
 }
 
@@ -779,6 +785,7 @@ void ICACHE_FLASH_ATTR CSPreInit()
 		wifi_softap_get_config(&sc);
 		printf( "Default SoftAP mode: \"%s\":\"%s\"\n", sc.ssid, sc.password );
 	}
+	CSSettingsLoad(0);
 }
 
 
@@ -822,6 +829,7 @@ static int GPIO0Down = 0;
 static void ICACHE_FLASH_ATTR GoAP( int always )
 {
 	struct softap_config config;
+	EnterCritical();
 	wifi_softap_get_config(&config);
 	config.ssid_len = ets_strlen(SETTINGS.DeviceName);
 	os_memcpy( &config.ssid, SETTINGS.DeviceName, config.ssid_len+1 );
@@ -833,14 +841,16 @@ static void ICACHE_FLASH_ATTR GoAP( int always )
 	config.beacon_interval = 100;
 	if( always )
 	{
+		wifi_set_opmode( 2 ); // doc says before set_config
 		wifi_softap_set_config(&config);
-		wifi_set_opmode( 2 );
 	}
 	else
 	{
-		wifi_softap_set_config_current(&config);
 		wifi_set_opmode_current( 2 );
+		wifi_softap_set_config_current(&config);
 	}
+	printf( "GoAP sets SoftAP mode: \"%s\":\"%s\" @ %d %d/%d\n", config.ssid, config.password, wifi_get_channel(), config.ssid_len, wifi_softap_dhcps_status() );
+	ExitCritical();
 }
 
 static void ICACHE_FLASH_ATTR RestoreAndReboot( )
@@ -900,10 +910,13 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 			wifi_station_disconnect();
 			wifi_fail_connects++;
 			printf( "Connection failed with code %d... Retrying, try: %d\n", stat, wifi_fail_connects );
+#define MAX_CONNECT_FAILURES_BEFORE_SOFTAP 2
 #ifdef MAX_CONNECT_FAILURES_BEFORE_SOFTAP
 			if( wifi_fail_connects > MAX_CONNECT_FAILURES_BEFORE_SOFTAP )
 			{
-				GoAP( 0 );
+				GoAP( 0 ); // giving up on station so start ADC so need ExitCritical() which is done in GoAP
+				CSConnectionChange();
+				wifi_fail_connects = 0;
 			}
 #endif
 			wifi_station_connect();
@@ -921,6 +934,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 			printed_ip = 1;
 			wifi_fail_connects = 0;
 			CSConnectionChange();
+			ExitCritical(); // station mode is connected so start ADC
 		}
 	}
 
@@ -982,6 +996,7 @@ void ICACHE_FLASH_ATTR CSConnectionChange()
 
 void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 {
+	EnterCritical();
 	ets_memset( &SETTINGS, 0, sizeof( SETTINGS) );
 	system_param_load( 0x3A, 0, &SETTINGS, sizeof( SETTINGS ) );
 
@@ -1001,24 +1016,27 @@ void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 		ets_sprintf( SETTINGS.DeviceDescription, "Default" );
 		printf( "Initialized Name: %s\n", SETTINGS.DeviceName );
 
-		CSSettingsSave();
+		CSSettingsSave(); // will have done ExitCritical() before returning so must
+		EnterCritical(); // again
 		system_restore();
+		ExitCritical();
 	}
 
 	wifi_station_set_hostname( SETTINGS.DeviceName );
-
 	printf( "Settings Loaded: %s / %s\n", SETTINGS.DeviceName, SETTINGS.DeviceDescription );
+	ExitCritical();
 }
 
 
 void ICACHE_FLASH_ATTR CSSettingsSave()
 {
+	EnterCritical();
 	SETTINGS.settings_key = 0xAF;
 //	spi_flash_erase_sector( 0x3a );
 //	spi_flash_write( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );
 	system_param_save_with_protect( 0x3A, &SETTINGS, sizeof( SETTINGS ) );
 	printf( "Saving\n" );
-
+	ExitCritical();
 }
 
 
