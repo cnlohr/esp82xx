@@ -99,7 +99,8 @@ uart_config(uint8 uart_no)
  * Parameters   : uint8 TxChar - character to tx
  * Returns      : OK
 *******************************************************************************/
-LOCAL STATUS ICACHE_FLASH_ATTR
+//LOCAL STATUS ICACHE_FLASH_ATTR will cause netburn to FAIL
+LOCAL STATUS
 uart_tx_one_char(uint8 uart, uint8 TxChar)
 {
     while (true)
