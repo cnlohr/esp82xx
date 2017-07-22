@@ -27,7 +27,7 @@ void ICACHE_FLASH_ATTR HEX16Convert( char * out, uint8_t * in )
 	int i;
 	for( i = 0; i < 16; i++ )
 	{
-		Kets_sprintf( out+i*2, "%02x", in[i] );
+		ets_sprintf( out+i*2, "%02x", in[i] );
 	}
 }
 
