@@ -69,6 +69,10 @@ $(warning Debug is enabled!)
 FLASH_WRITE_FLAGS += --verify
 endif
 
+ifeq ($(SDK),$(PWD)/esp82xx/toolchain/esp_nonos_sdk)
+SDK_DEP := esp82xx/toolchain/esp_nonos_sdk/Makefile
+endif
+
 ##########################################################################RULES
 
 help :
@@ -81,7 +85,7 @@ $(FW_FILE1) $(FW_FILE2) : $(TARGET)
 	PATH=$(PATH):$(FOLDERPREFIX) $(ESPTOOL_PY) elf2image $(TARGET)
 	@#no need to set things like dout, and memory size.  This data is copied from the ESP back to itself on write.
 
-$(TARGET) : $(SRCS) Makefile
+$(TARGET) : $(SRCS) Makefile $(SDK_DEP)
 	$(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
 
 debug : $(TARGET)
@@ -175,6 +179,12 @@ project : Makefile user.cfg web/page/index.html web/page/example.js
 	ln -s $(patsubst %,../../%,$(wildcard esp82xx/web/page/jquery-*)) ../../esp82xx/web/page/menuinterface.js web/page/ 2>/dev/null; \
 	ln -s $(patsubst %,../%,$(wildcard esp82xx/web/*)) web/ 2>/dev/null; \
 	cp -rn esp82xx/fwsrc/user/ .;
+
+ifeq ($(SDK),$(PWD)/esp82xx/toolchain/esp_nonos_sdk)
+$(SDK_DEP) :
+	@echo "Warning: SDK is missing, trying to get it from github:" >&2
+	@cd esp82xx && git submodule update --init --recursive
+endif
 
 gitproject: project
 	git init .
