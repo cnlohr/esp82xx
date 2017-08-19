@@ -910,6 +910,10 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 			wifi_station_disconnect();
 			wifi_fail_connects++;
 			printf( "Connection failed with code %d... Retrying, try: %d\n", stat, wifi_fail_connects );
+
+#ifdef CUSTOM_FAIL_BEHAVIOR
+			FailedToConnect( wifi_fail_connects );
+#else
 #define MAX_CONNECT_FAILURES_BEFORE_SOFTAP 2
 #ifdef MAX_CONNECT_FAILURES_BEFORE_SOFTAP
 			if( wifi_fail_connects > MAX_CONNECT_FAILURES_BEFORE_SOFTAP )
@@ -921,6 +925,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 #endif
 			wifi_station_connect();
 			printf("\n");
+#endif
 			printed_ip = 0;
 		} else if( stat == STATION_GOT_IP && !printed_ip ) {
 			wifi_station_get_config( &wcfg );

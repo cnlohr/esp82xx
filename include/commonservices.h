@@ -82,5 +82,10 @@ void ICACHE_FLASH_ATTR BrowseForService( const char * servicename );
 //Set the service name for this device.  No more than 10 chars allowed.
 void ICACHE_FLASH_ATTR SetServiceName( const char * myservice );
 
+
+#ifdef CUSTOM_FAIL_BEHAVIOR
+int ICACHE_FLASH_ATTR FailedToConnect( int wifi_fail_connects );
+#endif
+
 #endif
 
