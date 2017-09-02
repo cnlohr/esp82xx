@@ -824,7 +824,9 @@ void ICACHE_FLASH_ATTR CSInit()
 	PIN_OUT_CLEAR = _BV(2);
 }
 
+#ifndef DISABLE_GPIO0_RESET
 static int GPIO0Down = 0;
+#endif
 
 static void ICACHE_FLASH_ATTR GoAP( int always )
 {
@@ -863,11 +865,14 @@ static void ICACHE_FLASH_ATTR RestoreAndReboot( )
 
 	ets_delay_us(1000000);
 	system_restart();
+#ifndef DISABLE_GPIO0_RESET
 	GPIO0Down = 0;
+#endif
 }
 
 static void ICACHE_FLASH_ATTR SlowTick( int opm )
 {
+#ifndef DISABLE_GPIO0_RESET
 	if( (PIN_IN & _BV(0)) == 0 )
 	{
 		if( GPIO0Down++ > (5000 / SLOWTICK_MS) )
@@ -879,7 +884,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 	{
 		GPIO0Down = 0;
 	}
-
+#endif
 	HTTPTick(1);
 
 	if( BrowseRespond ) EmitWhoAmINow();
