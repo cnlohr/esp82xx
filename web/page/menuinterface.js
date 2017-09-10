@@ -474,8 +474,7 @@ function ClickOpmode( i )
 	else
 	{
 		document.wifisection.wificurname.disabled = false;
-		document.wifisection.wificurpassword.disabled = true;
-		document.wifisection.wificurpassword.value = "";
+		document.wifisection.wificurpassword.disabled = false;
 		document.wifisection.wifimac.disabled = true;
 		document.wifisection.wificurchannel.disabled = false;
 	}

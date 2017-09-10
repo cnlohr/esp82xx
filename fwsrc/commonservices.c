@@ -461,16 +461,14 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					config.ssid_len = aplen;
 					config.ssid[aplen] = 0;
 					config.password[passlen] = 0;
-				#if 0 //We don't support encryption.
-					config.ssid[c1l] = 0;  config.password[c2l] = 0;   config.authmode = 0;
-					if( encr ) {
-						int k;
-						for( k = 0; enctypes[k]; k++ )
-							if( strcmp( encr, enctypes[k] ) == 0 )
-								config.authmode = k;
+					if( passlen >= 8 )
+					{
+						config.authmode = AUTH_WPA2_PSK;
 					}
-    				#endif
-
+					else
+					{
+						config.authmode = AUTH_OPEN;
+					}
 					int chan = (bssid) ? safe_atoi(bssid) : config.channel;
 					if( chan == 0 || chan > 13 ) chan = 1;
 					config.channel = chan;
@@ -906,7 +904,18 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 		time_since_last_browse = -1;
 	}
 
-	if( opm == 1 ) {
+	if( opm == SOFTAP_MODE )
+	{
+		if( !printed_ip )
+		{
+			struct ip_info ipi;
+			wifi_get_ip_info(1, &ipi);
+			#define chop_ip(x) (((x)>>0)&0xff), (((x)>>8)&0xff), (((x)>>16)&0xff), (((x)>>24)&0xff)
+			printf( "IP: %d.%d.%d.%d\n", chop_ip(ipi.ip.addr) );
+			printed_ip = 1;
+		}
+	}
+	else if( opm == STATION_MODE ) {
 		struct station_config wcfg;
 		struct ip_info ipi;
 		int stat = wifi_station_get_connect_status();
