@@ -861,7 +861,7 @@ static void ICACHE_FLASH_ATTR RestoreAndReboot( )
 	//system_restore(); 	//Don't do this. Seems to permanantly break sector for settings.
 	GoAP(1);
 
-	ets_delay_us(1000000);
+	ets_delay_us(65535);
 	system_restart();
 #ifndef DISABLE_GPIO0_RESET
 	GPIO0Down = 0;
