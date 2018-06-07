@@ -910,6 +910,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 			wifi_station_disconnect();
 			wifi_fail_connects++;
 			printf( "Connection failed with code %d... Retrying, try: %d\n", stat, wifi_fail_connects );
+#ifndef DISABLE_AUTO_SWITCH_TO_AP
 #define MAX_CONNECT_FAILURES_BEFORE_SOFTAP 2
 #ifdef MAX_CONNECT_FAILURES_BEFORE_SOFTAP
 			if( wifi_fail_connects > MAX_CONNECT_FAILURES_BEFORE_SOFTAP )
@@ -918,6 +919,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 				CSConnectionChange();
 				wifi_fail_connects = 0;
 			}
+#endif
 #endif
 			wifi_station_connect();
 			printf("\n");
