@@ -774,7 +774,7 @@ void ICACHE_FLASH_ATTR CSPreInit()
 	if( opmode == 1 ) {
 		struct station_config sc;
 		wifi_station_get_config(&sc);
-		printf( "Station mode: \"%s\":\"%s\" (bssid_set:%d)\n", sc.ssid, sc.password, sc.bssid_set );
+		printf( "Station mode: \"%s\" (bssid_set:%d)\n", sc.ssid, sc.bssid_set );
 		int constat = wifi_station_connect();
 //Disables null SSIDs.
 //		if( sc.ssid[0] == 0 && !sc.bssid_set )	{ wifi_set_opmode( 2 );	opmode = 2; }
@@ -932,7 +932,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 			printf( "IP: %d.%d.%d.%d\n", chop_ip(ipi.ip.addr)      );
 			printf( "NM: %d.%d.%d.%d\n", chop_ip(ipi.netmask.addr) );
 			printf( "GW: %d.%d.%d.%d\n", chop_ip(ipi.gw.addr)      );
-			printf( "WCFG: /%s/%s/\n"  , wcfg.ssid, wcfg.password  );
+			printf( "WCFG: /%s/\n"  , wcfg.ssid  );
 			printed_ip = 1;
 			wifi_fail_connects = 0;
 			CSConnectionChange();
