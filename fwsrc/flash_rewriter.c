@@ -1,6 +1,8 @@
 //Copyright 2015 <>< Charles Lohr Under the MIT/x11 License, NewBSD License or
 // ColorChord License.  You Choose.
 
+#ifndef DISABLE_NET_REFLASH
+
 #include "flash_rewriter.h"
 #include "commonservices.h"
 #include <c_types.h>
@@ -14,15 +16,20 @@
 static const char * key = "";
 static int keylen = 0;
 
+#ifdef QUIET_REFLASH
+#define Kets_sprintf
+#define Kuart0_sendStr
+#else
 #define Kets_sprintf ets_sprintf
 #define Kuart0_sendStr uart0_sendStr
+#endif
 
 void ICACHE_FLASH_ATTR HEX16Convert( char * out, uint8_t * in )
 {
 	int i;
 	for( i = 0; i < 16; i++ )
 	{
-		Kets_sprintf( out+i*2, "%02x", in[i] );
+		ets_sprintf( out+i*2, "%02x", in[i] );
 	}
 }
 
@@ -217,4 +224,4 @@ int ICACHE_FLASH_ATTR FlashRewriter( char * command, int commandlen )
 
 }
 
-
+#endif

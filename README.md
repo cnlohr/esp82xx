@@ -6,14 +6,16 @@ Includes libraries and some basic functionality such as a Web-GUI, flashing firm
 You can use it as a template for your own ESP8266/ESP8285 projects.
 Just include it as sub-module in derivate projects.
 
+NOTE: If you are starting from another environment or from the factory, you should execute ```make erase initdefault``` this will set the flash up in a way compatible with the newer ESP NONOS SDK 2.x's.
+
 **Contributors,** please read the notes closely before you start (e.g. [Branches](#branches) and [Include Binaries](#include-binaries)).
 Make changes in the `dev` branch!
 
 - [List of projects using esp82xx](#list-of-projects-using-esp82xx)
 - [Usage](#usage)
     - [Requirements](#requirements)
-      - [Specify SDK](#specify-sdk)
     - [Start a new Project](#start-a-new-project)
+    - [Specify SDK](#specify-sdk)
     - [Burn Firmware](#burn-firmware)
     - [Connect to your Module](#connect-to-your-module)
     - [Commands](#commands)
@@ -115,8 +117,8 @@ It should create its own WiFi Access Point called `ESPXXXX` or similar, where `X
 From now on you can configure and burn new firmware/page data over the web interface in your browser (when connected to the esp's network or it is connected to yours).
 There are make targets to burn firmware and page data as well:
 
-    make netburn IP=192.168.1.4  # default IP, change to whatever your ESP is set to
-    make netweb IP=192.168.1.4
+    make netburn IP=192.168.4.1  # default IP, change to whatever your ESP is set to
+    make netweb IP=192.168.4.1
 
 To find out the IP, see below.
 
@@ -264,6 +266,7 @@ or create your own
     git submodule add https://github.com/cnlohr/esp82xx.git
     cp esp82xx/user.cfg.example user.cfg
     cp esp82xx/Makefile.example Makefile
+    cp esp82xx/fwsrc/user . -a
     mkdir -p web/page user
     ln -s ../esp82xx/web/Makefile web/
     # ... link or copy more files depending on how much you want to change ...
@@ -306,10 +309,10 @@ Cope with submodule changes in top-level project:
  - You made changes in the submodule and want to push them:
 
     ```
-    cd esp82xx   # is the submodules
+    cd esp82xx   # is the submodules here
     # Make changes in esp82xx
     git commit -m 'Your Message'
-    git push
+    git push     # pushes to the sumodule remote
     ```
     Make sure you're in the 'dev' branch.
     You can check that with `git branch`.
@@ -323,7 +326,6 @@ Cope with submodule changes in top-level project:
  - Bump esp82xx version in the main project root folder:
 
     ```
-    # You're in the main project root folder
     cd esp82xx
     git pull
     cd ..

@@ -23,6 +23,7 @@ usbweb ..... Burn webpage by PRE-RELEASE USB loader (will probably change)
 initdefault  Burn default initial data to ROM (may be needed after erase)
 init3v3 .... Burn default values to rom but for use with system_get_vdd33
 erase ...... Totally erase chip.
+burnitall .. initdefault + burnweb + burn as a single run.
 
 More commands: all, clean, purge, dumprom, cleanproject
 endef
@@ -53,7 +54,7 @@ endif
 
 INCL = $(SDK)/include esp82xx/include .
 
-CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)'
+CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)' -g
 
 LDFLAGS_CORE = -Wl,--relax -Wl,--gc-sections -nostdlib -L$(XTLIB) \
 	-L$(XTGCCLIB) $(addprefix $(SDK)/lib/lib,$(addsuffix .a,$(LIBS))) \
@@ -69,6 +70,10 @@ $(warning Debug is enabled!)
 FLASH_WRITE_FLAGS += --verify
 endif
 
+ifeq ($(SDK),$(PWD)/esp82xx/toolchain/esp_nonos_sdk)
+SDK_DEP := esp82xx/toolchain/esp_nonos_sdk/Makefile
+endif
+
 ##########################################################################RULES
 
 help :
@@ -81,7 +86,7 @@ $(FW_FILE1) $(FW_FILE2) : $(TARGET)
 	PATH=$(PATH):$(FOLDERPREFIX) $(ESPTOOL_PY) elf2image $(TARGET)
 	@#no need to set things like dout, and memory size.  This data is copied from the ESP back to itself on write.
 
-$(TARGET) : $(SRCS) Makefile
+$(TARGET) : $(SRCS) Makefile $(SDK_DEP)
 	$(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
 
 debug : $(TARGET)
@@ -94,9 +99,14 @@ burn : $(FW_FILE1) $(FW_FILE2)
 	$(info NOTICE: Currently burning for ESP8285.  If you are on a '66 reconfigure CHIP.)
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
 else ifeq ($(CHIP), 8266)
+burnitall :
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2) 0x3FC000 esp82xx/data/esp_init_data_default.bin $(PAGE_OFFSET) web/page.mpfs)||(true)
+
 burn : $(FW_FILE1) $(FW_FILE2)
 	$(info NOTICE: Currently burning for ESP8266.  If you are on an '85 reconfigure CHIP.)
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
+burnitall :
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2) 0x3FC000 esp82xx/data/esp_init_data_default.bin $(PAGE_OFFSET) web/page.mpfs)||(true)
 else
 	$(error Error: Unknown chip '$(CHIP)')
 endif
@@ -175,6 +185,12 @@ project : Makefile user.cfg web/page/index.html web/page/example.js
 	ln -s $(patsubst %,../../%,$(wildcard esp82xx/web/page/jquery-*)) ../../esp82xx/web/page/menuinterface.js web/page/ 2>/dev/null; \
 	ln -s $(patsubst %,../%,$(wildcard esp82xx/web/*)) web/ 2>/dev/null; \
 	cp -rn esp82xx/fwsrc/user/ .;
+
+ifeq ($(SDK),$(PWD)/esp82xx/toolchain/esp_nonos_sdk)
+$(SDK_DEP) :
+	@echo "Warning: SDK is missing, trying to get it from github:" >&2
+	@cd esp82xx && git submodule update --init --recursive
+endif
 
 gitproject: project
 	git init .
