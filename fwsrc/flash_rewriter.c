@@ -1,6 +1,8 @@
 //Copyright 2015 <>< Charles Lohr Under the MIT/x11 License, NewBSD License or
 // ColorChord License.  You Choose.
 
+#ifndef DISABLE_NET_REFLASH
+
 #include "flash_rewriter.h"
 #include "commonservices.h"
 #include <c_types.h>
@@ -233,4 +235,4 @@ int ICACHE_FLASH_ATTR FlashRewriter( char * command, int commandlen )
 
 }
 
-
+#endif

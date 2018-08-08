@@ -459,16 +459,16 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					os_memcpy( &config.ssid, apname, aplen );
 					os_memcpy( &config.password, password, passlen );
 					config.ssid_len = aplen;
-					config.ssid[aplen] = 0;
-					config.password[passlen] = 0;
-					if( passlen >= 8 )
-					{
-						config.authmode = AUTH_WPA2_PSK;
+    				#if 0 //We don't support encryption.
+					config.ssid[c1l] = 0;  config.password[c2l] = 0;   config.authmode = 0;
+					if( encr ) {
+						int k;
+						for( k = 0; enctypes[k]; k++ )
+							if( strcmp( encr, enctypes[k] ) == 0 )
+								config.authmode = k;
 					}
-					else
-					{
-						config.authmode = AUTH_OPEN;
-					}
+    				#endif
+
 					int chan = (bssid) ? safe_atoi(bssid) : config.channel;
 					if( chan == 0 || chan > 13 ) chan = 1;
 					config.channel = chan;
@@ -757,10 +757,7 @@ static void ICACHE_FLASH_ATTR SwitchToSoftAP( )
 	struct softap_config sc;
 	wifi_softap_get_config(&sc);
 	printed_ip = 0;
-	printf( "After scan back to SoftAP mode: \"%s\":\"%s\" @ %d %d/%d\n", sc.ssid, sc.password, wifi_get_channel(), sc.ssid_len, wifi_softap_dhcps_status() );
-	wifi_set_opmode( 2 );
-//	wifi_softap_set_config(&sc);
-//	wifi_station_connect();
+	printf( "SoftAP mode: \"%s\":\"%s\" @ %d %d/%d\n", sc.ssid, sc.password, wifi_get_channel(), sc.ssid_len, wifi_softap_dhcps_status() );
 	ExitCritical();
 }
 
@@ -783,7 +780,6 @@ void ICACHE_FLASH_ATTR CSPreInit()
 		wifi_softap_get_config(&sc);
 		printf( "Default SoftAP mode: \"%s\":\"%s\"\n", sc.ssid, sc.password );
 	}
-	CSSettingsLoad(0);
 }
 
 
@@ -949,7 +945,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 			printf( "IP: %d.%d.%d.%d\n", chop_ip(ipi.ip.addr)      );
 			printf( "NM: %d.%d.%d.%d\n", chop_ip(ipi.netmask.addr) );
 			printf( "GW: %d.%d.%d.%d\n", chop_ip(ipi.gw.addr)      );
-			printf( "WCFG: /%s/%s/\n"  , wcfg.ssid, wcfg.password  );
+			printf( "WCFG: /%s/\n"  , wcfg.ssid  );
 			printed_ip = 1;
 			wifi_fail_connects = 0;
 			CSConnectionChange();

@@ -277,6 +277,7 @@ or create your own
     git submodule add https://github.com/cnlohr/esp82xx.git
     cp esp82xx/user.cfg.example user.cfg
     cp esp82xx/Makefile.example Makefile
+    cp esp82xx/fwsrc/user . -a
     mkdir -p web/page user
     ln -s ../esp82xx/web/Makefile web/
     # ... link or copy more files depending on how much you want to change ...
