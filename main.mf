@@ -99,9 +99,6 @@ burn : $(FW_FILE1) $(FW_FILE2)
 	$(info NOTICE: Currently burning for ESP8285.  If you are on a '66 reconfigure CHIP.)
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
 else ifeq ($(CHIP), 8266)
-burnitall :
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2) 0x3FC000 esp82xx/data/esp_init_data_default.bin $(PAGE_OFFSET) web/page.mpfs)||(true)
-
 burn : $(FW_FILE1) $(FW_FILE2)
 	$(info NOTICE: Currently burning for ESP8266.  If you are on an '85 reconfigure CHIP.)
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
