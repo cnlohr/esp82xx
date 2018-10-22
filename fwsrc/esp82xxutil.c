@@ -267,13 +267,13 @@ int32_t    ParamCaptureAndAdvanceInt( )
 	}
 }
 
-const ICACHE_FLASH_ATTR unsigned char *memchr(const unsigned char *s, int c, size_t n)
-{
-	int i;
-	for( i = 0; i < n; i++, s++ )
-	{
-		if( *s == c ) return s;
-	}
-	return 0;
-}
+//const ICACHE_FLASH_ATTR unsigned char *memchr(const unsigned char *s, int c, size_t n)
+//{
+//	int i;
+//	for( i = 0; i < n; i++, s++ )
+//	{
+//		if( *s == c ) return s;
+//	}
+//	return 0;
+//}
 

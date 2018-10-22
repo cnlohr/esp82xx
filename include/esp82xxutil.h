@@ -98,6 +98,6 @@ uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
 
 
 //For newer SDKs
-const unsigned char * ICACHE_FLASH_ATTR memchr(const unsigned char *s, int c, size_t n);
+//const unsigned char * ICACHE_FLASH_ATTR memchr(const unsigned char *s, int c, size_t n);
 
 #endif
