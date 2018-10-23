@@ -155,7 +155,7 @@ dumprom :
 	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) read_flash 0 1048576 dump.bin)||(true)
 
 initdefault :
-	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash 0x3FC000 esp82xx/data/esp_init_data_default.bin
+	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash 0x3FC000 esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin
 
 init3v3 :
 	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash 0x3FC000 esp82xx/data/esp_init_data_adc33.bin
