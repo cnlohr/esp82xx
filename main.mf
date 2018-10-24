@@ -2,6 +2,8 @@ define USAGE
 Usage: make [command] [VARIABLES]
 
 all......... Build the binaries
+clean....... Clean the binaries
+purge....... Clean the binaries and web stuff
 debug....... Build a .map and .lst file.  Useful for seeing what's going on
              behind the scenes.
 burn ....... Write firmware to chip using a regular serial port
@@ -18,12 +20,18 @@ gitproject . Same as 'make project' but also initialiezes the current folder
              as git repository and pushes it to GIT_ORIGIN.
              Example:
                  make gitproject GIT_ORIGIN=https://github.com/USER/YREPO.git
+cleanproject Remove the use* and web folders
 usbburn .... Burn via PRE-RELEASE USB loader (will probably change)
 usbweb ..... Burn webpage by PRE-RELEASE USB loader (will probably change)
 initdefault  Burn default initial data to ROM (may be needed after erase)
 init3v3 .... Burn default values to rom but for use with system_get_vdd33
 erase ...... Totally erase chip.
+wipechip.... Write zeros to the chip
+getips ..... Detect pssible IPs for ESP82XX modules, needs nmap, takes time
 burnitall .. initdefault + burnweb + burn as a single run.
+dumprom .... read the rom from the chip
+bump_submodule . Update the git submodules
+
 
 More commands: all, clean, purge, dumprom, cleanproject
 endef
