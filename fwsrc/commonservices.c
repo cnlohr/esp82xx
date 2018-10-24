@@ -50,6 +50,8 @@ int ets_str2macaddr(void *, void *);
 
 uint8_t need_to_switch_opmode = 0; //0 = no, 1 = will need to. 2 = do it now.
 
+#define SETTINGS_ADDR 0x7C // this comes from SYSTEM_PARTITION_CUSTOMER_PRIV_PARAM_ADDR
+#define SETTINGS_KEY  0xAF
 
 void ICACHE_FLASH_ATTR SetServiceName( const char * myservice )
 {
@@ -333,7 +335,7 @@ CMD_RET_TYPE cmd_Info(char * buffer, int retsize, char * pusrdata, char * buffen
 	int i;
 	switch( pusrdata[1] ) {
 		case 'b': case 'B': system_restart(); break;
-		case 's': case 'S': CSSettingsSave();    buffprint( "IS\r\n" ); break;
+		case 's': case 'S': CSSettingsSave(true);    buffprint( "IS\r\n" ); break;
 		case 'l': case 'L': CSSettingsLoad( 0 ); buffprint( "IL\r\n" ); break;
 		case 'r': case 'R': CSSettingsLoad( 1 ); buffprint( "IR\r\n" ); break;
 		case 'f': case 'F': break; //Start finding devices, or return list of found devices.
@@ -1000,28 +1002,31 @@ void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 {
 	EnterCritical();
 	ets_memset( &SETTINGS, 0, sizeof( SETTINGS) );
-	system_param_load( 0x3A, 0, &SETTINGS, sizeof( SETTINGS ) );
+	system_param_load( SETTINGS_ADDR, 0, &SETTINGS, sizeof( SETTINGS ) );
 
 //	printf( "About to read\n" );
 //	int res = spi_flash_read( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );
 //	printf( "RES: %d\n", res );
 	printf( "Loading Settings: %02x / %d / %d / %d\n", SETTINGS.settings_key, force_reinit, SETTINGS.DeviceName[0], SETTINGS.DeviceName[0] );
-	if( SETTINGS.settings_key != 0xAF || force_reinit || SETTINGS.DeviceName[0] == 0x00 || SETTINGS.DeviceName[0] == 0xFF ) {
+	if( force_reinit ||
+			SETTINGS.settings_key != SETTINGS_KEY ||
+			SETTINGS.DeviceName[0] == 0x00 ||
+			SETTINGS.DeviceName[0] == 0xFF ) {
 		ets_memset( &SETTINGS, 0, sizeof( SETTINGS ) );
 
 		uint8_t sysmac[6];
 		printf( "Settings uninitialized.  Initializing.\n" );
-		if( !wifi_get_macaddr( 0, sysmac ) );
+		if( !wifi_get_macaddr( 0, sysmac ) )
+		{
 			wifi_get_macaddr( 1, sysmac );
+		}
 
 		ets_sprintf( SETTINGS.DeviceName, "ESP_%02X%02X%02X", sysmac[3], sysmac[4], sysmac[5] );
 		ets_sprintf( SETTINGS.DeviceDescription, "Default" );
 		printf( "Initialized Name: %s\n", SETTINGS.DeviceName );
 
-		CSSettingsSave(); // will have done ExitCritical() before returning so must
-		EnterCritical(); // again
+		CSSettingsSave(false);
 		system_restore();
-		ExitCritical();
 	}
 
 	wifi_station_set_hostname( SETTINGS.DeviceName );
@@ -1030,15 +1035,21 @@ void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 }
 
 
-void ICACHE_FLASH_ATTR CSSettingsSave()
+void ICACHE_FLASH_ATTR CSSettingsSave(bool criticalRequired)
 {
-	EnterCritical();
-	SETTINGS.settings_key = 0xAF;
+	if(criticalRequired)
+	{
+		EnterCritical();
+	}
+	SETTINGS.settings_key = SETTINGS_KEY;
 //	spi_flash_erase_sector( 0x3a );
 //	spi_flash_write( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );
-	system_param_save_with_protect( 0x3A, &SETTINGS, sizeof( SETTINGS ) );
+	system_param_save_with_protect( SETTINGS_ADDR, &SETTINGS, sizeof( SETTINGS ) );
 	printf( "Saving\n" );
-	ExitCritical();
+	if(criticalRequired)
+	{
+		ExitCritical();
+	}
 }
 
 
@@ -1085,4 +1096,4 @@ char * ICACHE_FLASH_ATTR strcat( char * dest, char * src )
     return rdest;
 }
 
-struct CommonSettings SETTINGS __attribute__ ((aligned (16)));
+struct CommonSettings SETTINGS;

@@ -34,17 +34,17 @@ void ICACHE_FLASH_ATTR CSTick( int slowtick );
 void ICACHE_FLASH_ATTR CSConnectionChange();
 
 void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit);
-void ICACHE_FLASH_ATTR CSSettingsSave();
+void ICACHE_FLASH_ATTR CSSettingsSave(bool criticalRequired);
 
-struct CommonSettings
+struct __attribute__ ((aligned (32))) CommonSettings
 {
-	uint8_t settings_key; //Needs to be 0xAF
+	uint32_t settings_key; //Needs to be 0xAF
 	char DeviceName[MAX_DEVICE_NAME];
 	char DeviceDescription[MAX_DEVICE_NAME];
 	char UserData[USERDATA_SIZE];
 };
 
-extern struct CommonSettings SETTINGS __attribute__ ((aligned (16)));
+extern struct CommonSettings SETTINGS;
 
 
 //You must provide:
