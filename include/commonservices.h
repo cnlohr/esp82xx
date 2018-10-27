@@ -82,5 +82,7 @@ void ICACHE_FLASH_ATTR BrowseForService( const char * servicename );
 //Set the service name for this device.  No more than 10 chars allowed.
 void ICACHE_FLASH_ATTR SetServiceName( const char * myservice );
 
+char * ICACHE_FLASH_ATTR strcat( char * dest, char * src );
+
 #endif
 
