@@ -29,7 +29,7 @@ int ICACHE_FLASH_ATTR issue_command(char * retdata, int retsize, char *pusrdata,
 
 //Includes UDP Control + HTTP Interfaces
 void ICACHE_FLASH_ATTR CSPreInit();
-void ICACHE_FLASH_ATTR CSInit();
+void ICACHE_FLASH_ATTR CSInit( bool startServer );
 void ICACHE_FLASH_ATTR CSTick( int slowtick );
 void ICACHE_FLASH_ATTR CSConnectionChange();
 

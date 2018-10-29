@@ -791,33 +791,36 @@ void ICACHE_FLASH_ATTR CSPreInit()
 }
 
 
-void ICACHE_FLASH_ATTR CSInit()
+void ICACHE_FLASH_ATTR CSInit(bool startServer)
 {
 
+	if(startServer)
+	{
 #ifndef DISABLE_SERVICE_UDP
-    pUdpServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
-	ets_memset( pUdpServer, 0, sizeof( struct espconn ) );
-	pUdpServer->type = ESPCONN_UDP;
-	pUdpServer->proto.udp = (esp_udp *)os_zalloc(sizeof(esp_udp));
-	pUdpServer->proto.udp->local_port = BACKEND_PORT;
-	espconn_regist_recvcb(pUdpServer, issue_command_udp);
-	espconn_create( pUdpServer );
+		pUdpServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
+		ets_memset( pUdpServer, 0, sizeof( struct espconn ) );
+		pUdpServer->type = ESPCONN_UDP;
+		pUdpServer->proto.udp = (esp_udp *)os_zalloc(sizeof(esp_udp));
+		pUdpServer->proto.udp->local_port = BACKEND_PORT;
+		espconn_regist_recvcb(pUdpServer, issue_command_udp);
+		espconn_create( pUdpServer );
 #endif
 
-	SetupMDNS();
+		SetupMDNS();
 
 #ifndef DISABLE_HTTP
-	pHTTPServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
-	ets_memset( pHTTPServer, 0, sizeof( struct espconn ) );
-	espconn_create( pHTTPServer );
-	pHTTPServer->type = ESPCONN_TCP;
-    pHTTPServer->state = ESPCONN_NONE;
-	pHTTPServer->proto.tcp = (esp_tcp *)os_zalloc(sizeof(esp_tcp));
-	pHTTPServer->proto.tcp->local_port = WEB_PORT;
-    espconn_regist_connectcb(pHTTPServer, httpserver_connectcb);
-    espconn_accept(pHTTPServer);
-    espconn_regist_time(pHTTPServer, 15, 0); //timeout
+		pHTTPServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
+		ets_memset( pHTTPServer, 0, sizeof( struct espconn ) );
+		espconn_create( pHTTPServer );
+		pHTTPServer->type = ESPCONN_TCP;
+		pHTTPServer->state = ESPCONN_NONE;
+		pHTTPServer->proto.tcp = (esp_tcp *)os_zalloc(sizeof(esp_tcp));
+		pHTTPServer->proto.tcp->local_port = WEB_PORT;
+		espconn_regist_connectcb(pHTTPServer, httpserver_connectcb);
+		espconn_accept(pHTTPServer);
+		espconn_regist_time(pHTTPServer, 15, 0); //timeout
 #endif
+	}
 
 	//Setup GPIO0 and 2 for input.
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U,FUNC_GPIO2);
