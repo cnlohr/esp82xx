@@ -16,6 +16,7 @@
 #include "esp8266_rom.h"
 #include <gpio.h>
 #include "flash_rewriter.h"
+#include "mdns.h"
 
 #define buffprint(M, ...) buffend += ets_sprintf( buffend, M, ##__VA_ARGS__)
 
@@ -893,7 +894,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 		if( BrowseSearchCount ) {
 			//Emit a browse.
 			EmitBrowseNow();
-			BrowseRequestTimeout = (rand()%20)+30;
+			BrowseRequestTimeout = (os_random()%20)+30;
 			BrowseSearchCount--;
 		} else BrowseRequestTimeout = 0;
 	}

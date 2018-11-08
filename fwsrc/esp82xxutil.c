@@ -5,6 +5,7 @@
 #include "esp82xxutil.h"
 #include <c_types.h>
 #include <mem.h>
+#include "osapi.h"
 
 const char * enctypes[6] = { "open", "wep", "wpa", "wpa2", "wpa_wpa2", 0 };
 char * generic_ptr;

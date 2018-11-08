@@ -15,7 +15,6 @@
 #include <c_types.h>
 #include <user_interface.h>
 #include <espconn.h>
-#include <stdio.h>
 
 
 //XXX WARNING As of 1.3.0, "cansend" doesn't work.
