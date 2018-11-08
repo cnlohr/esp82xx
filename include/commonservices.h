@@ -14,7 +14,7 @@
 #define STR(x) STR_HELPER(x)
 
 #ifdef DEBUG
-    #define debug(M, ...) printf("[DEBUG] (%s:%d) " M "\n", __FILE__, __LINE__, ##__VA_ARGS__);
+    #define debug(M, ...) os_printf("[DEBUG] (%s:%d) " M "\n", __FILE__, __LINE__, ##__VA_ARGS__);
 #else
     #define debug(...) ;
 #endif

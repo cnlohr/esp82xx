@@ -10,7 +10,7 @@ void ICACHE_FLASH_ATTR HTTPTick( uint8_t timed ){ }
 void ICACHE_FLASH_ATTR httpserver_connectcb(void *arg) { }
 #else
 
-#define HTDEBUG( x... ) printf( x )
+#define HTDEBUG( x... ) os_printf( x )
 
 //#define ISKEEPALIVE "keep-alive"
 #define ISKEEPALIVE "close"
@@ -68,7 +68,7 @@ void ICACHE_FLASH_ATTR HTTPGotData( )
 				curhttp->pathbuffer[curhttp->state_deets-1] = 0;
 				curhttp->state_deets = 0;
 
-				if( strncmp( (const char*)curhttp->pathbuffer, "/d/ws", 5 ) == 0 )
+				if( ets_strncmp( (const char*)curhttp->pathbuffer, "/d/ws", 5 ) == 0 )
 				{
 					curhttp->state = HTTP_STATE_DATA_WEBSOCKET;
 					curhttp->state_deets = 0;
@@ -182,7 +182,7 @@ void ICACHE_FLASH_ATTR HTTPTick( uint8_t timed )
 	uint8_t i;
 	for( i = 0; i < HTTP_CONNECTIONS; i++ )
 	{
-		if( curhttp ) { printf( "XXUER\n" );} //Unexpected Race Condition
+		if( curhttp ) { os_printf( "XXUER\n" );} //Unexpected Race Condition
 		curhttp = &HTTPConnections[i];
 		DoHTTP( timed );
 		curhttp = 0;
@@ -234,11 +234,11 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 		//Content-Type?
 		while( slen && ( curhttp->pathbuffer[--slen] != '.' ) );
 		k = &curhttp->pathbuffer[slen+1];
-		if( strcmp( k, "mp3" ) == 0 )
+		if( ets_strcmp( k, "mp3" ) == 0 )
 		{
 			PushString( "audio/mpeg3" );
 		}
-		else if( strcmp( k, "gz" ) == 0 )
+		else if( ets_strcmp( k, "gz" ) == 0 )
 		{
 			// move past the dot
 			--slen;
@@ -247,10 +247,10 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 			while( slen && ( curhttp->pathbuffer[--slen] != '.' ) );
 			k2 = &curhttp->pathbuffer[slen+1];
 
-			if( strcmp (k2, "js.gz") == 0 ) {
+			if( ets_strcmp (k2, "js.gz") == 0 ) {
 				PushString( "text/javascript" );
 			}
-			else if( strcmp (k2, "css.gz") == 0 ) {
+			else if( ets_strcmp (k2, "css.gz") == 0 ) {
 				PushString( "text/css" );
 			}
 			else {
@@ -361,7 +361,7 @@ http_recvcb(void *arg, char *pusrdata, unsigned short length)
 	//Though it might be possible for this to interrupt the other
 	//tick task, I don't know if this is actually a probelem.
 	//I'm adding this back-up-the-register just in case.
-	if( curhttp ) { printf( "Unexpected Race Condition\n" );}
+	if( curhttp ) { os_printf( "Unexpected Race Condition\n" );}
 
 	curhttp = (struct HTTPConnection * )pespconn->reverse;
 	curdata = (uint8*)pusrdata;
@@ -457,7 +457,7 @@ void ICACHE_FLASH_ATTR WebSocketGotData( uint8_t c )
 		while( curlen > 20 )
 		{
 			curdata++; curlen--;
-			if( strncmp( curdata, "Sec-WebSocket-Key: ", 19 ) == 0 )
+			if( ets_strncmp( curdata, "Sec-WebSocket-Key: ", 19 ) == 0 )
 			{
 				break;
 			}

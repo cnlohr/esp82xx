@@ -97,7 +97,7 @@ void user_init(void)
 	os_timer_setfn(&some_timer, (os_timer_func_t *)myTimer, NULL);
 	os_timer_arm(&some_timer, 100, 1);
 
-	printf( "Boot Ok.\n" );
+	os_printf( "Boot Ok.\n" );
 
 	wifi_set_sleep_type(LIGHT_SLEEP_T);
 	wifi_fpm_set_sleep_type(LIGHT_SLEEP_T);
