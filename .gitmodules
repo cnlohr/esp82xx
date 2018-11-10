@@ -1,3 +1,0 @@
-[submodule "toolchain/esp_nonos_sdk"]
-	path = toolchain/esp_nonos_sdk
-	url = https://github.com/AEFeinstein/ESP8266_NONOS_SDK
