@@ -39,7 +39,7 @@ LOCAL struct UartBuffer* pRxBuffer = NULL;
 /*uart demo with a system task, to output what uart receives*/
 /*this is a example to process uart data from task,please change the priority to fit your application task if exists*/
 /*it might conflict with your task, if so,please arrange the priority of different task,  or combine it to a different event in the same task. */
-#define uart_recvTaskPrio        0
+#define uart_recvTaskPrio        1
 #define uart_recvTaskQueueLen    10
 os_event_t    uart_recvTaskQueue[uart_recvTaskQueueLen];
 
@@ -65,7 +65,9 @@ uart_config(uint8 uart_no)
         PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U, FUNC_U1TXD_BK);
     }else{
         /* rcv_buff size if 0x100 */
+#ifndef DISABLE_CHARRX
         ETS_UART_INTR_ATTACH(uart0_rx_intr_handler,  &(UartDev.rcv_buff));
+#endif
         PIN_PULLUP_DIS(PERIPHS_IO_MUX_U0TXD_U);
         PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0TXD_U, FUNC_U0TXD);
 	#if UART_HW_RTS
@@ -85,7 +87,8 @@ uart_config(uint8 uart_no)
     //clear rx and tx fifo,not ready
     SET_PERI_REG_MASK(UART_CONF0(uart_no), UART_RXFIFO_RST | UART_TXFIFO_RST);    //RESET FIFO
     CLEAR_PERI_REG_MASK(UART_CONF0(uart_no), UART_RXFIFO_RST | UART_TXFIFO_RST);
-    
+
+#ifndef DISABLE_CHARRX
     if (uart_no == UART0){
         //set rx fifo trigger
         WRITE_PERI_REG(UART_CONF1(uart_no),
@@ -104,10 +107,13 @@ uart_config(uint8 uart_no)
     }else{
         WRITE_PERI_REG(UART_CONF1(uart_no),((UartDev.rcv_buff.TrigLvl & UART_RXFIFO_FULL_THRHD) << UART_RXFIFO_FULL_THRHD_S));//TrigLvl default val == 1
     }
+#endif
     //clear all interrupt
     WRITE_PERI_REG(UART_INT_CLR(uart_no), 0xffff);
+#ifndef DISABLE_CHARRX
     //enable rx_interrupt
     SET_PERI_REG_MASK(UART_INT_ENA(uart_no), UART_RXFIFO_FULL_INT_ENA|UART_RXFIFO_OVF_INT_ENA);
+#endif
 }
 
 /******************************************************************************
@@ -217,6 +223,9 @@ void at_port_print(const char *str) __attribute__((alias("uart0_sendStr")));
  * Parameters   : void *para - point to ETS_UART_INTR_ATTACH's arg
  * Returns      : NONE
 *******************************************************************************/
+
+#ifndef DISABLE_CHARRX
+
 LOCAL void
 uart0_rx_intr_handler(void *para)
 {
@@ -265,8 +274,9 @@ uart0_rx_intr_handler(void *para)
         WRITE_PERI_REG(UART_INT_CLR(uart_no), UART_RXFIFO_OVF_INT_CLR);
         DBG1("RX OVF!!\r\n");
     }
-
 }
+
+#endif
 
 /******************************************************************************
  * FunctionName : uart_init
@@ -287,6 +297,10 @@ uart_test_rx()
 }
 #endif
 
+#ifndef DISABLE_CHARRX
+extern void charrx( uint8_t c );
+#endif
+
 LOCAL void ICACHE_FLASH_ATTR ///////
 uart_recvTask(os_event_t *events)
 {
@@ -299,7 +313,9 @@ uart_recvTask(os_event_t *events)
         uint8 idx=0;
         for(idx=0;idx<fifo_len;idx++) {
             d_tmp = READ_PERI_REG(UART_FIFO(UART0)) & 0xFF;
-            uart_tx_one_char(UART0, d_tmp);
+#ifndef DISABLE_CHARRX
+            charrx(d_tmp);
+#endif
         }
         WRITE_PERI_REG(UART_INT_CLR(UART0), UART_RXFIFO_FULL_INT_CLR|UART_RXFIFO_TOUT_INT_CLR);
         uart_rx_intr_enable(UART0);
