@@ -254,7 +254,7 @@ void user_init(void)
  * section with critical timing. There is no code in this project that will
  * cause reboots if interrupts are disabled.
  */
-void ICACHE_FLASH_ATTR EnterCritical(void)
+void EnterCritical(void)
 {
 	;
 }
@@ -263,7 +263,7 @@ void ICACHE_FLASH_ATTR EnterCritical(void)
  * This will be called to enable any interrupts after the firmware exits a
  * section with critical timing.
  */
-void ICACHE_FLASH_ATTR ExitCritical(void)
+void ExitCritical(void)
 {
 	;
 }
