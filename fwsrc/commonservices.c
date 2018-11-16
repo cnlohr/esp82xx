@@ -463,9 +463,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					os_memcpy( &config.ssid, apname, aplen );
 					os_memcpy( &config.password, password, passlen );
 					config.ssid_len = aplen;
-					config.ssid[aplen] = 0;
-					config.password[passlen] = 0;
-				#if 0 //We don't support encryption.
+    				#if 0 //We don't support encryption.
 					config.ssid[c1l] = 0;  config.password[c2l] = 0;   config.authmode = 0;
 					if( encr ) {
 						int k;
@@ -763,10 +761,7 @@ static void ICACHE_FLASH_ATTR SwitchToSoftAP( )
 	struct softap_config sc;
 	wifi_softap_get_config(&sc);
 	printed_ip = 0;
-	os_printf( "After scan back to SoftAP mode: \"%s\":\"%s\" @ %d %d/%d\n", sc.ssid, sc.password, wifi_get_channel(), sc.ssid_len, wifi_softap_dhcps_status() );
-	wifi_set_opmode( 2 );
-//	wifi_softap_set_config(&sc);
-//	wifi_station_connect();
+	os_printf( "SoftAP mode: \"%s\":\"%s\" @ %d %d/%d\n", sc.ssid, sc.password, wifi_get_channel(), sc.ssid_len, wifi_softap_dhcps_status() );
 	ExitCritical();
 }
 
@@ -778,7 +773,7 @@ void ICACHE_FLASH_ATTR CSPreInit()
 	if( opmode == 1 ) {
 		struct station_config sc;
 		wifi_station_get_config(&sc);
-		os_printf( "Station mode: \"%s\" (bssid_set:%d)\n", sc.ssid, sc.bssid_set );
+		os_printf( "Station mode: \"%s\":\"%s\" (bssid_set:%d)\n", sc.ssid, sc.password, sc.bssid_set );
 		int constat = wifi_station_connect();
 //Disables null SSIDs.
 //		if( sc.ssid[0] == 0 && !sc.bssid_set )	{ wifi_set_opmode( 2 );	opmode = 2; }
@@ -789,7 +784,6 @@ void ICACHE_FLASH_ATTR CSPreInit()
 		wifi_softap_get_config(&sc);
 		os_printf( "Default SoftAP mode: \"%s\":\"%s\"\n", sc.ssid, sc.password );
 	}
-	CSSettingsLoad(0);
 }
 
 
@@ -831,7 +825,9 @@ void ICACHE_FLASH_ATTR CSInit(bool startServer)
 	PIN_OUT_CLEAR = _BV(2);
 }
 
+#ifndef DISABLE_GPIO0_RESET
 static int GPIO0Down = 0;
+#endif
 
 static void ICACHE_FLASH_ATTR GoAP( int always )
 {
@@ -868,13 +864,16 @@ static void ICACHE_FLASH_ATTR RestoreAndReboot( )
 	//system_restore(); 	//Don't do this. Seems to permanantly break sector for settings.
 	GoAP(1);
 
-	ets_delay_us(1000000);
+	ets_delay_us(65535);
 	system_restart();
+#ifndef DISABLE_GPIO0_RESET
 	GPIO0Down = 0;
+#endif
 }
 
 static void ICACHE_FLASH_ATTR SlowTick( int opm )
 {
+#ifndef DISABLE_GPIO0_RESET
 	if( (PIN_IN & _BV(0)) == 0 )
 	{
 		if( GPIO0Down++ > (5000 / SLOWTICK_MS) )
@@ -886,7 +885,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 	{
 		GPIO0Down = 0;
 	}
-
+#endif
 	HTTPTick(1);
 
 	if( BrowseRespond ) EmitWhoAmINow();
@@ -908,7 +907,18 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 		time_since_last_browse = -1;
 	}
 
-	if( opm == 1 ) {
+	if( opm == SOFTAP_MODE )
+	{
+		if( !printed_ip )
+		{
+			struct ip_info ipi;
+			wifi_get_ip_info(1, &ipi);
+			#define chop_ip(x) (((x)>>0)&0xff), (((x)>>8)&0xff), (((x)>>16)&0xff), (((x)>>24)&0xff)
+			printf( "IP: %d.%d.%d.%d\n", chop_ip(ipi.ip.addr) );
+			printed_ip = 1;
+		}
+	}
+	else if( opm == STATION_MODE ) {
 		struct station_config wcfg;
 		struct ip_info ipi;
 		int stat = wifi_station_get_connect_status();
@@ -917,7 +927,10 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 			wifi_station_disconnect();
 			wifi_fail_connects++;
 			os_printf( "Connection failed with code %d... Retrying, try: %d\n", stat, wifi_fail_connects );
-#ifndef DISABLE_AUTO_SWITCH_TO_AP
+
+#ifdef CUSTOM_FAIL_BEHAVIOR
+			FailedToConnect( wifi_fail_connects );
+#else
 #define MAX_CONNECT_FAILURES_BEFORE_SOFTAP 2
 #ifdef MAX_CONNECT_FAILURES_BEFORE_SOFTAP
 			if( wifi_fail_connects > MAX_CONNECT_FAILURES_BEFORE_SOFTAP )
@@ -927,9 +940,9 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 				wifi_fail_connects = 0;
 			}
 #endif
-#endif
 			wifi_station_connect();
 			os_printf("\n");
+#endif
 			printed_ip = 0;
 		} else if( stat == STATION_GOT_IP && !printed_ip ) {
 			wifi_station_get_config( &wcfg );

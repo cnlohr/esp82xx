@@ -4,9 +4,10 @@
 #ifndef _HTTP_H
 #define _HTTP_H
 
+#include <stdlib.h>
+#include "user_interface.h"
 #include "mem.h"
 #include "c_types.h"
-#include "user_interface.h"
 #include "ets_sys.h"
 #include "uart.h"
 #include "osapi.h"
