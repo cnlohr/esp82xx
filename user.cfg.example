@@ -21,6 +21,7 @@ OPTS += -DICACHE_FLASH
 #OPTS += -DDEBUG
 #OPTS += -DNET_MAXTRIES=10
 #OPTS += -DNET_TIMEOUT=3.0
+OPTS += -DMFS_PAGE_OFFSET=$(MFS_PAGE_OFFSET)
 
 PAGE_TITLE = esp82xx-basic
 PAGE_SCRIPTS = $(wildcard page/*.js) # include all javascrpts in ./web/page/
