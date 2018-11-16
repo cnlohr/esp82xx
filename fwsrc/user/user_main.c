@@ -194,7 +194,7 @@ void ICACHE_FLASH_ATTR user_pre_init(void)
  * The default method, equivalent to main() in other environments. Handles all
  * initialization
  */
-void user_init(void)
+void ICACHE_FLASH_ATTR user_init(void)
 {
 	// Initialize the UART
 	uart_init(BIT_RATE_115200, BIT_RATE_115200);

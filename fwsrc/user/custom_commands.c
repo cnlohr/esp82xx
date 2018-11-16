@@ -2,6 +2,7 @@
 
 #include <commonservices.h>
 #include "esp82xxutil.h"
+#include <osapi.h>
 
 int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, unsigned short len) {
 	char * buffend = buffer;
