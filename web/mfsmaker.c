@@ -11,7 +11,7 @@
 #define SPI_FLASH_SEC_SIZE 4096
 #define MFS_STARTFLASHSECTOR  0x100
 #define MFS_START	(MFS_STARTFLASHSECTOR*SPI_FLASH_SEC_SIZE)
-#define MFS_SECTOR	256
+#define MFS_SECTOR_SIZE	256
 #define MFS_FILENAMELEN 32-8
 #define ENTRIES 8192
 
@@ -112,7 +112,7 @@ int main( int argc, char ** argv )
 				fread( &mfsdata[datapointer], 1, buf.st_size, f );
 				fclose( f );
 				int rs = buf.st_size;
-				rs = (rs+1+MFS_SECTOR)&(~(MFS_SECTOR-1));
+				rs = (rs+1+MFS_SECTOR_SIZE)&(~(MFS_SECTOR_SIZE-1));
 				datapointer += rs;
 				printf( "%s: %d (%ld)\n", thisfile, rs, datapointer );
 			}
@@ -122,7 +122,7 @@ int main( int argc, char ** argv )
     closedir(d);
 
 	int rs = (fatpointer+1)*sizeof(struct MFSFileEntry);
-	rs = (rs+1+MFS_SECTOR)&(~(MFS_SECTOR-1));
+	rs = (rs+1+MFS_SECTOR_SIZE)&(~(MFS_SECTOR_SIZE-1));
 	for( i = 0; i < fatpointer; i++ )
 	{
 		mfsfat[i].start = ENDIAN(mfsfat[i].start + rs );

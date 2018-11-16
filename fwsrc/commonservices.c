@@ -17,6 +17,7 @@
 #include <gpio.h>
 #include "flash_rewriter.h"
 #include "mdns.h"
+#include "spi_memory_addrs.h"
 
 #define buffprint(M, ...) buffend += ets_sprintf( buffend, M, ##__VA_ARGS__)
 
@@ -51,7 +52,7 @@ int ets_str2macaddr(void *, void *);
 
 uint8_t need_to_switch_opmode = 0; //0 = no, 1 = will need to. 2 = do it now.
 
-#define SETTINGS_ADDR 0x7C // this comes from SYSTEM_PARTITION_CUSTOMER_PRIV_PARAM_ADDR
+#define SETTINGS_ADDR (COMMON_SERVICES_SETTINGS_ADDR / SPI_FLASH_SEC_SIZE)
 #define SETTINGS_KEY  0xAF
 
 void ICACHE_FLASH_ATTR SetServiceName( const char * myservice )

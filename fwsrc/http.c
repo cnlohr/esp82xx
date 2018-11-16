@@ -282,7 +282,7 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 		for( i = 0; i < 4 && curhttp->bytesleft; i++ )
 		{
 			int bpt = curhttp->bytesleft;
-			if( bpt > MFS_SECTOR ) bpt = MFS_SECTOR;
+			if( bpt > MFS_SECTOR_SIZE ) bpt = MFS_SECTOR_SIZE;
 			curhttp->bytesleft = MFSReadSector( generic_ptr, &curhttp->data.filedescriptor );
 			generic_ptr += bpt;
 		}

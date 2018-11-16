@@ -16,8 +16,8 @@ void ICACHE_FLASH_ATTR FindMPFS()
 	uint32 chip_size_saved = flashchip->chip_size;
 	flashchip->chip_size = 0x01000000;
 
-	spi_flash_read( MFS_START, mfs_check, sizeof( mfs_check ) );
-	if( ets_strncmp( "MPFSMPFS", mfs_check, 8 ) == 0 ) { mfs_at = MFS_START; goto done; }
+	spi_flash_read( MFS_PAGE_OFFSET, mfs_check, sizeof( mfs_check ) );
+	if( ets_strncmp( "MPFSMPFS", mfs_check, 8 ) == 0 ) { mfs_at = MFS_PAGE_OFFSET; goto done; }
 	
 	os_printf( "MFS Not found at regular address (%08x).\n", mfs_check[0], mfs_check[1] );
 
@@ -83,12 +83,12 @@ int32_t ICACHE_FLASH_ATTR MFSReadSector( uint8_t* data, struct MFSFileInfo * mfi
 	}
 
 	int toread = mfi->filelen;
-	if( toread > MFS_SECTOR ) toread = MFS_SECTOR;
+	if( toread > MFS_SECTOR_SIZE ) toread = MFS_SECTOR_SIZE;
 
 	EnterCritical();
 	uint32 chip_size_saved = flashchip->chip_size;
 	flashchip->chip_size = 0x01000000;
-	spi_flash_read( mfs_at+mfi->offset, (uint32*)data, MFS_SECTOR ); //TODO: should we make this toread?  maybe toread rounded up?
+	spi_flash_read( mfs_at+mfi->offset, (uint32*)data, MFS_SECTOR_SIZE ); //TODO: should we make this toread?  maybe toread rounded up?
 	flashchip->chip_size = chip_size_saved;
 	ExitCritical();
 

@@ -117,7 +117,7 @@ burn_cutecom:
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
 	-cutecom &
 burnitall :	
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2) 0x3FC000 esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin $(PAGE_OFFSET) web/page.mpfs)||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2) 0x3FC000 esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin $(MFS_PAGE_OFFSET) web/page.mpfs)||(true)
 else ifeq ($(CHIP), 8266)
 burn : $(FW_FILE1) $(FW_FILE2)
 	$(info NOTICE: Currently burning for ESP8266.  If you are on an '85 reconfigure CHIP.)
@@ -128,14 +128,14 @@ burn_cutecom:
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
 	-cutecom &
 burnitall :
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2) 0x3FC000 esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin $(PAGE_OFFSET) web/page.mpfs)||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2) 0x3FC000 esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin $(MFS_PAGE_OFFSET) web/page.mpfs)||(true)
 else
 	$(error Error: Unknown chip '$(CHIP)')
 endif
 
 burnweb :
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs  #Always rebuild page.mpfs
-	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) write_flash $(PAGE_OFFSET) web/page.mpfs)||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) write_flash $(MFS_PAGE_OFFSET) web/page.mpfs)||(true)
 #If you have space, MFS should live at 0x100000. It can also live at
 #0x10000. But, then it is limited to 180kB. You might need to do this if
 # you have a 512kB, or 1M ESP variant.

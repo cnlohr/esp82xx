@@ -28,10 +28,10 @@ page.mpfs : mfsmaker $(wildcard page/*) Makefile
 	./mfsmaker tmp page.mpfs
 
 push : pushtodev page.mpfs
-	./pushtodev $(IP) $(PAGE_OFFSET) page.mpfs
+	./pushtodev $(IP) $(MFS_PAGE_OFFSET) page.mpfs
 
 usbpush : pushtodev page.mpfs
-	./pushtodev USB $(PAGE_OFFSET) page.mpfs
+	./pushtodev USB $(MFS_PAGE_OFFSET) page.mpfs
 
 clean :
 	$(RM) mfsmaker page.mpfs pushtodev execute_reflash tmp/*
