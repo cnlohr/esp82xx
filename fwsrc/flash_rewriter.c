@@ -42,8 +42,6 @@ static void FinalFlashRewrite( uint32_t from1, uint32_t to1, uint32_t size1, uin
 	uint32 buf[SRCSIZE/4] __attribute__((aligned(32)));
 	Kuart0_sendStr( "B\n" );
 
-	int last_reflash_block = -1;
-
 	int i, j;
 	int ipl;
 	int p;
@@ -67,16 +65,7 @@ static void FinalFlashRewrite( uint32_t from1, uint32_t to1, uint32_t size1, uin
 			}
 			Kuart0_sendStr( "#" );
 			//spi_flash_erase_sector( p++ );
-#ifdef SLOW_ERASE
 			SPIEraseSector( p++ );
-#else
-			if( last_reflash_block != p/16 )
-			{
-				last_reflash_block = p/16;
-				SPIEraseBlock( last_reflash_block );
-			}
-			p++;
-#endif
 			Kuart0_sendStr( "$" );
 			SPIWrite( to1, buf, SRCSIZE );
 			Kuart0_sendStr( "!\n" );

@@ -29,7 +29,12 @@ usbweb ..... Burn webpage by PRE-RELEASE USB loader (will probably change)
 initdefault  Burn default initial data to ROM (may be needed after erase)
 init3v3 .... Burn default values to rom but for use with system_get_vdd33
 erase ...... Totally erase chip.
-reset ...... If plugged into USB, will reset it in software the chip.
+wipechip.... Write zeros to the chip
+getips ..... Detect pssible IPs for ESP82XX modules, needs nmap, takes time
+burnitall .. initdefault + burnweb + burn as a single run.
+dumprom .... read the rom from the chip
+bump_submodule . Update the git submodules
+
 
 More commands: all, clean, purge, dumprom, cleanproject
 endef
@@ -60,7 +65,7 @@ endif
 
 INCL = $(SDK)/include esp82xx/include .
 
-CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)'
+CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)' -g
 
 LDFLAGS_CORE = -Wl,--relax -Wl,--gc-sections -nostdlib -L$(XTLIB) \
 	-L$(XTGCCLIB) $(addprefix $(SDK)/lib/lib,$(addsuffix .a,$(LIBS))) \
@@ -117,6 +122,13 @@ else ifeq ($(CHIP), 8266)
 burn : $(FW_FILE1) $(FW_FILE2)
 	$(info NOTICE: Currently burning for ESP8266.  If you are on an '85 reconfigure CHIP.)
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
+burn_cutecom:
+	-killall cutecom
+	$(info NOTICE: Currently burning for ESP8266.  If you are on an '85 reconfigure CHIP.)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
+	-cutecom &
+burnitall :
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2) 0x3FC000 esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin $(MFS_PAGE_OFFSET) web/page.mpfs)||(true)
 else
 	$(error Error: Unknown chip '$(CHIP)')
 endif
@@ -180,14 +192,6 @@ purge : clean
 
 bump_submodule :
 	cd esp82xx; git pull origin master; git submodule update --init --recursive; cd ..
-
-esp82xx/toolchain/esp_reset : esp82xx/toolchain/esp_reset.c
-	gcc -o $@ $^
-
-reset : esp82xx/toolchain/esp_reset
-	$^ $(PORT)
-
-
 
 Makefile : esp82xx/Makefile.example
 user.cfg : esp82xx/user.cfg.example

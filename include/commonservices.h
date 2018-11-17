@@ -84,9 +84,5 @@ void ICACHE_FLASH_ATTR SetServiceName( const char * myservice );
 
 char * ICACHE_FLASH_ATTR strcat( char * dest, char * src );
 
-#ifdef CUSTOM_FAIL_BEHAVIOR
-int ICACHE_FLASH_ATTR FailedToConnect( int wifi_fail_connects );
-#endif
-
 #endif
 
