@@ -14,7 +14,7 @@
 #define STR(x) STR_HELPER(x)
 
 #ifdef DEBUG
-    #define debug(M, ...) printf("[DEBUG] (%s:%d) " M "\n", __FILE__, __LINE__, ##__VA_ARGS__);
+    #define debug(M, ...) os_printf("[DEBUG] (%s:%d) " M "\n", __FILE__, __LINE__, ##__VA_ARGS__);
 #else
     #define debug(...) ;
 #endif
@@ -29,22 +29,22 @@ int ICACHE_FLASH_ATTR issue_command(char * retdata, int retsize, char *pusrdata,
 
 //Includes UDP Control + HTTP Interfaces
 void ICACHE_FLASH_ATTR CSPreInit();
-void ICACHE_FLASH_ATTR CSInit();
+void ICACHE_FLASH_ATTR CSInit( bool startServer );
 void ICACHE_FLASH_ATTR CSTick( int slowtick );
 void ICACHE_FLASH_ATTR CSConnectionChange();
 
 void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit);
-void ICACHE_FLASH_ATTR CSSettingsSave();
+void ICACHE_FLASH_ATTR CSSettingsSave(bool criticalRequired);
 
-struct CommonSettings
+struct __attribute__ ((aligned (32))) CommonSettings
 {
-	uint8_t settings_key; //Needs to be 0xAF
+	uint32_t settings_key; //Needs to be 0xAF
 	char DeviceName[MAX_DEVICE_NAME];
 	char DeviceDescription[MAX_DEVICE_NAME];
 	char UserData[USERDATA_SIZE];
 };
 
-extern struct CommonSettings SETTINGS __attribute__ ((aligned (16)));
+extern struct CommonSettings SETTINGS;
 
 
 //You must provide:
@@ -82,10 +82,7 @@ void ICACHE_FLASH_ATTR BrowseForService( const char * servicename );
 //Set the service name for this device.  No more than 10 chars allowed.
 void ICACHE_FLASH_ATTR SetServiceName( const char * myservice );
 
-
-#ifdef CUSTOM_FAIL_BEHAVIOR
-int ICACHE_FLASH_ATTR FailedToConnect( int wifi_fail_connects );
-#endif
+char * ICACHE_FLASH_ATTR strcat( char * dest, char * src );
 
 #endif
 
