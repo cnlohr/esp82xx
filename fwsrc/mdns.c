@@ -392,7 +392,7 @@ static void ICACHE_FLASH_ATTR got_mdns_packet(void *arg, char *pusrdata, unsigne
 			{
 				continue;
 			}
-			if( strcmp( path + pathlen - 6, ".local" ) != 0 )
+			if( ets_strcmp( path + pathlen - 6, ".local" ) != 0 )
 			{
 				continue;
 			}
@@ -440,7 +440,7 @@ static void ICACHE_FLASH_ATTR got_mdns_packet(void *arg, char *pusrdata, unsigne
 						const char * srv = MDNSServices[i];
 						if( !srv ) continue;
 						int sl = ets_strlen( srv );
-						if( strncmp( path, srv, sl ) == 0 )
+						if( ets_strncmp( path, srv, sl ) == 0 )
 						{
 							SendSpecificService( i, namestartptr, xactionid, stlen, 0 );
 						}
@@ -471,7 +471,7 @@ int ICACHE_FLASH_ATTR JoinGropMDNS()
 	{
 		struct ip_addr grpip;
 		grpip.addr = MDNS_BRD;
-		printf( "IGMP Joining: %08x %08x\n", ip, grpip.addr );
+		os_printf( "IGMP Joining: %08x %08x\n", ip, grpip.addr );
 		ets_memcpy( igmp_bound, &grpip.addr, 4 );
 		espconn_igmp_join( (ip_addr_t *)&ip, &grpip);
 		return 0;

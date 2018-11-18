@@ -10,7 +10,7 @@ int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, 
 		// Custom command test
 		case 'C': case 'c':
 			buffend += ets_sprintf( buffend, "CC" );
-        	printf("CC");
+        	os_printf("CC");
 			return buffend-buffer;
 		break;
 
@@ -19,7 +19,7 @@ int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, 
 			if( retsize <= len ) return -1;
 			ets_memcpy( buffend, &(pusrdata[2]), len-2 );
 			buffend[len-2] = '\0';
-			printf( "%s\n", buffend );
+			os_printf( "%s\n", buffend );
 			return len-2;
 		break;
 	}

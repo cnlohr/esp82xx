@@ -11,12 +11,10 @@
 
 #ifndef NOSDK
 
-#include <stdlib.h>
 #include <mem.h>
 #include <c_types.h>
 #include <user_interface.h>
 #include <espconn.h>
-#include <stdio.h>
 
 
 //XXX WARNING As of 1.3.0, "cansend" doesn't work.
@@ -99,6 +97,6 @@ uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
 
 
 //For newer SDKs
-const unsigned char * ICACHE_FLASH_ATTR memchr(const unsigned char *s, int c, size_t n);
+//const unsigned char * ICACHE_FLASH_ATTR memchr(const unsigned char *s, int c, size_t n);
 
 #endif

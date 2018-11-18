@@ -60,19 +60,19 @@ void ICACHE_FLASH_ATTR HTTPCustomStart( )
 	{
 		//Was a custom CB.  It should have set this all
 	}
-	else if( strncmp( (const char*)curhttp->pathbuffer, "/d/huge", 7 ) == 0 )
+	else if( ets_strncmp( (const char*)curhttp->pathbuffer, "/d/huge", 7 ) == 0 )
 	{
 		curhttp->rcb = (void(*)())&huge;
 		curhttp->bytesleft = 0xffffffff;
 	}
 	else
-	if( strncmp( (const char*)curhttp->pathbuffer, "/d/echo?", 8 ) == 0 )
+	if( ets_strncmp( (const char*)curhttp->pathbuffer, "/d/echo?", 8 ) == 0 )
 	{
 		curhttp->rcb = (void(*)())&echo;
 		curhttp->bytesleft = 0xfffffffe;
 	}
 	else
-	if( strncmp( (const char*)curhttp->pathbuffer, "/d/issue?", 9 ) == 0 )
+	if( ets_strncmp( (const char*)curhttp->pathbuffer, "/d/issue?", 9 ) == 0 )
 	{
 		curhttp->rcb = (void(*)())&issue;
 		curhttp->bytesleft = 0xfffffffe;
@@ -145,17 +145,17 @@ static void ICACHE_FLASH_ATTR WSCommandData(  int len )
 
 void ICACHE_FLASH_ATTR NewWebSocket()
 {
-	if( strcmp( (const char*)curhttp->pathbuffer, "/d/ws/echo" ) == 0 )
+	if( ets_strcmp( (const char*)curhttp->pathbuffer, "/d/ws/echo" ) == 0 )
 	{
 		curhttp->rcb = 0;
 		curhttp->rcbDat = (void*)&WSEchoData;
 	}
-	else if( strcmp( (const char*)curhttp->pathbuffer, "/d/ws/evaltest" ) == 0 )
+	else if( ets_strcmp( (const char*)curhttp->pathbuffer, "/d/ws/evaltest" ) == 0 )
 	{
 		curhttp->rcb = 0;
 		curhttp->rcbDat = (void*)&WSEvalData;
 	}
-	else if( strncmp( (const char*)curhttp->pathbuffer, "/d/ws/issue", 11 ) == 0 )
+	else if( ets_strncmp( (const char*)curhttp->pathbuffer, "/d/ws/issue", 11 ) == 0 )
 	{
 		curhttp->rcb = 0;
 		curhttp->rcbDat = (void*)&WSCommandData;
