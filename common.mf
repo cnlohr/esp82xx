@@ -20,8 +20,8 @@ CC           = $(PREFIX)gcc
 LD           = $(PREFIX)ld
 AR           = $(PREFIX)ar
 CP           = cp
-LINKERSCRIPT ?= esp82xx/toolchain/ld/linkerscript.ld
-#LINKERSCRIPT ?= $(SDK)/ld/eagle.app.v6.ld
+#LINKERSCRIPT ?= esp82xx/toolchain/ld/linkerscript.ld
+LINKERSCRIPT ?= $(SDK)/ld/eagle.app.v6.ld
 
 SLOWTICK_MS ?= 50
 
