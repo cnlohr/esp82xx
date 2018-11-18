@@ -16,6 +16,8 @@
 #include "esp8266_rom.h"
 #include <gpio.h>
 #include "flash_rewriter.h"
+#include "mdns.h"
+#include "spi_memory_addrs.h"
 
 #define buffprint(M, ...) buffend += ets_sprintf( buffend, M, ##__VA_ARGS__)
 
@@ -50,6 +52,8 @@ int ets_str2macaddr(void *, void *);
 
 uint8_t need_to_switch_opmode = 0; //0 = no, 1 = will need to. 2 = do it now.
 
+#define SETTINGS_ADDR (COMMON_SERVICES_SETTINGS_ADDR / SPI_FLASH_SEC_SIZE)
+#define SETTINGS_KEY  0xAF
 
 void ICACHE_FLASH_ATTR SetServiceName( const char * myservice )
 {
@@ -101,12 +105,12 @@ static void ICACHE_FLASH_ATTR scandone(void *arg, STATUS status)
 	if( !c->pbss ) { scanplace = -1;  return;  }
 	scanplace = 0;
 
-	printf( "ISCAN\n" );
+	os_printf( "ISCAN\n" );
 
 	STAILQ_FOREACH(inf, c->pbss, next) {
 		struct totalscan_t * t = scanarray[scanplace++] = (struct totalscan_t *)os_malloc( sizeof(struct totalscan_t) );
 
-		printf( "%s\n", inf->ssid );
+		os_printf( "%s\n", inf->ssid );
 		ets_memcpy( t->name, inf->ssid, 32 );
 		ets_sprintf( t->mac, MACSTR, MAC2STR( inf->bssid ) );
 		t->rssi = inf->rssi;
@@ -146,7 +150,7 @@ static void ICACHE_FLASH_ATTR EmitWhoAmINow( )
 	pUdpServer->proto.udp->remote_port = BrowseRespondPort;
 	espconn_sent( (struct espconn *)pUdpServer, etsend, ets_strlen( etsend ) );
 	BrowseRespond = 0;
-	printf( "Emitting WhoAmI\n" );
+	os_printf( "Emitting WhoAmI\n" );
 #endif
 }
 
@@ -187,7 +191,7 @@ CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char 
 	switch( pusrdata[1] ) {
 		case 'q': case 'Q': //Probe
 			//Make sure it's either a wildcard, to our service or to us.
-			if( srv && strcmp(srv,ServiceName) && strcmp(srv,SETTINGS.DeviceName) ) break;
+			if( srv && ets_strcmp(srv,ServiceName) && ets_strcmp(srv,SETTINGS.DeviceName) ) break;
 			//Respond at a random time in the future (to prevent congestion)
 
 			//Unless there's already a pending thing, then respond to that client.
@@ -333,7 +337,7 @@ CMD_RET_TYPE cmd_Info(char * buffer, int retsize, char * pusrdata, char * buffen
 	int i;
 	switch( pusrdata[1] ) {
 		case 'b': case 'B': system_restart(); break;
-		case 's': case 'S': CSSettingsSave();    buffprint( "IS\r\n" ); break;
+		case 's': case 'S': CSSettingsSave(true);    buffprint( "IS\r\n" ); break;
 		case 'l': case 'L': CSSettingsLoad( 0 ); buffprint( "IL\r\n" ); break;
 		case 'r': case 'R': CSSettingsLoad( 1 ); buffprint( "IR\r\n" ); break;
 		case 'f': case 'F': break; //Start finding devices, or return list of found devices.
@@ -418,7 +422,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 				if( aplen > 31 ) aplen = 31;
 				if( passlen > 63 ) passlen = 63;
 
-				printf( "Switching to: \"%s\"/\"%s\" (%d/%d). BSSID_SET: %d [%c]\n", apname, password, aplen, passlen, bssid_set, pusrdata[1] );
+				os_printf( "Switching to: \"%s\"/\"%s\" (%d/%d). BSSID_SET: %d [%c]\n", apname, password, aplen, passlen, bssid_set, pusrdata[1] );
 				wifi_station_disconnect();
 
 				if( pusrdata[1] == '1' ) {
@@ -433,7 +437,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					stationConf.bssid_set = bssid_set;
 					os_memcpy( stationConf.bssid, mac, 6 );
 
-					printf( "-->'%s'\n" 	   "-->'%s'\n",
+					os_printf( "-->'%s'\n" 	   "-->'%s'\n",
 						    stationConf.ssid,  stationConf.password  );
 
 					EnterCritical();
@@ -448,7 +452,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					printed_ip = 0;
 					//wifi_station_get_config( &stationConf );
 					buffprint( "W1\r\n" );
-					printf( "Switching.\n" );
+					os_printf( "Switching.\n" );
 				} else {
 					struct softap_config config;
 					char macaddr[6];
@@ -482,7 +486,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					EnterCritical();
 					wifi_set_opmode( 2 ); // before softap_set or doesn't remember config
 					wifi_softap_set_config(&config);
-					printf( "Switching SoftAP: %d %d.\n", chan, config.authmode );
+					os_printf( "Switching SoftAP: %d %d.\n", chan, config.authmode );
 
 					buffprint( "W2\r\n" );
 					ExitCritical(); // after prints to give more time
@@ -563,6 +567,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 
 
 CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned short len, char * buffend) {
+#ifndef DISABLE_NET_REFLASH
 	uint32 chip_size_saved = flashchip->chip_size;
 	flashchip->chip_size = 0x01000000;
 	int nr = ParamCaptureAndAdvanceInt();
@@ -689,6 +694,9 @@ CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned shor
 
 	flashchip->chip_size = chip_size_saved;
 	return buffend - buffer;
+#else
+	return 0;
+#endif
 } // END: cmd_Flash(...)
 
 
@@ -759,7 +767,7 @@ static void ICACHE_FLASH_ATTR SwitchToSoftAP( )
 	struct softap_config sc;
 	wifi_softap_get_config(&sc);
 	printed_ip = 0;
-	printf( "After scan back to SoftAP mode: \"%s\":\"%s\" @ %d %d/%d\n", sc.ssid, sc.password, wifi_get_channel(), sc.ssid_len, wifi_softap_dhcps_status() );
+	os_printf( "After scan back to SoftAP mode: \"%s\":\"%s\" @ %d %d/%d\n", sc.ssid, sc.password, wifi_get_channel(), sc.ssid_len, wifi_softap_dhcps_status() );
 	wifi_set_opmode( 2 );
 //	wifi_softap_set_config(&sc);
 //	wifi_station_connect();
@@ -770,11 +778,11 @@ static void ICACHE_FLASH_ATTR SwitchToSoftAP( )
 void ICACHE_FLASH_ATTR CSPreInit()
 {
 	int opmode = wifi_get_opmode();
-	printf( "Opmode: %d\n", opmode );
+	os_printf( "Opmode: %d\n", opmode );
 	if( opmode == 1 ) {
 		struct station_config sc;
 		wifi_station_get_config(&sc);
-		printf( "Station mode: \"%s\" (bssid_set:%d)\n", sc.ssid, sc.bssid_set );
+		os_printf( "Station mode: \"%s\" (bssid_set:%d)\n", sc.ssid, sc.bssid_set );
 		int constat = wifi_station_connect();
 //Disables null SSIDs.
 //		if( sc.ssid[0] == 0 && !sc.bssid_set )	{ wifi_set_opmode( 2 );	opmode = 2; }
@@ -783,39 +791,42 @@ void ICACHE_FLASH_ATTR CSPreInit()
 	if( opmode == 2 ) {
 		struct softap_config sc;
 		wifi_softap_get_config(&sc);
-		printf( "Default SoftAP mode: \"%s\":\"%s\"\n", sc.ssid, sc.password );
+		os_printf( "Default SoftAP mode: \"%s\":\"%s\"\n", sc.ssid, sc.password );
 	}
 	CSSettingsLoad(0);
 }
 
 
-void ICACHE_FLASH_ATTR CSInit()
+void ICACHE_FLASH_ATTR CSInit(bool startServer)
 {
 
+	if(startServer)
+	{
 #ifndef DISABLE_SERVICE_UDP
-    pUdpServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
-	ets_memset( pUdpServer, 0, sizeof( struct espconn ) );
-	pUdpServer->type = ESPCONN_UDP;
-	pUdpServer->proto.udp = (esp_udp *)os_zalloc(sizeof(esp_udp));
-	pUdpServer->proto.udp->local_port = BACKEND_PORT;
-	espconn_regist_recvcb(pUdpServer, issue_command_udp);
-	espconn_create( pUdpServer );
+		pUdpServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
+		ets_memset( pUdpServer, 0, sizeof( struct espconn ) );
+		pUdpServer->type = ESPCONN_UDP;
+		pUdpServer->proto.udp = (esp_udp *)os_zalloc(sizeof(esp_udp));
+		pUdpServer->proto.udp->local_port = BACKEND_PORT;
+		espconn_regist_recvcb(pUdpServer, issue_command_udp);
+		espconn_create( pUdpServer );
 #endif
 
-	SetupMDNS();
+		SetupMDNS();
 
 #ifndef DISABLE_HTTP
-	pHTTPServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
-	ets_memset( pHTTPServer, 0, sizeof( struct espconn ) );
-	espconn_create( pHTTPServer );
-	pHTTPServer->type = ESPCONN_TCP;
-    pHTTPServer->state = ESPCONN_NONE;
-	pHTTPServer->proto.tcp = (esp_tcp *)os_zalloc(sizeof(esp_tcp));
-	pHTTPServer->proto.tcp->local_port = WEB_PORT;
-    espconn_regist_connectcb(pHTTPServer, httpserver_connectcb);
-    espconn_accept(pHTTPServer);
-    espconn_regist_time(pHTTPServer, 15, 0); //timeout
+		pHTTPServer = (struct espconn *)os_zalloc(sizeof(struct espconn));
+		ets_memset( pHTTPServer, 0, sizeof( struct espconn ) );
+		espconn_create( pHTTPServer );
+		pHTTPServer->type = ESPCONN_TCP;
+		pHTTPServer->state = ESPCONN_NONE;
+		pHTTPServer->proto.tcp = (esp_tcp *)os_zalloc(sizeof(esp_tcp));
+		pHTTPServer->proto.tcp->local_port = WEB_PORT;
+		espconn_regist_connectcb(pHTTPServer, httpserver_connectcb);
+		espconn_accept(pHTTPServer);
+		espconn_regist_time(pHTTPServer, 15, 0); //timeout
 #endif
+	}
 
 	//Setup GPIO0 and 2 for input.
 	PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO2_U,FUNC_GPIO2);
@@ -849,13 +860,13 @@ static void ICACHE_FLASH_ATTR GoAP( int always )
 		wifi_set_opmode_current( 2 );
 		wifi_softap_set_config_current(&config);
 	}
-	printf( "GoAP sets SoftAP mode: \"%s\":\"%s\" @ %d %d/%d\n", config.ssid, config.password, wifi_get_channel(), config.ssid_len, wifi_softap_dhcps_status() );
+	os_printf( "GoAP sets SoftAP mode: \"%s\":\"%s\" @ %d %d/%d\n", config.ssid, config.password, wifi_get_channel(), config.ssid_len, wifi_softap_dhcps_status() );
 	ExitCritical();
 }
 
 static void ICACHE_FLASH_ATTR RestoreAndReboot( )
 {
-	printf( "Restoring and rebooting\n" );
+	os_printf( "Restoring and rebooting\n" );
 	CSSettingsLoad(1);
 	PIN_DIR_OUTPUT = _BV(2); //Turn GPIO2 light off.
 	//system_restore(); 	//Don't do this. Seems to permanantly break sector for settings.
@@ -888,7 +899,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 		if( BrowseSearchCount ) {
 			//Emit a browse.
 			EmitBrowseNow();
-			BrowseRequestTimeout = (rand()%20)+30;
+			BrowseRequestTimeout = (os_random()%20)+30;
 			BrowseSearchCount--;
 		} else BrowseRequestTimeout = 0;
 	}
@@ -909,7 +920,7 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 		if( stat == STATION_WRONG_PASSWORD || stat == STATION_NO_AP_FOUND || stat == STATION_CONNECT_FAIL ) {
 			wifi_station_disconnect();
 			wifi_fail_connects++;
-			printf( "Connection failed with code %d... Retrying, try: %d\n", stat, wifi_fail_connects );
+			os_printf( "Connection failed with code %d... Retrying, try: %d\n", stat, wifi_fail_connects );
 #ifndef DISABLE_AUTO_SWITCH_TO_AP
 #define MAX_CONNECT_FAILURES_BEFORE_SOFTAP 2
 #ifdef MAX_CONNECT_FAILURES_BEFORE_SOFTAP
@@ -922,17 +933,17 @@ static void ICACHE_FLASH_ATTR SlowTick( int opm )
 #endif
 #endif
 			wifi_station_connect();
-			printf("\n");
+			os_printf("\n");
 			printed_ip = 0;
 		} else if( stat == STATION_GOT_IP && !printed_ip ) {
 			wifi_station_get_config( &wcfg );
 			wifi_get_ip_info(0, &ipi);
-			printf( "STAT: %d\n", stat );
+			os_printf( "STAT: %d\n", stat );
 			#define chop_ip(x) (((x)>>0)&0xff), (((x)>>8)&0xff), (((x)>>16)&0xff), (((x)>>24)&0xff)
-			printf( "IP: %d.%d.%d.%d\n", chop_ip(ipi.ip.addr)      );
-			printf( "NM: %d.%d.%d.%d\n", chop_ip(ipi.netmask.addr) );
-			printf( "GW: %d.%d.%d.%d\n", chop_ip(ipi.gw.addr)      );
-			printf( "WCFG: /%s/\n"  , wcfg.ssid  );
+			os_printf( "IP: %d.%d.%d.%d\n", chop_ip(ipi.ip.addr)      );
+			os_printf( "NM: %d.%d.%d.%d\n", chop_ip(ipi.netmask.addr) );
+			os_printf( "GW: %d.%d.%d.%d\n", chop_ip(ipi.gw.addr)      );
+			os_printf( "WCFG: /%s/\n"  , wcfg.ssid  );
 			printed_ip = 1;
 			wifi_fail_connects = 0;
 			CSConnectionChange();
@@ -1000,45 +1011,54 @@ void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit)
 {
 	EnterCritical();
 	ets_memset( &SETTINGS, 0, sizeof( SETTINGS) );
-	system_param_load( 0x3A, 0, &SETTINGS, sizeof( SETTINGS ) );
+	system_param_load( SETTINGS_ADDR, 0, &SETTINGS, sizeof( SETTINGS ) );
 
-//	printf( "About to read\n" );
+//	os_printf( "About to read\n" );
 //	int res = spi_flash_read( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );
-//	printf( "RES: %d\n", res );
-	printf( "Loading Settings: %02x / %d / %d / %d\n", SETTINGS.settings_key, force_reinit, SETTINGS.DeviceName[0], SETTINGS.DeviceName[0] );
-	if( SETTINGS.settings_key != 0xAF || force_reinit || SETTINGS.DeviceName[0] == 0x00 || SETTINGS.DeviceName[0] == 0xFF ) {
+//	os_printf( "RES: %d\n", res );
+	os_printf( "Loading Settings: %02x / %d / %d / %d\n", SETTINGS.settings_key, force_reinit, SETTINGS.DeviceName[0], SETTINGS.DeviceName[0] );
+	if( force_reinit ||
+			SETTINGS.settings_key != SETTINGS_KEY ||
+			SETTINGS.DeviceName[0] == 0x00 ||
+			SETTINGS.DeviceName[0] == 0xFF ) {
 		ets_memset( &SETTINGS, 0, sizeof( SETTINGS ) );
 
 		uint8_t sysmac[6];
-		printf( "Settings uninitialized.  Initializing.\n" );
-		if( !wifi_get_macaddr( 0, sysmac ) );
+		os_printf( "Settings uninitialized.  Initializing.\n" );
+		if( !wifi_get_macaddr( 0, sysmac ) )
+		{
 			wifi_get_macaddr( 1, sysmac );
+		}
 
 		ets_sprintf( SETTINGS.DeviceName, "ESP_%02X%02X%02X", sysmac[3], sysmac[4], sysmac[5] );
 		ets_sprintf( SETTINGS.DeviceDescription, "Default" );
-		printf( "Initialized Name: %s\n", SETTINGS.DeviceName );
+		os_printf( "Initialized Name: %s\n", SETTINGS.DeviceName );
 
-		CSSettingsSave(); // will have done ExitCritical() before returning so must
-		EnterCritical(); // again
+		CSSettingsSave(false);
 		system_restore();
-		ExitCritical();
 	}
 
 	wifi_station_set_hostname( SETTINGS.DeviceName );
-	printf( "Settings Loaded: %s / %s\n", SETTINGS.DeviceName, SETTINGS.DeviceDescription );
+	os_printf( "Settings Loaded: %s / %s\n", SETTINGS.DeviceName, SETTINGS.DeviceDescription );
 	ExitCritical();
 }
 
 
-void ICACHE_FLASH_ATTR CSSettingsSave()
+void ICACHE_FLASH_ATTR CSSettingsSave(bool criticalRequired)
 {
-	EnterCritical();
-	SETTINGS.settings_key = 0xAF;
+	if(criticalRequired)
+	{
+		EnterCritical();
+	}
+	SETTINGS.settings_key = SETTINGS_KEY;
 //	spi_flash_erase_sector( 0x3a );
 //	spi_flash_write( 0x3a*0x1000, (uint32*)&SETTINGS, sizeof( SETTINGS ) );
-	system_param_save_with_protect( 0x3A, &SETTINGS, sizeof( SETTINGS ) );
-	printf( "Saving\n" );
-	ExitCritical();
+	system_param_save_with_protect( SETTINGS_ADDR, &SETTINGS, sizeof( SETTINGS ) );
+	os_printf( "Saving\n" );
+	if(criticalRequired)
+	{
+		ExitCritical();
+	}
 }
 
 
@@ -1085,4 +1105,4 @@ char * ICACHE_FLASH_ATTR strcat( char * dest, char * src )
     return rdest;
 }
 
-struct CommonSettings SETTINGS __attribute__ ((aligned (16)));
+struct CommonSettings SETTINGS;

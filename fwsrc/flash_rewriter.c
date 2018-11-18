@@ -7,8 +7,8 @@
 #include "commonservices.h"
 #include <c_types.h>
 #include <esp8266_rom.h>
-#include <stdio.h>
 #include "esp82xxutil.h"
+#include "osapi.h"
 
 #define SRCSIZE 4096
 #define BLKSIZE 65536

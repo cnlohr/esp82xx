@@ -2,9 +2,14 @@ define USAGE
 Usage: make [command] [VARIABLES]
 
 all......... Build the binaries
+clean....... Clean the binaries
+purge....... Clean the binaries and web stuff
 debug....... Build a .map and .lst file.  Useful for seeing what's going on
              behind the scenes.
 burn ....... Write firmware to chip using a regular serial port
+burn_cutecom Write firmware to chip using a regular serial port, killing and
+             starting cutecom, a serial terminal
+build_burn . Build the binaries then execute burn_cutecom
 burnweb .... Write data for the Web-GUI to chip using a regular serial
              port
 netburn .... Same as 'burn' but transfer firmware over the network rather
@@ -18,21 +23,27 @@ gitproject . Same as 'make project' but also initialiezes the current folder
              as git repository and pushes it to GIT_ORIGIN.
              Example:
                  make gitproject GIT_ORIGIN=https://github.com/USER/YREPO.git
+cleanproject Remove the use* and web folders
 usbburn .... Burn via PRE-RELEASE USB loader (will probably change)
 usbweb ..... Burn webpage by PRE-RELEASE USB loader (will probably change)
 initdefault  Burn default initial data to ROM (may be needed after erase)
 init3v3 .... Burn default values to rom but for use with system_get_vdd33
 erase ...... Totally erase chip.
+wipechip.... Write zeros to the chip
+getips ..... Detect pssible IPs for ESP82XX modules, needs nmap, takes time
 burnitall .. initdefault + burnweb + burn as a single run.
+dumprom .... read the rom from the chip
+bump_submodule . Update the git submodules
+
 
 More commands: all, clean, purge, dumprom, cleanproject
 endef
 
-.PHONY : all clean purge netburn burnweb burn $(BIN_TARGET) netweb getips help project gitproject cleanproject
+.PHONY : all clean purge netburn burnweb burn $(BIN_TARGET) netweb getips help project gitproject cleanproject build_burn burn_cutecom
 
 
 FW_FILE1 = image.elf-0x00000.bin
-FW_FILE2 = image.elf-0x40000.bin
+FW_FILE2 = image.elf-0x10000.bin
 TARGET = image.elf
 
 
@@ -47,7 +58,7 @@ SRCS +=  esp82xx/fwsrc/uart.c \
 	user/custom_commands.c \
 	user/user_main.c
 
-LIBS += main lwip ssl upgrade net80211 wpa phy lwip crypto
+LIBS += main lwip ssl upgrade net80211 wpa phy lwip crypto c espnow
 ifneq ($(CUSTOMPP), 1)
 	LIBS += pp
 endif
@@ -82,6 +93,8 @@ help :
 
 all : $(FW_FILE1) $(FW_FILE2)
 
+build_burn : all burn_cutecom
+
 $(FW_FILE1) $(FW_FILE2) : $(TARGET)
 	PATH=$(PATH):$(FOLDERPREFIX) $(ESPTOOL_PY) elf2image $(TARGET)
 	@#no need to set things like dout, and memory size.  This data is copied from the ESP back to itself on write.
@@ -97,22 +110,34 @@ debug : $(TARGET)
 ifeq ($(CHIP), 8285)
 burn : $(FW_FILE1) $(FW_FILE2)
 	$(info NOTICE: Currently burning for ESP8285.  If you are on a '66 reconfigure CHIP.)
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
+burn_cutecom:
+	-killall cutecom
+	$(info NOTICE: Currently burning for ESP8285.  If you are on a '66 reconfigure CHIP.)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
+	-cutecom &
 burnitall :	
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2) 0x3FC000 esp82xx/data/esp_init_data_default.bin $(PAGE_OFFSET) web/page.mpfs)||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2) 0x3FC000 esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin $(MFS_PAGE_OFFSET) web/page.mpfs)||(true)
+
 else ifeq ($(CHIP), 8266)
+
 burn : $(FW_FILE1) $(FW_FILE2)
 	$(info NOTICE: Currently burning for ESP8266.  If you are on an '85 reconfigure CHIP.)
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
+burn_cutecom:
+	-killall cutecom
+	$(info NOTICE: Currently burning for ESP8266.  If you are on an '85 reconfigure CHIP.)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
+	-cutecom &
 burnitall :
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2) 0x3FC000 esp82xx/data/esp_init_data_default.bin $(PAGE_OFFSET) web/page.mpfs)||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2) 0x3FC000 esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin $(MFS_PAGE_OFFSET) web/page.mpfs)||(true)
 else
 	$(error Error: Unknown chip '$(CHIP)')
 endif
 
 burnweb :
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs  #Always rebuild page.mpfs
-	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) write_flash $(PAGE_OFFSET) web/page.mpfs)||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) write_flash $(MFS_PAGE_OFFSET) web/page.mpfs)||(true)
 #If you have space, MFS should live at 0x100000. It can also live at
 #0x10000. But, then it is limited to 180kB. You might need to do this if
 # you have a 512kB, or 1M ESP variant.
@@ -155,7 +180,7 @@ dumprom :
 	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) read_flash 0 1048576 dump.bin)||(true)
 
 initdefault :
-	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash 0x3FC000 esp82xx/data/esp_init_data_default.bin
+	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash 0x3FC000 esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin
 
 init3v3 :
 	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash 0x3FC000 esp82xx/data/esp_init_data_adc33.bin
