@@ -340,7 +340,7 @@ int main(int argc, char**argv)
 		servaddr.sin_port=htons(BACKEND_PORT);
 	}
 
-	uint32_t fs1 = Push( 0x080000, file1 );
+	uint32_t fs1 = Push( 0x0b0000, file1 );
 	uint32_t fs2 = Push( 0x0c0000, file2 );
 
 	if( !fs1 || !fs2 )
@@ -365,12 +365,12 @@ int main(int argc, char**argv)
 	char cmd[1024];
 
 	sprintf( cmd, "FM%d\t%d\t%d\t%s\t%d\t%d\t%d\t%s\n",
-		0x080000,
+		0x0b0000,
 		0x000000,
 		fs1, //roundup( fs1 ),
 		md5_f1,
 		0x0C0000,
-		0x040000,
+		0x010000,
 		fs2, //roundup( fs2 ),
 		md5_f2 );
 

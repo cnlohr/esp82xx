@@ -99,6 +99,7 @@ esp82xx/libgcc_stripped.a :
 	cp $(GCC_FOLDER)/lib/gcc/xtensa-lx106-elf/$(ESP_GCC_VERS)/libgcc.a esp82xx/libgcc_stripped.a
 	$(OBJCOPY) -N __addsf3_aux esp82xx/libgcc_stripped.a
 	$(OBJCOPY) -N __mulsf3_aux esp82xx/libgcc_stripped.a
+	$(OBJCOPY) -N __subsf3_aux esp82xx/libgcc_stripped.a
 	$(OBJCOPY) -N __divsf3_aux esp82xx/libgcc_stripped.a
 	$(OBJCOPY) -N __fixunssfsi esp82xx/libgcc_stripped.a
 	$(OBJCOPY) -N __muldf3_aux esp82xx/libgcc_stripped.a
