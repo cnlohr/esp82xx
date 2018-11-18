@@ -17,12 +17,12 @@ void ICACHE_FLASH_ATTR FindMPFS()
 	flashchip->chip_size = 0x01000000;
 
 	spi_flash_read( MFS_PAGE_OFFSET, mfs_check, sizeof( mfs_check ) );
-	if( ets_strncmp( "MPFSMPFS", mfs_check, 8 ) == 0 ) { mfs_at = MFS_PAGE_OFFSET; goto done; }
+	if( ets_strncmp( "MPFSMPFS", (char*)mfs_check, 8 ) == 0 ) { mfs_at = MFS_PAGE_OFFSET; goto done; }
 	
 	os_printf( "MFS Not found at regular address (%08x).\n", mfs_check[0], mfs_check[1] );
 
 	spi_flash_read( MFS_ALTERNATIVE_START, mfs_check, sizeof( mfs_check ) );
-	if( ets_strncmp( "MPFSMPFS", mfs_check, 8 ) == 0 ) { mfs_at = MFS_ALTERNATIVE_START; goto done; }
+	if( ets_strncmp( "MPFSMPFS", (char*)mfs_check, 8 ) == 0 ) { mfs_at = MFS_ALTERNATIVE_START; goto done; }
 
 	os_printf( "MFS Not found at alternative address (%08x%08x).\n", mfs_check[0], mfs_check[1] );
 

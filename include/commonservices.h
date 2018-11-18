@@ -5,6 +5,7 @@
 #define _COMMON_H
 
 #include "c_types.h"
+#include <osapi.h>
 
 #define FLASH_PROTECTION_BOUNDARY 524288
 #define MAX_DEVICE_NAME 32

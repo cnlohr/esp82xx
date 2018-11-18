@@ -87,7 +87,7 @@ os_event_t    procTaskQueue[procTaskQueueLen];
  * Variables
  *============================================================================*/
 
-static volatile os_timer_t some_timer;
+static os_timer_t some_timer;
 static struct espconn *pUdpServer;
 usr_conf_t * UsrCfg = (usr_conf_t*)(SETTINGS.UserData);
 
@@ -194,7 +194,7 @@ void ICACHE_FLASH_ATTR user_pre_init(void)
  * The default method, equivalent to main() in other environments. Handles all
  * initialization
  */
-void user_init(void)
+void ICACHE_FLASH_ATTR user_init(void)
 {
 	// Initialize the UART
 	uart_init(BIT_RATE_115200, BIT_RATE_115200);
@@ -223,7 +223,7 @@ void user_init(void)
 	}
 
 	// Initialize common settings
-	CSInit();
+	CSInit( 1 );
 
 	// Start MDNS services
 	SetServiceName( "espcom" );
