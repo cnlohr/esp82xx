@@ -96,6 +96,8 @@ static void ICACHE_FLASH_ATTR scandone(void *arg, STATUS status)
 	free_scan_array();
 	scanarray = (struct totalscan_t **)os_malloc( sizeof(struct totalscan_t *) * MAX_STATIONS );
 
+	ets_memset( scanarray, 0, sizeof(struct totalscan_t *) * MAX_STATIONS );
+
 	scaninfo *c = arg;
 	struct bss_info *inf;
 
@@ -105,12 +107,12 @@ static void ICACHE_FLASH_ATTR scandone(void *arg, STATUS status)
 	if( !c->pbss ) { scanplace = -1;  return;  }
 	scanplace = 0;
 
-	os_printf( "ISCAN\n" );
+	os_printf( "Got Scan\n" );
 
 	STAILQ_FOREACH(inf, c->pbss, next) {
 		struct totalscan_t * t = scanarray[scanplace++] = (struct totalscan_t *)os_malloc( sizeof(struct totalscan_t) );
 
-		os_printf( "%s\n", inf->ssid );
+		os_printf( " * %s\n", inf->ssid );
 		ets_memcpy( t->name, inf->ssid, 32 );
 		ets_sprintf( t->mac, MACSTR, MAC2STR( inf->bssid ) );
 		t->rssi = inf->rssi;
@@ -437,8 +439,8 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					stationConf.bssid_set = bssid_set;
 					os_memcpy( stationConf.bssid, mac, 6 );
 
-					os_printf( "-->'%s'\n" 	   "-->'%s'\n",
-						    stationConf.ssid,  stationConf.password  );
+					//os_printf( "-->'%s'\n" 	   "-->'%s'\n",
+					//	    stationConf.ssid,  stationConf.password  );
 
 					EnterCritical();
 					//wifi_station_set_config(&stationConf);
