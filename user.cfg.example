@@ -23,6 +23,7 @@ OPTS += -DUSE_OPTIMIZE_PRINTF
 #OPTS += -DDEBUG
 #OPTS += -DNET_MAXTRIES=10
 #OPTS += -DNET_TIMEOUT=3.0
+#OPTS += -DDISABLE_NET_REFLASH      #Saves about 196 bytes of iram.
 OPTS += -DMFS_PAGE_OFFSET=$(MFS_PAGE_OFFSET)
 
 #If you need an extra 2.5kB of flash, you can force esp82xx to use the ROM
