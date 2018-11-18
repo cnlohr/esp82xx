@@ -97,21 +97,28 @@ build_burn : all burn_cutecom
 
 esp82xx/libgcc_stripped.a :
 	cp $(GCC_FOLDER)/lib/gcc/xtensa-lx106-elf/$(ESP_GCC_VERS)/libgcc.a esp82xx/libgcc_stripped.a
-	$(OBJCOPY) -N __addsf3_aux esp82xx/libgcc_stripped.a
-	$(OBJCOPY) -N __mulsf3_aux esp82xx/libgcc_stripped.a
-	$(OBJCOPY) -N __subsf3_aux esp82xx/libgcc_stripped.a
-	$(OBJCOPY) -N __divsf3_aux esp82xx/libgcc_stripped.a
-	$(OBJCOPY) -N __fixunssfsi esp82xx/libgcc_stripped.a
-	$(OBJCOPY) -N __muldf3_aux esp82xx/libgcc_stripped.a
-	$(OBJCOPY) -N __divdf3_aux esp82xx/libgcc_stripped.a
-	$(OBJCOPY) -N __truncdfsf2 esp82xx/libgcc_stripped.a
-	$(OBJCOPY) -N __divdi3 esp82xx/libgcc_stripped.a
-	$(OBJCOPY) -N __udivdi3 esp82xx/libgcc_stripped.a
-	$(OBJCOPY) -N __umoddi3 esp82xx/libgcc_stripped.a
-	$(OBJCOPY) -N __floatunsisf esp82xx/libgcc_stripped.a
-	$(OBJCOPY) -N __floatsisf esp82xx/libgcc_stripped.a
-	$(OBJCOPY) -N __floatunsidf esp82xx/libgcc_stripped.a
-	$(OBJCOPY) -N __floatsidf esp82xx/libgcc_stripped.a
+	$(AR) dv esp82xx/libgcc_stripped.a _muldi3.o
+	$(AR) dv esp82xx/libgcc_stripped.a _mulsf3.o
+	$(AR) dv esp82xx/libgcc_stripped.a _divsi3.o
+	$(AR) dv esp82xx/libgcc_stripped.a _udivsi3.o
+	$(AR) dv esp82xx/libgcc_stripped.a _umodsi3.o
+	$(AR) dv esp82xx/libgcc_stripped.a _addsubsf3.o
+	$(AR) dv esp82xx/libgcc_stripped.a _fixdfsi.o
+	#$(AR) dv esp82xx/libgcc_stripped.a _divsf3.o
+	$(AR) dv esp82xx/libgcc_stripped.a _muldf3.o
+	$(AR) dv esp82xx/libgcc_stripped.a _divdf3.o
+	#$(AR) dv esp82xx/libgcc_stripped.a _divsf3.o
+	$(AR) dv esp82xx/libgcc_stripped.a _fixunssfsi.o
+	$(AR) dv esp82xx/libgcc_stripped.a _umoddi3.o
+	$(AR) dv esp82xx/libgcc_stripped.a _divdi3.o
+	$(AR) dv esp82xx/libgcc_stripped.a _udivdi3.o
+	$(AR) dv esp82xx/libgcc_stripped.a _truncdfsf2.o
+	#$(AR) dv esp82xx/libgcc_stripped.a _divsf3.o
+	#$(AR) dv esp82xx/libgcc_stripped.a _fixsfsi.o
+	$(AR) dv esp82xx/libgcc_stripped.a _floatunsidf.o
+	$(AR) dv esp82xx/libgcc_stripped.a _floatunsisf.o
+	$(AR) dv esp82xx/libgcc_stripped.a _floatsisf.o
+	$(AR) dv esp82xx/libgcc_stripped.a _floatsidf.o
 
 
 $(FW_FILE1) $(FW_FILE2) : $(TARGET)
