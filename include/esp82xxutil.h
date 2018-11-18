@@ -11,6 +11,7 @@
 
 #ifndef NOSDK
 
+#include <stdlib.h>
 #include <mem.h>
 #include <c_types.h>
 #include <user_interface.h>

@@ -23,7 +23,7 @@ usbweb ..... Burn webpage by PRE-RELEASE USB loader (will probably change)
 initdefault  Burn default initial data to ROM (may be needed after erase)
 init3v3 .... Burn default values to rom but for use with system_get_vdd33
 erase ...... Totally erase chip.
-burnitall .. initdefault + burnweb + burn as a single run.
+reset ...... If plugged into USB, will reset it in software the chip.
 
 More commands: all, clean, purge, dumprom, cleanproject
 endef
@@ -54,7 +54,7 @@ endif
 
 INCL = $(SDK)/include esp82xx/include .
 
-CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)' -g
+CFLAGS = -mlongcalls -Os $(addprefix -I,$(INCL) $(call uniq, $(patsubst %/,%,$(dir $(SRCS))))) $(OPTS) -DVERSSTR='$(VERSSTR)'
 
 LDFLAGS_CORE = -Wl,--relax -Wl,--gc-sections -nostdlib -L$(XTLIB) \
 	-L$(XTGCCLIB) $(addprefix $(SDK)/lib/lib,$(addsuffix .a,$(LIBS))) \
@@ -98,17 +98,16 @@ ifeq ($(CHIP), 8285)
 burn : $(FW_FILE1) $(FW_FILE2)
 	$(info NOTICE: Currently burning for ESP8285.  If you are on a '66 reconfigure CHIP.)
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
-burnitall :	
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2) 0x3FC000 esp82xx/data/esp_init_data_default.bin $(PAGE_OFFSET) web/page.mpfs)||(true)
 else ifeq ($(CHIP), 8266)
 burn : $(FW_FILE1) $(FW_FILE2)
 	$(info NOTICE: Currently burning for ESP8266.  If you are on an '85 reconfigure CHIP.)
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2))||(true)
-burnitall :
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2) 0x3FC000 esp82xx/data/esp_init_data_default.bin $(PAGE_OFFSET) web/page.mpfs)||(true)
 else
 	$(error Error: Unknown chip '$(CHIP)')
 endif
+
+burnitall :	
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x40000 $(FW_FILE2) 0x3FC000 esp82xx/data/esp_init_data_default.bin $(PAGE_OFFSET) web/page.mpfs)||(true)
 
 burnweb :
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean page.mpfs  #Always rebuild page.mpfs
@@ -169,6 +168,14 @@ purge : clean
 
 bump_submodule :
 	cd esp82xx; git pull origin master; git submodule update --init --recursive; cd ..
+
+esp82xx/toolchain/esp_reset : esp82xx/toolchain/esp_reset.c
+	gcc -o $@ $^
+
+reset : esp82xx/toolchain/esp_reset
+	$^ $(PORT)
+
+
 
 Makefile : esp82xx/Makefile.example
 user.cfg : esp82xx/user.cfg.example

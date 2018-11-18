@@ -105,16 +105,27 @@ The file  `user.cfg` specifies the most important configuration variables.
 
 ### Burn Firmware
 
-If you did everything correctly, flashing your esp should work.
+If you did everything correctly, flashing your esp should work now.
+
 Just connect it to an USB to serial adapter that uses 3.3V (**you will fry your ESP with voltages higher than 3.3 V**) and place it in programming mode.
-Then you can run
+
+Optionally you can flash the default inital data now with:
+
+    make initdefault
+
+We talk about it at the end of the [Requirements](#requirements) section.
+It should not be necessary to do that, provided you use fairly recent esp-modules.
+However, using different `make init3v3` gives you the possibility to monitor the 3.3 V supply voltage rail with the ADC instead of using it via the ADC pin.
+
+Whether you flash the inital data or not, your next step will be to burn the firmware.
+Just go into programming mode and run:
 
     make burn
     make burnweb  # programming mode here too
 
-and your ESP is good to go.
-It should create its own WiFi Access Point called `ESPXXXX` or similar, where `XXXX` is some arbitrary code.
-From now on you can configure and burn new firmware/page data over the web interface in your browser (when connected to the esp's network or it is connected to yours).
+Your ESP is good to go now.
+It should create its own WiFi Access Point called `ESPXXXX` or similar, where `XXXX` stands for some unique string.
+From now on you can configure and burn new firmware/page data over the web interface in your browser (when connected to the esp's network or the ESP is connected to yours).
 There are make targets to burn firmware and page data as well:
 
     make netburn IP=192.168.4.1  # default IP, change to whatever your ESP is set to
