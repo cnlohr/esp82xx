@@ -216,7 +216,7 @@ void ICACHE_FLASH_ATTR user_init(void)
 	wifi_fpm_set_sleep_type(LIGHT_SLEEP_T);
 
 	// Add a process and start it
-	system_os_task(procTask, LoadDefaultPartitionMapprocTaskPrio, procTaskQueue, procTaskQueueLen);
+	system_os_task(procTask, procTaskPrio, procTaskQueue, procTaskQueueLen);
 	system_os_post(procTaskPrio, 0, 0 );
 }
 
