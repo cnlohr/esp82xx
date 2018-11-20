@@ -476,7 +476,10 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
     				#endif
 
 					int chan = (bssid) ? safe_atoi(bssid) : config.channel;
-					if( chan == 0 || chan > 13 ) chan = 1;
+					if( chan == 0 || chan > 13 )
+					{
+						chan = SOFTAP_CHANNEL;
+					}
 					config.channel = chan;
 
 					//printf( "Mode now. %s %s %d %d %d %d %d\n", config.ssid, config.password, config.ssid_len, config.channel, config.authmode, config.max_connection );
@@ -845,7 +848,7 @@ static void ICACHE_FLASH_ATTR GoAP( int always )
 	config.ssid_len = ets_strlen(SETTINGS.DeviceName);
 	os_memcpy( &config.ssid, SETTINGS.DeviceName, config.ssid_len+1 );
 	os_memcpy( &config.password, "", 1 );
-	config.channel = 1;
+	config.channel = SOFTAP_CHANNEL;
 	config.authmode = 0;
 	config.ssid_hidden = 0;
 	config.max_connection = 4;
