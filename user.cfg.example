@@ -25,6 +25,7 @@ OPTS += -DUSE_OPTIMIZE_PRINTF
 #OPTS += -DNET_TIMEOUT=3.0
 #OPTS += -DDISABLE_NET_REFLASH      #Saves about 196 bytes of iram.
 OPTS += -DMFS_PAGE_OFFSET=$(MFS_PAGE_OFFSET)
+OPTS += -DSOFTAP_CHANNEL=11
 
 #If you need an extra 3kB of IRAM, you can force esp82xx to use the ROM
 #symbols for some internal libgcc functions.
