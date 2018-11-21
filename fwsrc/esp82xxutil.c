@@ -268,6 +268,25 @@ int32_t    ParamCaptureAndAdvanceInt( )
 	}
 }
 
+
+int ICACHE_FLASH_ATTR MakePinGPIO( int nr )
+{
+	static const uint32_t AFMapper[16] = {
+		0, PERIPHS_IO_MUX_U0TXD_U, 0, PERIPHS_IO_MUX_U0RXD_U,
+		0, 0, 1, 1,
+		1, 1, 1, 1,
+		PERIPHS_IO_MUX_MTDI_U, PERIPHS_IO_MUX_MTCK_U, PERIPHS_IO_MUX_MTMS_U, PERIPHS_IO_MUX_MTDO_U
+	};
+
+	if( AFMapper[nr] == 1 ) {
+		return -1;
+	} else if( AFMapper[nr] )
+		PIN_FUNC_SELECT( AFMapper[nr], 3);  //Select AF pin to be GPIO.
+
+	return 0;
+}
+
+
 /*==============================================================================
  * Partition Map Data
  *============================================================================*/

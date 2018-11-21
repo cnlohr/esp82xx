@@ -273,20 +273,13 @@ CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char 
 
 CMD_RET_TYPE cmd_GPIO(char * buffer, char *pusrdata, char * buffend)
 {
-	static const uint32_t AFMapper[16] = {
-		0, PERIPHS_IO_MUX_U0TXD_U, 0, PERIPHS_IO_MUX_U0RXD_U,
-		0, 0, 1, 1,
-		1, 1, 1, 1,
-		PERIPHS_IO_MUX_MTDI_U, PERIPHS_IO_MUX_MTCK_U, PERIPHS_IO_MUX_MTMS_U, PERIPHS_IO_MUX_MTDO_U
-	};
 
 	int nr = ParamCaptureAndAdvanceInt();
-
-	if( AFMapper[nr] == 1 ) {
+	if( MakePinGPIO( nr ) )
+	{
 		buffprint( "!G%c%d\n", pusrdata[1], nr );
 		return buffend - buffer;
-	} else if( AFMapper[nr] )
-		PIN_FUNC_SELECT( AFMapper[nr], 3);  //Select AF pin to be GPIO.
+	}
 
 	switch( pusrdata[1] ) {
 		case '0':
