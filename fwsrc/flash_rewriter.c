@@ -19,9 +19,11 @@ static int keylen = 0;
 #ifdef QUIET_REFLASH
 #define Kets_sprintf
 #define Kuart0_sendStr
+#define KICHAR
 #else
 #define Kets_sprintf ets_sprintf
 #define Kuart0_sendStr uart0_sendStr
+#define KICHAR ets_write_char
 #endif
 
 void ICACHE_FLASH_ATTR HEX16Convert( char * out, uint8_t * in )
@@ -40,7 +42,7 @@ extern void Cache_Read_Disable(void);
 static void FinalFlashRewrite( uint32_t from1, uint32_t to1, uint32_t size1, uint32_t from2, uint32_t to2, uint32_t size2, uint32_t firstfour )
 {
 	uint32 buf[SRCSIZE/4] __attribute__((aligned(32)));
-	Kuart0_sendStr( "B\n" );
+	KICHAR( 'B' );
 
 	int i, j;
 	int ipl;
@@ -50,40 +52,37 @@ static void FinalFlashRewrite( uint32_t from1, uint32_t to1, uint32_t size1, uin
 	// I know this syntax looks odd, but it really makes the code smaller!
 	for( j = 2; j; j-- )
 	{
-		Kuart0_sendStr( "C\n" );
+		KICHAR( 'C' );
 		p = to1/SRCSIZE;
 		ipl = (size1/SRCSIZE)+1;
 		for( i = ipl; i; i-- )
 		{
-			Kuart0_sendStr( "." );
+			KICHAR( '.' );
 			SPIRead( from1, buf, SRCSIZE );
-			Kuart0_sendStr( "-" );
+			KICHAR( '-' );
 			if( to1 == 0 )
 			{
 				//Tricky: if first sector, must overwrite out our flash control bits.  This sets things like din, dio, qio, as well as configuration points.
 				buf[0] = firstfour;
 			}
-			Kuart0_sendStr( "#" );
+			KICHAR( '#' );
 			//spi_flash_erase_sector( p++ );
 			SPIEraseSector( p++ );
-			Kuart0_sendStr( "$" );
+			KICHAR( '$' );
 			SPIWrite( to1, buf, SRCSIZE );
-			Kuart0_sendStr( "!\n" );
+			KICHAR( '!' );
 			to1 += SRCSIZE;
 			from1 += SRCSIZE;
 		}
 		from1 = from2;
 		to1 = to2;
 		size1 = size2;
-		Kuart0_sendStr( "D\n" );
+		KICHAR( 'D' );
 	}
 
 	ets_wdt_enable();  //In case the system restart doesn't hit us... Not sure why it doesn't sometimes.
-	Kuart0_sendStr( "E\n" );
-	system_restart();  //This seems to not always trigger.
-
-//	void(*rebootme)() = (void(*)())0x40000080;
-//	rebootme();
+	KICHAR( 'E' );
+	system_restart_core();
 }
 
 void (*LocalFlashRewrite)( uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t ) = FinalFlashRewrite;
@@ -214,7 +213,7 @@ int ICACHE_FLASH_ATTR FlashRewriter( char * command, int commandlen )
 	//__asm__ __volatile__("rsil %%0," __STRINGIFY(level) : "=a" (state));
 	uint32_t interruptsState;
 	__asm__ __volatile__("rsil %0,15" : "=a" (interruptsState));
-	uart_tx_one_char( 'A' );
+	KICHAR( 'A' );
 	LocalFlashRewrite( from1, to1, size1, from2, to2, size2, firstfour );
 
 	return 0; //Will never get here.

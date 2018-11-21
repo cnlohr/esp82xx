@@ -94,9 +94,8 @@ uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
 #define PIN_DIR_INPUT ( *((uint32_t*)0x60000314) )
 #define PIN_IN        ( *((volatile uint32_t*)0x60000318) )
 #define _BV(x) ((1)<<(x))
+int ICACHE_FLASH_ATTR MakePinGPIO( int pinno ); //returns 0 if OK. Returns nonzero if not.
 
-
-//For newer SDKs
-//const unsigned char * ICACHE_FLASH_ATTR memchr(const unsigned char *s, int c, size_t n);
+void ICACHE_FLASH_ATTR LoadDefaultPartitionMap();
 
 #endif
