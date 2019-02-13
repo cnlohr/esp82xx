@@ -85,13 +85,19 @@ Starting a new project based on esp82xx is pretty easy:
 
     mkdir my_new_esp_project
     cd my_new_esp_project
-    git clone --recursive https://github.com/CNLohr/esp82xx
+    git clone --recursive https://github.com/cnlohr/esp82xx
     cp esp82xx/Makefile.example Makefile
     make project
 
 Replace the last line by the line below, if you also want to initialize the folder as a new git repo and upload it to a remote location:
 
     make gitproject GIT_ORIGIN=https://github.com/YOUR_USER/YOUR_NEW_REPO.git
+
+Alternatively, you can add esp82xx as a submodule from your project as follows:
+
+    git add submodule https://github.com/cnlohr/esp82xx
+    cp esp82xx/Makefile.example Makefile
+    make project
 
 After the above commands, provided you have [specified the SDK](#specify-sdk), the basic file structure should be in place.
 Most files will be symbolic links against files in `./esp82xx/`.
