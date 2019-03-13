@@ -17,6 +17,7 @@ XTGCCLIB     = $(GCC_FOLDER)/lib/gcc/xtensa-lx106-elf/$(ESP_GCC_VERS)/libgcc.a
 FOLDERPREFIX = $(GCC_FOLDER)/bin
 PREFIX       = $(FOLDERPREFIX)/xtensa-lx106-elf-
 CC           = $(PREFIX)gcc
+OBJCOPY      = $(PREFIX)objcopy
 LD           = $(PREFIX)ld
 AR           = $(PREFIX)ar
 CP           = cp
@@ -38,6 +39,11 @@ ESP_ROOT := $(shell echo "$$ESP_ROOT")
 ifeq ($(strip $(ESP_ROOT)),)
     $(warning Warning: No shell variable 'ESP_ROOT', using '$(ESP_DEFAULT)')
     ESP_ROOT := $(ESP_DEFAULT)
+endif
+
+
+ifeq ($(strip $(STRIPPED_LIBGCC)),YES)
+	XTGCCLIB=esp82xx/libgcc_stripped.a
 endif
 
 # Version related stuff

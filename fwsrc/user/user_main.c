@@ -87,7 +87,7 @@ os_event_t    procTaskQueue[procTaskQueueLen];
  * Variables
  *============================================================================*/
 
-static volatile os_timer_t some_timer;
+static os_timer_t some_timer;
 static struct espconn *pUdpServer;
 usr_conf_t * UsrCfg = (usr_conf_t*)(SETTINGS.UserData);
 
@@ -155,46 +155,17 @@ void user_rf_pre_init(void)
 	; // nothing
 }
 
-/**
- * Required function as of ESP8266_NONOS_SDK_v3.0.0. Must call
- * system_partition_table_regist(). This tries to register a few different
- * partition maps. The ESP should be happy with one of them.
- */
+
 void ICACHE_FLASH_ATTR user_pre_init(void)
 {
-    if(system_partition_table_regist(
-                partition_table_opt2,
-                sizeof(partition_table_opt2) / sizeof(partition_table_opt2[0]),
-                SPI_FLASH_SIZE_MAP_OPT2))
-    {
-        os_printf("system_partition_table_regist 2 success!!\r\n");
-    }
-    else if(system_partition_table_regist(
-                partition_table_opt4,
-                sizeof(partition_table_opt4) / sizeof(partition_table_opt4[0]),
-                SPI_FLASH_SIZE_MAP_OPT4))
-    {
-        os_printf("system_partition_table_regist 4 success!!\r\n");
-    }
-    else if(system_partition_table_regist(
-                partition_table_opt3,
-                sizeof(partition_table_opt3) / sizeof(partition_table_opt3[0]),
-                SPI_FLASH_SIZE_MAP_OPT3))
-    {
-        os_printf("system_partition_table_regist 3 success!!\r\n");
-    }
-    else
-    {
-        os_printf("system_partition_table_regist all fail\r\n");
-        while(1);
-    }
+	LoadDefaultPartitionMap(); //You must load the partition table so the NONOS SDK can find stuff.
 }
 
 /**
  * The default method, equivalent to main() in other environments. Handles all
  * initialization
  */
-void user_init(void)
+void ICACHE_FLASH_ATTR user_init(void)
 {
 	// Initialize the UART
 	uart_init(BIT_RATE_115200, BIT_RATE_115200);
@@ -223,7 +194,7 @@ void user_init(void)
 	}
 
 	// Initialize common settings
-	CSInit();
+	CSInit( 1 );
 
 	// Start MDNS services
 	SetServiceName( "espcom" );
@@ -254,7 +225,7 @@ void user_init(void)
  * section with critical timing. There is no code in this project that will
  * cause reboots if interrupts are disabled.
  */
-void EnterCritical(void)
+void ICACHE_FLASH_ATTR EnterCritical(void)
 {
 	;
 }
@@ -263,7 +234,7 @@ void EnterCritical(void)
  * This will be called to enable any interrupts after the firmware exits a
  * section with critical timing.
  */
-void ExitCritical(void)
+void ICACHE_FLASH_ATTR ExitCritical(void)
 {
 	;
 }
