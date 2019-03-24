@@ -94,6 +94,7 @@ void ICACHE_FLASH_ATTR WebSocketTickInternal();
 
 void ICACHE_FLASH_ATTR WebSocketSend( uint8_t * data, int size );
 
+void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( );
 
 //Custom HTTP request callback - return 0 if accepted connection.
 extern int (*custom_http_cb_start)( struct HTTPConnection * hc );

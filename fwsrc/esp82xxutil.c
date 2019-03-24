@@ -103,7 +103,7 @@ void ICACHE_FLASH_ATTR NixNewline( char * str )
 void ICACHE_FLASH_ATTR PushString( const char * buffer )
 {
 	char c;
-	while( c = *(buffer++) )
+	while( 0 != (c = *(buffer++)) )
 		PushByte( c );
 }
 
@@ -115,7 +115,7 @@ void ICACHE_FLASH_ATTR PushBlob( const uint8 * buffer, int len )
 }
 
 
-int8_t ICACHE_FLASH_ATTR TCPCanSend( struct espconn * conn, int size )
+int8_t ICACHE_FLASH_ATTR TCPCanSend( struct espconn * conn, int size __attribute__((unused)))
 {
 #ifdef SAFESEND
 	return TCPDoneSend( conn );
@@ -156,12 +156,12 @@ static const char encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
                                       'w', 'x', 'y', 'z', '0', '1', '2', '3',
                                       '4', '5', '6', '7', '8', '9', '+', '/'};
 
-static const int mod_table[] = {0, 2, 1};
+static const uint8_t mod_table[] = {0, 2, 1};
 
 void ICACHE_FLASH_ATTR my_base64_encode(const unsigned char *data, size_t input_length, uint8_t * encoded_data )
 {
 
-	int i, j;
+	uint32_t i, j;
     int output_length = 4 * ((input_length + 2) / 3);
 
     if( !encoded_data ) return;
@@ -196,12 +196,12 @@ void ICACHE_FLASH_ATTR SafeMD5Update( MD5_CTX * md5ctx, uint8_t*from, uint32_t s
 	while( size1 > 32 )
 	{
 		ets_memcpy( buffer, from, 32 );
-		MD5Update( md5ctx, buffer, 32 );
+		MD5Update( md5ctx, (unsigned char*)buffer, 32 );
 		size1-=32;
 		from+=32;
 	}
 	ets_memcpy( buffer, from, 32 );
-	MD5Update( md5ctx, buffer, size1 );
+	MD5Update( md5ctx, (unsigned char*)buffer, size1 );
 }
 
 char * ICACHE_FLASH_ATTR strdup( const char * src )
