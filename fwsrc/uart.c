@@ -787,29 +787,3 @@ UART_SetPrintPort(uint8 uart_no)
 	os_install_putc1(uart0_write_char);
     }
 }
-
-
-//========================================================
-
-
-/*test code*/
-void ICACHE_FLASH_ATTR
-uart_init_2(UartBautRate uart0_br, UartBautRate uart1_br)
-{
-    // rom use 74880 baut_rate, here reinitialize
-    UartDev.baut_rate = uart0_br;
-    UartDev.exist_parity = STICK_PARITY_EN;
-    UartDev.parity = EVEN_BITS;
-    UartDev.stop_bits = ONE_STOP_BIT;
-    UartDev.data_bits = EIGHT_BITS;
-	
-    uart_config(UART0);
-    UartDev.baut_rate = uart1_br;
-    uart_config(UART1);
-    ETS_UART_INTR_ENABLE();
-
-    // install uart1 putc callback
-    os_install_putc1((void *)uart1_write_char);//print output at UART1
-}
-
-

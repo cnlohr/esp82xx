@@ -24,6 +24,8 @@ uint8   wsmaskplace;
 
 
 ICACHE_FLASH_ATTR void InternalStartHTTP( );
+ICACHE_FLASH_ATTR void HTTPClose( );
+void ICACHE_FLASH_ATTR HTTPGotData( );
 
 // part of libwpa.a, but not declared anywhere
 uint8_t hex2byte(const char*);
@@ -515,7 +517,7 @@ void ICACHE_FLASH_ATTR WebSocketGotData( uint8_t c )
 		SHA1Update( &c, inkey, i );
 		SHA1Final( hash, &c );
 
-#if	(WS_RETKEY_SIZE > MAX_PATHLEN - 10 )
+#if	(WS_RETKEY_SIZEM1 > MAX_PATHLEN - 10 )
 #error MAX_PATHLEN too short.
 #endif
 

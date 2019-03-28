@@ -24,6 +24,9 @@ void ICACHE_FLASH_ATTR AddMDNSService( const char * ServiceName, const char * Te
 //Reset all services and matches.
 void ICACHE_FLASH_ATTR ClearMDNS();
 
+void ICACHE_FLASH_ATTR AddMDNSName( const char * ToDup __attribute__((unused)) );
+void ICACHE_FLASH_ATTR ClearMDNSNames();
+
 uint8_t * ICACHE_FLASH_ATTR ParseMDNSPath( uint8_t * dat, char * topop, int * len );
 //Sends part of a path, but, does not terminate, so you an concatinate paths.
 uint8_t * ICACHE_FLASH_ATTR SendPathSegment( uint8_t * dat, const char * path );

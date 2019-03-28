@@ -9,6 +9,7 @@
 #include "commonservices.h"
 
 uint32 mfs_at = 0;
+void ICACHE_FLASH_ATTR FindMPFS();
 
 void ICACHE_FLASH_ATTR FindMPFS()
 {

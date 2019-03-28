@@ -12,6 +12,8 @@ char * generic_ptr;
 char * parameters;
 uint8_t  paramcount;
 
+const char * ICACHE_FLASH_ATTR  my_strchr( const char * st, char c );
+
 int32 ICACHE_FLASH_ATTR safe_atoi( const char * in )
 {
 	int positive = 1; //1 if negative.

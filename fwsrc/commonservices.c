@@ -55,6 +55,19 @@ uint8_t need_to_switch_opmode = 0; //0 = no, 1 = will need to. 2 = do it now.
 #define SETTINGS_ADDR (COMMON_SERVICES_SETTINGS_ADDR / SPI_FLASH_SEC_SIZE)
 #define SETTINGS_KEY  0xAF
 
+#ifndef CMD_RET_TYPE
+	#define CMD_RET_TYPE int ICACHE_FLASH_ATTR
+#endif
+
+CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char * buffend);
+CMD_RET_TYPE cmd_Echo(char * pursdata, int retsize, unsigned short len, char * buffend);
+CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned short len, char * buffend);
+CMD_RET_TYPE cmd_GPIO(char * buffer, char *pusrdata, char * buffend);
+CMD_RET_TYPE cmd_Info(char * buffer, int retsize, char * pusrdata, char * buffend);
+CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend);
+void ICACHE_FLASH_ATTR issue_command_udp(void *arg, char *pusrdata, unsigned short len);
+uint32 ICACHE_FLASH_ATTR user_rf_cal_sector_set(void);
+
 void ICACHE_FLASH_ATTR SetServiceName( const char * myservice )
 {
 	int sl = ets_strlen( myservice );
@@ -167,11 +180,6 @@ static void ICACHE_FLASH_ATTR EmitBrowseNow( )
 	espconn_sent( (struct espconn *)pUdpServer, (uint8_t*)etsend, ets_strlen( etsend ) );
 #endif
 }
-
-
-#ifndef CMD_RET_TYPE
-	#define CMD_RET_TYPE int ICACHE_FLASH_ATTR
-#endif
 
 CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char * buffend)
 {
