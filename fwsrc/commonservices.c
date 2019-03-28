@@ -1096,20 +1096,4 @@ uint32 ICACHE_FLASH_ATTR user_rf_cal_sector_set(void)
     return rf_cal_sec;
 }
 
-
-//For some reason doesn't exist under modern GCC.
-char * ICACHE_FLASH_ATTR strcat( char * dest, char * src )
-{
-    char *rdest = dest;
-    while (0 != *dest)
-    {
-    	dest++;
-    }
-    while (0 != (*dest++ = *src++))
-    {
-    	;
-    }
-    return rdest;
-}
-
 struct CommonSettings SETTINGS;
