@@ -356,11 +356,18 @@ static const partition_item_t partition_table_opt4[] =
 void ICACHE_FLASH_ATTR LoadDefaultPartitionMap()
 {
     if(system_partition_table_regist(
-                partition_table_opt2,
-                sizeof(partition_table_opt2) / sizeof(partition_table_opt2[0]),
-                SPI_FLASH_SIZE_MAP_OPT2))
+                    partition_table_opt2,
+                    sizeof(partition_table_opt2) / sizeof(partition_table_opt2[0]),
+                    SPI_FLASH_SIZE_MAP_OPT2))
     {
         os_printf("system_partition_table_regist 2 success!!\r\n");
+    }
+    else if(system_partition_table_regist(
+                    partition_table_opt3,
+                    sizeof(partition_table_opt3) / sizeof(partition_table_opt3[0]),
+                    SPI_FLASH_SIZE_MAP_OPT3))
+    {
+        os_printf("system_partition_table_regist 3 success!!\r\n");
     }
     else if(system_partition_table_regist(
                 partition_table_opt4,
@@ -368,13 +375,6 @@ void ICACHE_FLASH_ATTR LoadDefaultPartitionMap()
                 SPI_FLASH_SIZE_MAP_OPT4))
     {
         os_printf("system_partition_table_regist 4 success!!\r\n");
-    }
-    else if(system_partition_table_regist(
-                partition_table_opt3,
-                sizeof(partition_table_opt3) / sizeof(partition_table_opt3[0]),
-                SPI_FLASH_SIZE_MAP_OPT3))
-    {
-        os_printf("system_partition_table_regist 3 success!!\r\n");
     }
     else
     {
