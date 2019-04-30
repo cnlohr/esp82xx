@@ -6,8 +6,10 @@
 #include "spi_flash.h"
 #include "ets_sys.h"
 #include "osapi.h"
+#include "commonservices.h"
 
 uint32 mfs_at = 0;
+void ICACHE_FLASH_ATTR FindMPFS();
 
 void ICACHE_FLASH_ATTR FindMPFS()
 {
@@ -19,7 +21,7 @@ void ICACHE_FLASH_ATTR FindMPFS()
 	spi_flash_read( MFS_PAGE_OFFSET, mfs_check, sizeof( mfs_check ) );
 	if( ets_strncmp( "MPFSMPFS", (char*)mfs_check, 8 ) == 0 ) { mfs_at = MFS_PAGE_OFFSET; goto done; }
 	
-	os_printf( "MFS Not found at regular address (%08x).\n", mfs_check[0], mfs_check[1] );
+	os_printf( "MFS Not found at regular address (%08x %08x).\n", mfs_check[0], mfs_check[1] );
 
 done:
 	os_printf( "MFS Found at: %08x\n", mfs_at );

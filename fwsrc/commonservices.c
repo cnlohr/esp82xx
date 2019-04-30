@@ -55,6 +55,19 @@ uint8_t need_to_switch_opmode = 0; //0 = no, 1 = will need to. 2 = do it now.
 #define SETTINGS_ADDR (COMMON_SERVICES_SETTINGS_ADDR / SPI_FLASH_SEC_SIZE)
 #define SETTINGS_KEY  0xAF
 
+#ifndef CMD_RET_TYPE
+	#define CMD_RET_TYPE int ICACHE_FLASH_ATTR
+#endif
+
+CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char * buffend);
+CMD_RET_TYPE cmd_Echo(char * pursdata, int retsize, unsigned short len, char * buffend);
+CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned short len, char * buffend);
+CMD_RET_TYPE cmd_GPIO(char * buffer, char *pusrdata, char * buffend);
+CMD_RET_TYPE cmd_Info(char * buffer, int retsize, char * pusrdata, char * buffend);
+CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend);
+void ICACHE_FLASH_ATTR issue_command_udp(void *arg, char *pusrdata, unsigned short len);
+uint32 ICACHE_FLASH_ATTR user_rf_cal_sector_set(void);
+
 void ICACHE_FLASH_ATTR SetServiceName( const char * myservice )
 {
 	int sl = ets_strlen( myservice );
@@ -91,7 +104,7 @@ static void ICACHE_FLASH_ATTR free_scan_array()
 	scanarray = 0;
 }
 
-static void ICACHE_FLASH_ATTR scandone(void *arg, STATUS status)
+static void ICACHE_FLASH_ATTR scandone(void *arg, STATUS status __attribute__((unused)))
 {
 	free_scan_array();
 	scanarray = (struct totalscan_t **)os_malloc( sizeof(struct totalscan_t *) * MAX_STATIONS );
@@ -150,7 +163,7 @@ static void ICACHE_FLASH_ATTR EmitWhoAmINow( )
 	ets_sprintf( etsend, "BR%s\t%s\t%s", ServiceName, SETTINGS.DeviceName, SETTINGS.DeviceDescription );
 	uint32_to_IP4(BrowseRespond,pUdpServer->proto.udp->remote_ip);
 	pUdpServer->proto.udp->remote_port = BrowseRespondPort;
-	espconn_sent( (struct espconn *)pUdpServer, etsend, ets_strlen( etsend ) );
+	espconn_sent( (struct espconn *)pUdpServer, (uint8_t*)etsend, ets_strlen( etsend ) );
 	BrowseRespond = 0;
 	os_printf( "Emitting WhoAmI\n" );
 #endif
@@ -164,14 +177,9 @@ static void ICACHE_FLASH_ATTR EmitBrowseNow( )
 	ets_sprintf( etsend, "BQ%s", BrowsingService );
 	uint32_to_IP4( ((uint32_t)0xffffffff), pUdpServer->proto.udp->remote_ip );
 	pUdpServer->proto.udp->remote_port = BACKEND_PORT;
-	espconn_sent( (struct espconn *)pUdpServer, etsend, ets_strlen( etsend ) );
+	espconn_sent( (struct espconn *)pUdpServer, (uint8_t*)etsend, ets_strlen( etsend ) );
 #endif
 }
-
-
-#ifndef CMD_RET_TYPE
-	#define CMD_RET_TYPE int ICACHE_FLASH_ATTR
-#endif
 
 CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char * buffend)
 {
@@ -184,7 +192,7 @@ CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char 
 	char * des = ParamCaptureAndAdvance();
 
 	NixNewline( srv );  NixNewline( nam );  NixNewline( des );
-	int fromip = thisfromip;
+	uint32_t fromip = thisfromip;
 
 	remot_info * ri = 0;
 	espconn_get_connection_info( pUdpServer, &ri, 0);
@@ -327,7 +335,7 @@ CMD_RET_TYPE cmd_Echo(char * pursdata, int retsize, unsigned short len, char * b
 }
 
 
-CMD_RET_TYPE cmd_Info(char * buffer, int retsize, char * pusrdata, char * buffend)
+CMD_RET_TYPE cmd_Info(char * buffer, int retsize __attribute__((unused)), char * pusrdata, char * buffend)
 {
 	int i;
 	switch( pusrdata[1] ) {
@@ -392,7 +400,10 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 	parameters++; //Assume "tab" after command.
 	char * apname = ParamCaptureAndAdvance();
 	char * password = ParamCaptureAndAdvance();
-	char * encr = ParamCaptureAndAdvance(); //Encryption
+#if 0 //We don't support encryption.
+	char * encr =
+#endif
+	ParamCaptureAndAdvance(); //Encryption
 	char * bssid = ParamCaptureAndAdvance();
 
 	if( apname ) { aplen = ets_strlen( apname ); }
@@ -450,7 +461,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 					os_printf( "Switching.\n" );
 				} else {
 					struct softap_config config;
-					char macaddr[6];
+					uint8_t macaddr[6];
 					wifi_softap_get_config( &config );
 
 					wifi_get_macaddr(SOFTAP_IF, macaddr);
@@ -564,7 +575,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 } // END: cmd_WiFi(...)
 
 
-CMD_RET_TYPE cmd_Flash(char * buffer, int retsize, char *pusrdata, unsigned short len, char * buffend) {
+CMD_RET_TYPE cmd_Flash(char * buffer __attribute__((unused)), int retsize __attribute__((unused)), char *pusrdata __attribute__((unused)), unsigned short len __attribute__((unused)), char * buffend __attribute__((unused))) {
 #ifndef DISABLE_NET_REFLASH
 	uint32 chip_size_saved = flashchip->chip_size;
 	flashchip->chip_size = 0x01000000;
@@ -749,12 +760,12 @@ void ICACHE_FLASH_ATTR issue_command_udp(void *arg, char *pusrdata, unsigned sho
 	thisfromip = IP4_to_uint32(ri->remote_ip);
 	thisfromport = ri->remote_port;
 
-	int r = issue_command( retbuf, 1300, pusrdata, len );
+	uint16_t r = issue_command( retbuf, 1300, pusrdata, len );
 
 	if( r > 0 ) {
 		ets_memcpy( rc->proto.udp->remote_ip, ri->remote_ip, 4 );
 		rc->proto.udp->remote_port = ri->remote_port;
-		espconn_sendto( rc, retbuf, r );
+		espconn_sendto( rc, (uint8_t*)retbuf, r );
 	}
 }
 
@@ -784,7 +795,7 @@ void ICACHE_FLASH_ATTR CSPreInit()
 		int constat = wifi_station_connect();
 //Disables null SSIDs.
 //		if( sc.ssid[0] == 0 && !sc.bssid_set )	{ wifi_set_opmode( 2 );	opmode = 2; }
-		debug("constat: %d", constat);
+		os_printf("constat: %d", constat);
 	}
 	if( opmode == 2 ) {
 		struct softap_config sc;
@@ -1091,16 +1102,6 @@ uint32 ICACHE_FLASH_ATTR user_rf_cal_sector_set(void)
     }
 
     return rf_cal_sec;
-}
-
-
-//For some reason doesn't exist under modern GCC.
-char * ICACHE_FLASH_ATTR strcat( char * dest, char * src )
-{
-    char *rdest = dest;
-    while (*dest) dest++;
-    while (*dest++ = *src++);
-    return rdest;
 }
 
 struct CommonSettings SETTINGS;

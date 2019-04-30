@@ -10,10 +10,10 @@
 #include "ip_addr.h"
 
 #ifdef DISABLE_MDNS
-int ICACHE_FLASH_ATTR JoinGropMDNS() { }
+int ICACHE_FLASH_ATTR JoinGropMDNS() { return 1; }
 void ICACHE_FLASH_ATTR SetupMDNS() { }
-void ICACHE_FLASH_ATTR AddMDNSService( const char * ServiceName, const char * Text, int port ) { }
-void ICACHE_FLASH_ATTR AddMDNSName( const char * ToDup ) { }
+void ICACHE_FLASH_ATTR AddMDNSService( const char * ServiceName __attribute__((unused)), const char * Text __attribute__((unused)), int port __attribute__((unused))) { }
+void ICACHE_FLASH_ATTR AddMDNSName( const char * ToDup __attribute__((unused)) ) { }
 void ICACHE_FLASH_ATTR ClearMDNSNames() { }
 
 #else
@@ -29,8 +29,6 @@ static int nr_services = 0;
 static char * MDNSServices[MAX_MDNS_SERVICES];
 static char * MDNSServiceTexts[MAX_MDNS_SERVICES];
 static uint16_t MDNSServicePorts[MAX_MDNS_SERVICES];
-
-static char MDNSSearchName[MAX_MDNS_PATH];
 
 
 void ICACHE_FLASH_ATTR AddMDNSService( const char * ServiceName, const char * Text, int port )
@@ -137,7 +135,7 @@ uint8_t * ICACHE_FLASH_ATTR SendPathSegment( uint8_t * dat, const char * path )
 	{
 		const char * pathstart = path;
 		int this_seg_length = 0;
-		while( c = *(path++) )
+		while( 0 != (c = *(path++)) )
 		{
 			if( c == '.' ) break;
 			this_seg_length++;

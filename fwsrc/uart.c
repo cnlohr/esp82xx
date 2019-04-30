@@ -29,12 +29,15 @@
 #include "uart_register.h"
 #include "mem.h"
 #include "os_type.h"
+#include "user_interface.h"
 
 // UartDev is defined and initialized in rom code.
 extern UartDevice    UartDev;
 
 LOCAL struct UartBuffer* pTxBuffer = NULL;
+#if UART_BUFF_EN
 LOCAL struct UartBuffer* pRxBuffer = NULL;
+#endif
 
 /*uart demo with a system task, to output what uart receives*/
 /*this is a example to process uart data from task,please change the priority to fit your application task if exists*/
@@ -48,7 +51,9 @@ os_event_t    uart_recvTaskQueue[uart_recvTaskQueueLen];
 #define DBG2 os_printf
 
 
+#ifndef DISABLE_CHARRX
 LOCAL void uart0_rx_intr_handler(void *para);
+#endif
 
 /******************************************************************************
  * FunctionName : uart_config
@@ -215,7 +220,7 @@ uart0_sendStr(const char *str)
         uart_tx_one_char(UART0, *str++);
     }
 }
-void at_port_print(const char *str) __attribute__((alias("uart0_sendStr")));
+
 /******************************************************************************
  * FunctionName : uart0_rx_intr_handler
  * Description  : Internal used function
@@ -309,12 +314,10 @@ uart_recvTask(os_event_t *events)
         Uart_rx_buff_enq();
     #else
         uint8 fifo_len = (READ_PERI_REG(UART_STATUS(UART0))>>UART_RXFIFO_CNT_S)&UART_RXFIFO_CNT;
-        uint8 d_tmp = 0;
         uint8 idx=0;
         for(idx=0;idx<fifo_len;idx++) {
-            d_tmp = READ_PERI_REG(UART_FIFO(UART0)) & 0xFF;
 #ifndef DISABLE_CHARRX
-            charrx(d_tmp);
+            charrx(READ_PERI_REG(UART_FIFO(UART0)) & 0xFF);
 #endif
         }
         WRITE_PERI_REG(UART_INT_CLR(UART0), UART_RXFIFO_FULL_INT_CLR|UART_RXFIFO_TOUT_INT_CLR);
@@ -784,29 +787,3 @@ UART_SetPrintPort(uint8 uart_no)
 	os_install_putc1(uart0_write_char);
     }
 }
-
-
-//========================================================
-
-
-/*test code*/
-void ICACHE_FLASH_ATTR
-uart_init_2(UartBautRate uart0_br, UartBautRate uart1_br)
-{
-    // rom use 74880 baut_rate, here reinitialize
-    UartDev.baut_rate = uart0_br;
-    UartDev.exist_parity = STICK_PARITY_EN;
-    UartDev.parity = EVEN_BITS;
-    UartDev.stop_bits = ONE_STOP_BIT;
-    UartDev.data_bits = EIGHT_BITS;
-	
-    uart_config(UART0);
-    UartDev.baut_rate = uart1_br;
-    uart_config(UART1);
-    ETS_UART_INTR_ENABLE();
-
-    // install uart1 putc callback
-    os_install_putc1((void *)uart1_write_char);//print output at UART1
-}
-
-

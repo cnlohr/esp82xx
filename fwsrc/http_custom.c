@@ -29,10 +29,10 @@ static ICACHE_FLASH_ATTR void huge()
 static ICACHE_FLASH_ATTR void echo()
 {
 	char mydat[128];
-	int len = URLDecode( mydat, 128, curhttp->pathbuffer+8 );
+	int len = URLDecode( mydat, 128, (char*)&curhttp->pathbuffer[8] );
 
 	START_PACK;
-	PushBlob( mydat, len );
+	PushBlob( (uint8_t*)mydat, len );
 	END_TCP_WRITE( curhttp->socket );
 
 	curhttp->state = HTTP_WAIT_CLOSE;
@@ -41,9 +41,9 @@ static ICACHE_FLASH_ATTR void echo()
 static ICACHE_FLASH_ATTR void issue()
 {
 	uint8_t  __attribute__ ((aligned (32))) buf[1300];
-	int len = URLDecode( buf, 1300, curhttp->pathbuffer+9 );
+	uint32_t len = URLDecode( (char*)buf, 1300, (char*)&curhttp->pathbuffer[9] );
 
-	int r = issue_command(buf, 1300, buf, len );
+	int r = issue_command((char*)buf, 1300, (char*)buf, len );
 	if( r > 0 )
 	{
 		START_PACK;
@@ -107,16 +107,16 @@ static void ICACHE_FLASH_ATTR WSEchoData(  int len )
 	{
 		cbo[i] = WSPOPMASK();
 	}
-	WebSocketSend( cbo, len );
+	WebSocketSend( (uint8_t*)cbo, len );
 }
 
 
-static void ICACHE_FLASH_ATTR WSEvalData( int len )
+static void ICACHE_FLASH_ATTR WSEvalData( int len __attribute__((unused)))
 {
 	char cbo[128];
 	int l = ets_sprintf( cbo, "output.innerHTML = %d; doSend('x' );", curhttp->bytessofar++ );
 
-	WebSocketSend( cbo, l );
+	WebSocketSend( (uint8_t*)cbo, l );
 }
 
 
@@ -130,7 +130,7 @@ static void ICACHE_FLASH_ATTR WSCommandData(  int len )
 		buf[i] = WSPOPMASK();
 	}
 
-	i = issue_command(buf, 1300, buf, len );
+	i = issue_command((char*)buf, 1300, (char*)buf, len );
 
 	if( i < 0 ) i = 0;
 
@@ -143,7 +143,7 @@ static void ICACHE_FLASH_ATTR WSCommandData(  int len )
 
 
 
-void ICACHE_FLASH_ATTR NewWebSocket()
+void ICACHE_FLASH_ATTR WebSocketNew()
 {
 	if( ets_strcmp( (const char*)curhttp->pathbuffer, "/d/ws/echo" ) == 0 )
 	{

@@ -24,7 +24,11 @@ uint8   wsmaskplace;
 
 
 ICACHE_FLASH_ATTR void InternalStartHTTP( );
-ICACHE_FLASH_ATTR void HTTPHandleInternalCallback( );
+ICACHE_FLASH_ATTR void HTTPClose( );
+void ICACHE_FLASH_ATTR HTTPGotData( );
+
+// part of libwpa.a, but not declared anywhere
+uint8_t hex2byte(const char*);
 
 ICACHE_FLASH_ATTR void HTTPClose( )
 {
@@ -191,7 +195,7 @@ void ICACHE_FLASH_ATTR HTTPTick( uint8_t timed )
 
 void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 {
-	uint16_t i, bytestoread;
+	uint16_t i;
 
 	if( curhttp->isdone )
 	{
@@ -209,7 +213,7 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 	else if( curhttp->isfirst )
 	{
 		char stto[10];
-		uint8_t slen = os_strlen( curhttp->pathbuffer );
+		uint8_t slen = os_strlen( (char*)curhttp->pathbuffer );
 		const char * k;
 		const char * k2; // Used for gzip, perhaps not needed? -NM 2016-09-24
 
@@ -221,7 +225,7 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 		{
 			PushString("Connection: "ISKEEPALIVE"\r\nContent-Length: ");
 			Uint32To10Str( stto, curhttp->bytesleft );
-			PushBlob( stto, os_strlen( stto ) );
+			PushBlob( (uint8_t*)stto, os_strlen( stto ) );
 			curhttp->keep_alive = 1;
 		}
 		else
@@ -233,7 +237,7 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 		PushString( "\r\nContent-Type: " );
 		//Content-Type?
 		while( slen && ( curhttp->pathbuffer[--slen] != '.' ) );
-		k = &curhttp->pathbuffer[slen+1];
+		k = (char*)&curhttp->pathbuffer[slen+1];
 		if( ets_strcmp( k, "mp3" ) == 0 )
 		{
 			PushString( "audio/mpeg3" );
@@ -245,7 +249,7 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 
 			// find the next extension (dot)
 			while( slen && ( curhttp->pathbuffer[--slen] != '.' ) );
-			k2 = &curhttp->pathbuffer[slen+1];
+			k2 = (char*)&curhttp->pathbuffer[slen+1];
 
 			if( ets_strcmp (k2, "js.gz") == 0 ) {
 				PushString( "text/javascript" );
@@ -283,7 +287,7 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 		{
 			int bpt = curhttp->bytesleft;
 			if( bpt > MFS_SECTOR_SIZE ) bpt = MFS_SECTOR_SIZE;
-			curhttp->bytesleft = MFSReadSector( generic_ptr, &curhttp->data.filedescriptor );
+			curhttp->bytesleft = MFSReadSector( (uint8_t*)generic_ptr, &curhttp->data.filedescriptor );
 			generic_ptr += bpt;
 		}
 
@@ -296,9 +300,8 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 
 void InternalStartHTTP( )
 {
-	int32_t clusterno;
 	int8_t i;
-	const char * path = &curhttp->pathbuffer[0];
+	const char * path = (char*)&curhttp->pathbuffer[0];
 
 	if( curhttp->pathbuffer[0] == '/' )
 		path++;
@@ -404,7 +407,6 @@ httpserver_connectcb(void *arg)
 
 }
 
-
 int ICACHE_FLASH_ATTR URLDecode( char * decodeinto, int maxlen, const char * buf )
 {
 	int i = 0;
@@ -447,17 +449,16 @@ void ICACHE_FLASH_ATTR WebSocketGotData( uint8_t c )
 	{
 	case 0:
 	{
-		int i = 0;
-		char inkey[120];
+		uint32_t i = 0;
+		uint8_t inkey[120];
 		unsigned char hash[SHA1_HASH_LEN];
 		SHA1_CTX c;
-		int inkeylen = 0;
 
 		curhttp->is_dynamic = 1;
 		while( curlen > 20 )
 		{
 			curdata++; curlen--;
-			if( ets_strncmp( curdata, "Sec-WebSocket-Key: ", 19 ) == 0 )
+			if( ets_strncmp( (char*)curdata, "Sec-WebSocket-Key: ", 19 ) == 0 )
 			{
 				break;
 			}
@@ -512,11 +513,11 @@ void ICACHE_FLASH_ATTR WebSocketGotData( uint8_t c )
 
 		ets_memcpy( &inkey[i], WS_KEY, WS_KEY_LEN + 1 );
 		i += WS_KEY_LEN;
-		SHA1_Init( &c );
-		SHA1_Update( &c, inkey, i );
-		SHA1_Final( hash, &c );
+		SHA1Init( &c );
+		SHA1Update( &c, inkey, i );
+		SHA1Final( hash, &c );
 
-#if	(WS_RETKEY_SIZE > MAX_PATHLEN - 10 )
+#if	(WS_RETKEY_SIZEM1 > MAX_PATHLEN - 10 )
 #error MAX_PATHLEN too short.
 #endif
 
@@ -525,7 +526,7 @@ void ICACHE_FLASH_ATTR WebSocketGotData( uint8_t c )
 		curhttp->bytessofar = 0;
 		curhttp->bytesleft = 0;
 
-		NewWebSocket();
+		WebSocketNew();
 
 		//Respond...
 		curhttp->state_deets = 1;
@@ -549,8 +550,8 @@ void ICACHE_FLASH_ATTR WebSocketGotData( uint8_t c )
 		if( curlen < 5 ) //Can't interpret packet.
 			break;
 
-		uint8_t fin = c & 1;
-		uint8_t opcode = c << 4;
+		// uint8_t fin = c & 1;
+		// uint8_t opcode = c << 4;
 		uint16_t payloadlen = *(curdata++);
 		curlen--;
 		if( !(payloadlen & 0x80) )
@@ -615,7 +616,7 @@ void ICACHE_FLASH_ATTR WebSocketTickInternal()
 	{
 		START_PACK;
 		PushString( "HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: " );
-		PushString( curhttp->pathbuffer + (MAX_PATHLEN-WS_RETKEY_SIZEM1) );
+		PushString( (char*)&curhttp->pathbuffer[MAX_PATHLEN - WS_RETKEY_SIZEM1] );
 		PushString( "\r\n\r\n" );
 		END_TCP_WRITE( curhttp->socket );
 		curhttp->state_deets = 5;
