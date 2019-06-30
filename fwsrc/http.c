@@ -625,6 +625,10 @@ void ICACHE_FLASH_ATTR WebSocketTickInternal(void)
 	case 5:
 		WebSocketTick();
 		break;
+
+	default: {
+		break;
+	}
 	}
 }
 

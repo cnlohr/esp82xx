@@ -276,6 +276,10 @@ CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char 
 			}
 		}
 		break;
+
+		default: {
+			break;
+		}
 	}
 
 	return buffend - buffer;
@@ -326,6 +330,10 @@ CMD_RET_TYPE cmd_GPIO(char * buffer, char *pusrdata, char * buffend)
 				rmask |= GPIO_INPUT_GET( GPIO_ID_PIN(i) )?(1<<i):0;
 			buffprint( "GS\t%d\t%d\n", g_gpiooutputmask, rmask );
 		} break;
+
+		default: {
+			break;
+		}
 	}
 	return buffend - buffer;
 } // END: cmd_GPIO(...)
@@ -573,6 +581,9 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 			}
 
 		} break;
+		default: {
+			break;
+		}
 	}
 	return buffend - buffer;
 } // END: cmd_WiFi(...)
@@ -748,6 +759,11 @@ int ICACHE_FLASH_ATTR issue_command(char * buffer, int retsize, char *pusrdata, 
 		// Issue a custom command defined by the user in ../user/custom_commands.c
 		case 'c': case 'C':
 			return CustomCommand( buffer, retsize, pusrdata, len);
+
+		default: {
+			break;
+		}
+
 	}
 	return -1;
 } // END: issue_command(...)
