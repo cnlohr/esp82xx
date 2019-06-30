@@ -199,7 +199,7 @@ CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char 
 	if( !ri ) return 0;
 
 	switch( pusrdata[1] ) {
-		case 'q': case 'Q': //Probe
+		case 'q': case 'Q': { //Probe
 			//Make sure it's either a wildcard, to our service or to us.
 			if( srv && ets_strcmp(srv,ServiceName) && ets_strcmp(srv,SETTINGS.DeviceName) ) break;
 			//Respond at a random time in the future (to prevent congestion)
@@ -209,10 +209,11 @@ CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char 
 
 			BrowseRespond = fromip;
 			BrowseRespondPort = thisfromport;
+		}
 		break;
 
 		//Response
-		case 'r': case 'R':
+		case 'r': case 'R': {
 			if( srv && nam && des && time_since_last_browse < 0 ) break;
 			//Find in list.
 			int i = -1,   last_empty = -1;
@@ -250,11 +251,13 @@ CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char 
 				ets_memcpy( bc->description, des, dl ); bc->description[dl] = 0;
 				bc->ip = fromip;
 			}
+		}
 		break; // END: case 'r': case 'R': // Response
 
-		case 's': case 'S':
+		case 's': case 'S': {
 			BrowseForService( nam ? nam : "" );
 			buffprint( "BS\r\n" );
+		}
 		break;
 
 		case 'l': case 'L':	{
@@ -271,7 +274,8 @@ CMD_RET_TYPE cmd_Browse(char * buffer, char *pusrdata, unsigned short len, char 
 						bc->ip, bc->service, bc->devicename, bc->description );
 				}
 			}
-		} break;
+		}
+		break;
 	}
 
 	return buffend - buffer;
@@ -410,7 +414,7 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 	if( password ) { passlen = ets_strlen( password ); }
 
 
-	char mac[6] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
+	uint8_t mac[6] = { 0xff, 0xff, 0xff, 0xff, 0xff, 0xff };
 	int bssid_set = 0;
 
 	if( bssid ) {
@@ -510,7 +514,6 @@ CMD_RET_TYPE cmd_WiFi(char * buffer, int retsize, char * pusrdata, char *buffend
 			buffprint( "WI%d", mode );
 
 			if( mode == 2 ) {
-				uint8_t mac[6];
 				struct softap_config ap;
 				wifi_softap_get_config( &ap );
 				wifi_get_macaddr( 1, mac );

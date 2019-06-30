@@ -443,7 +443,7 @@ int ICACHE_FLASH_ATTR URLDecode( char * decodeinto, int maxlen, const char * buf
 
 
 
-void ICACHE_FLASH_ATTR WebSocketGotData( uint8_t c )
+void ICACHE_FLASH_ATTR WebSocketGotData( uint8_t ch )
 {
 	switch( curhttp->state_deets )
 	{
@@ -452,7 +452,7 @@ void ICACHE_FLASH_ATTR WebSocketGotData( uint8_t c )
 		uint32_t i = 0;
 		uint8_t inkey[120];
 		unsigned char hash[SHA1_HASH_LEN];
-		SHA1_CTX c;
+		SHA1_CTX ctx;
 
 		curhttp->is_dynamic = 1;
 		while( curlen > 20 )
@@ -513,9 +513,9 @@ void ICACHE_FLASH_ATTR WebSocketGotData( uint8_t c )
 
 		ets_memcpy( &inkey[i], WS_KEY, WS_KEY_LEN + 1 );
 		i += WS_KEY_LEN;
-		SHA1Init( &c );
-		SHA1Update( &c, inkey, i );
-		SHA1Final( hash, &c );
+		SHA1Init( &ctx );
+		SHA1Update( &ctx, inkey, i );
+		SHA1Final( hash, &ctx );
 
 #if	(WS_RETKEY_SIZEM1 > MAX_PATHLEN - 10 )
 #error MAX_PATHLEN too short.
@@ -533,14 +533,14 @@ void ICACHE_FLASH_ATTR WebSocketGotData( uint8_t c )
 		break;
 	}
 	case 1:
-		if( c == '\n' ) curhttp->state_deets = 2;
+		if( ch == '\n' ) curhttp->state_deets = 2;
 		break;
 	case 2:
-		if( c == '\r' ) curhttp->state_deets = 3;
+		if( ch == '\r' ) curhttp->state_deets = 3;
 		else curhttp->state_deets = 1;
 		break;
 	case 3:
-		if( c == '\n' ) curhttp->state_deets = 4;
+		if( ch == '\n' ) curhttp->state_deets = 4;
 		else curhttp->state_deets = 1;
 		break;
 	case 5: //Established connection.
