@@ -15,7 +15,6 @@ void ICACHE_FLASH_ATTR httpserver_connectcb(void *arg) { }
 //#define ISKEEPALIVE "keep-alive"
 #define ISKEEPALIVE "close"
 
-struct HTTPConnection HTTPConnections[HTTP_CONNECTIONS];
 struct HTTPConnection * curhttp;
 uint8 * curdata;
 uint16  curlen;

@@ -29,8 +29,6 @@ done:
 	ExitCritical();
 }
 
-extern SpiFlashChip * flashchip;
-
 //Returns 0 on succses.
 //Returns size of file if non-empty
 //If positive, populates mfi.
