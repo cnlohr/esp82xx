@@ -92,7 +92,7 @@ struct totalscan_t ** scanarray;
 
 int scanplace = 0;
 
-static void ICACHE_FLASH_ATTR free_scan_array()
+static void ICACHE_FLASH_ATTR free_scan_array(void)
 {
 	if( !scanarray ) return;
 	int i;
@@ -156,7 +156,7 @@ void ICACHE_FLASH_ATTR BrowseForService( const char * servicename )
 }
 
 
-static void ICACHE_FLASH_ATTR EmitWhoAmINow( )
+static void ICACHE_FLASH_ATTR EmitWhoAmINow(void )
 {
 #ifndef DISABLE_SERVICE_UDP
 	char etsend[64];
@@ -170,7 +170,7 @@ static void ICACHE_FLASH_ATTR EmitWhoAmINow( )
 }
 
 
-static void ICACHE_FLASH_ATTR EmitBrowseNow( )
+static void ICACHE_FLASH_ATTR EmitBrowseNow(void )
 {
 #ifndef DISABLE_SERVICE_UDP
 	char etsend[32];
@@ -773,7 +773,7 @@ void ICACHE_FLASH_ATTR issue_command_udp(void *arg, char *pusrdata, unsigned sho
 }
 
 
-static void ICACHE_FLASH_ATTR SwitchToSoftAP( )
+static void ICACHE_FLASH_ATTR SwitchToSoftAP(void )
 {
 	EnterCritical();
 	struct softap_config sc;
@@ -787,7 +787,7 @@ static void ICACHE_FLASH_ATTR SwitchToSoftAP( )
 }
 
 
-void ICACHE_FLASH_ATTR CSPreInit()
+void ICACHE_FLASH_ATTR CSPreInit(void)
 {
 	int opmode = wifi_get_opmode();
 	os_printf( "Opmode: %d\n", opmode );
@@ -876,7 +876,7 @@ static void ICACHE_FLASH_ATTR GoAP( int always )
 	ExitCritical();
 }
 
-static void ICACHE_FLASH_ATTR RestoreAndReboot( )
+static void ICACHE_FLASH_ATTR RestoreAndReboot(void )
 {
 	os_printf( "Restoring and rebooting\n" );
 	CSSettingsLoad(1);
@@ -1013,7 +1013,7 @@ void CSTick( int slowtick )
 }
 
 
-void ICACHE_FLASH_ATTR CSConnectionChange()
+void ICACHE_FLASH_ATTR CSConnectionChange(void)
 {
 	attached_to_mdns = 0;
 }

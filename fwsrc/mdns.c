@@ -10,11 +10,11 @@
 #include "ip_addr.h"
 
 #ifdef DISABLE_MDNS
-int ICACHE_FLASH_ATTR JoinGropMDNS() { return 1; }
-void ICACHE_FLASH_ATTR SetupMDNS() { }
+int ICACHE_FLASH_ATTR JoinGropMDNS(void) { return 1; }
+void ICACHE_FLASH_ATTR SetupMDNS(void) { }
 void ICACHE_FLASH_ATTR AddMDNSService( const char * ServiceName __attribute__((unused)), const char * Text __attribute__((unused)), int port __attribute__((unused))) { }
 void ICACHE_FLASH_ATTR AddMDNSName( const char * ToDup __attribute__((unused)) ) { }
-void ICACHE_FLASH_ATTR ClearMDNSNames() { }
+void ICACHE_FLASH_ATTR ClearMDNSNames(void) { }
 
 #else
 

@@ -371,7 +371,7 @@ uart_init(UartBautRate uart0_br, UartBautRate uart1_br)
 }
 
 void ICACHE_FLASH_ATTR
-uart_reattach()
+uart_reattach(void)
 {
     uart_init(BIT_RATE_115200, BIT_RATE_115200);
 }

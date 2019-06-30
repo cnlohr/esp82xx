@@ -229,7 +229,7 @@ char * ICACHE_FLASH_ATTR strdupcaselower( const char * src )
 	return ret;
 }
 
-uint32_t ICACHE_FLASH_ATTR GetCurrentIP( )
+uint32_t ICACHE_FLASH_ATTR GetCurrentIP(void )
 {
 	struct ip_info sta_ip;
 	wifi_get_ip_info(STATION_IF, &sta_ip);
@@ -243,7 +243,7 @@ uint32_t ICACHE_FLASH_ATTR GetCurrentIP( )
 		return 0;
 }
 
-char * ParamCaptureAndAdvance( )
+char * ParamCaptureAndAdvance(void )
 {
 	if( parameters == 0 ) return 0;  //If the string to start with was null
 	if( *parameters == 0 ) return 0; //If we got to the end of the string.
@@ -258,7 +258,7 @@ char * ParamCaptureAndAdvance( )
 	return ret;
 }
 
-int32_t    ParamCaptureAndAdvanceInt( )
+int32_t    ParamCaptureAndAdvanceInt(void )
 {
 	char * r = ParamCaptureAndAdvance( );
 	if( !r )
@@ -353,7 +353,7 @@ static const partition_item_t partition_table_opt4[] =
  * system_partition_table_regist(). This tries to register a few different
  * partition maps. The ESP should be happy with one of them.
  */
-void ICACHE_FLASH_ATTR LoadDefaultPartitionMap()
+void ICACHE_FLASH_ATTR LoadDefaultPartitionMap(void)
 {
     if(system_partition_table_regist(
                     partition_table_opt2,

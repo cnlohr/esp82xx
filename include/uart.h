@@ -154,7 +154,7 @@ typedef struct {
 
 void uart_init(UartBautRate uart0_br, UartBautRate uart1_br);
 void uart0_sendStr(const char *str);
-void uart_reattach();
+void uart_reattach(void);
 
 ///////////////////////////////////////
 #define UART_FIFO_LEN  128  //define the tx fifo length
@@ -191,7 +191,7 @@ STATUS uart_tx_one_char(uint8 uart, uint8 TxChar);
 STATUS uart_tx_one_char_no_wait(uint8 uart, uint8 TxChar);
 STATUS uart0_tx_one_char_no_wait(uint8 TxChar);
 void  uart1_sendStr_no_wait(const char *str);
-struct UartBuffer*  Uart_Buf_Init();
+struct UartBuffer*  Uart_Buf_Init(void);
 
 #if UART_BUFF_EN
 LOCAL void  Uart_Buf_Cpy(struct UartBuffer* pCur, char* pdata , uint16 data_len);

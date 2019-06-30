@@ -22,14 +22,14 @@ uint8   wsmask[4];
 uint8   wsmaskplace;
 
 
-ICACHE_FLASH_ATTR void InternalStartHTTP( );
-ICACHE_FLASH_ATTR void HTTPClose( );
-void ICACHE_FLASH_ATTR HTTPGotData( );
+ICACHE_FLASH_ATTR void InternalStartHTTP( void);
+ICACHE_FLASH_ATTR void HTTPClose( void);
+void ICACHE_FLASH_ATTR HTTPGotData(void );
 
 // part of libwpa.a, but not declared anywhere
 uint8_t hex2byte(const char*);
 
-ICACHE_FLASH_ATTR void HTTPClose( )
+ICACHE_FLASH_ATTR void HTTPClose(void )
 {
 	//This is dead code, but it is a testament to Charles.
 	//Do not do this here.  Wait for the ESP to tell us the
@@ -40,7 +40,7 @@ ICACHE_FLASH_ATTR void HTTPClose( )
 }
 
 
-void ICACHE_FLASH_ATTR HTTPGotData( )
+void ICACHE_FLASH_ATTR HTTPGotData(void )
 {
 	uint8 c;
 	curhttp->timeout = 0;
@@ -192,7 +192,7 @@ void ICACHE_FLASH_ATTR HTTPTick( uint8_t timed )
 	}
 }
 
-void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
+void ICACHE_FLASH_ATTR HTTPHandleInternalCallback(void )
 {
 	uint16_t i;
 
@@ -297,7 +297,7 @@ void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( )
 	}
 }
 
-void InternalStartHTTP( )
+void InternalStartHTTP(void )
 {
 	int8_t i;
 	const char * path = (char*)&curhttp->pathbuffer[0];
@@ -607,7 +607,7 @@ void ICACHE_FLASH_ATTR WebSocketGotData( uint8_t ch )
 	}
 }
 
-void ICACHE_FLASH_ATTR WebSocketTickInternal()
+void ICACHE_FLASH_ATTR WebSocketTickInternal(void)
 {
 	switch( curhttp->state_deets )
 	{
@@ -646,7 +646,7 @@ void ICACHE_FLASH_ATTR WebSocketSend( uint8_t * data, int size )
 	END_TCP_WRITE( curhttp->socket );
 }
 
-uint8_t WSPOPMASK()
+uint8_t WSPOPMASK(void)
 {
 	uint8_t mask = wsmask[wsmaskplace];
 	wsmaskplace = (wsmaskplace+1)&3;

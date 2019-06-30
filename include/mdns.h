@@ -7,8 +7,8 @@
 #define MAX_MDNS_SERVICES 5
 #define MAX_MDNS_PATH 32
 
-void ICACHE_FLASH_ATTR SetupMDNS();
-int ICACHE_FLASH_ATTR JoinGropMDNS(); //returns nonzero on failure.
+void ICACHE_FLASH_ATTR SetupMDNS(void);
+int ICACHE_FLASH_ATTR JoinGropMDNS(void); //returns nonzero on failure.
 
 //This _does_ dup the data.  Don't worry about keeping the data around.
 //Matching name, to respond with full suite of what-I-have
@@ -22,10 +22,10 @@ void ICACHE_FLASH_ATTR MDNSAddName( const char * ToDup );
 void ICACHE_FLASH_ATTR AddMDNSService( const char * ServiceName, const char * Text, int port );
 
 //Reset all services and matches.
-void ICACHE_FLASH_ATTR ClearMDNS();
+void ICACHE_FLASH_ATTR ClearMDNS(void);
 
 void ICACHE_FLASH_ATTR AddMDNSName( const char * ToDup __attribute__((unused)) );
-void ICACHE_FLASH_ATTR ClearMDNSNames();
+void ICACHE_FLASH_ATTR ClearMDNSNames(void);
 
 uint8_t * ICACHE_FLASH_ATTR ParseMDNSPath( uint8_t * dat, char * topop, int * len );
 //Sends part of a path, but, does not terminate, so you an concatinate paths.

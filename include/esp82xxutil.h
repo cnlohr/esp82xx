@@ -79,10 +79,10 @@ char * ICACHE_FLASH_ATTR strdupcaselower( const char * src );
 //WARNING: These functions are NOT threadsafe.
 extern char * parameters;
 extern uint8_t paramcount;
-char *  ICACHE_FLASH_ATTR ParamCaptureAndAdvance( ); //Increments intcount if good.
-int32_t ICACHE_FLASH_ATTR ParamCaptureAndAdvanceInt( ); //Do the same, but we're looking for an integer.
+char *  ICACHE_FLASH_ATTR ParamCaptureAndAdvance(void ); //Increments intcount if good.
+int32_t ICACHE_FLASH_ATTR ParamCaptureAndAdvanceInt(void ); //Do the same, but we're looking for an integer.
 
-uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
+uint32_t ICACHE_FLASH_ATTR GetCurrentIP(void );
 
 #endif
 
@@ -96,6 +96,6 @@ uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
 #define _BV(x) ((1)<<(x))
 int ICACHE_FLASH_ATTR MakePinGPIO( int pinno ); //returns 0 if OK. Returns nonzero if not.
 
-void ICACHE_FLASH_ATTR LoadDefaultPartitionMap();
+void ICACHE_FLASH_ATTR LoadDefaultPartitionMap(void);
 
 #endif
