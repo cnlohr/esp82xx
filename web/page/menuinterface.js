@@ -103,7 +103,7 @@ function init()
 		<input type=submit onclick=\"ShowHideEvent( 'SystemReflash' );\" value=\"System Reflash\"></td><td>\
 		<div id=SystemReflash class=\"collapsible\">\
 		<div id=InnerSystemReflash class=\"dragandrophandler\">\
-		<input id=\"dragndropersystem\" type=\"file\" multiple> <div id=innersystemflashtext>Drop or browse for system (0x000.. 0x400...) or web (.mpfs) reflash files.</div>\
+		<input id=\"dragndropersystem\" type=\"file\" multiple> <div id=innersystemflashtext>Drop or browse for system (0x000.. 0x100...) or web (.mpfs) reflash files.</div>\
 		</div></div></td></tr>"
 	);
 
