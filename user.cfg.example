@@ -8,7 +8,7 @@ PORT  = /dev/ttyUSB0    # could also be /dev/ttyACM0
 WEB_PORT     = 80
 COM_PORT     = 7777
 BACKEND_PORT = 7878
-MFS_PAGE_OFFSET  = 532480
+MFS_PAGE_OFFSET  = 524288
 
 ESP_DEFAULT  = $(HOME)/esp8266/esp-open-sdk
 ESP_GCC_VERS = 4.8.5
