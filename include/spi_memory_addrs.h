@@ -20,7 +20,7 @@
  * Currently 0x7F000
  */
 #define USER_SETTINGS_ADDR            (COMMON_SERVICES_SETTINGS_ADDR + COMMON_SERVICES_SETTINGS_SIZE)
-#define USER_SETTINGS_SIZE            0x3000
+#define USER_SETTINGS_SIZE            0x1000
 /**
  * The webpage data is stored at an address, MFS_PAGE_OFFSET, declared in the
  * makefile, This is so the makefile can burn the file system at the correct
