@@ -76,6 +76,10 @@ LINKFLAGS = $(LDFLAGS_CORE) -B$(XTLIB) $(LDFLAGS_POST)
 
 BIN_TARGET = $(PROJECT_NAME)-$(VERSION)-binaries.zip
 
+INIT_DATA_PLACE ?= 0x3FC000
+BLANK_DATA_PLACE1 ?= 0x3FB000
+BLANK_DATA_PLACE2 ?= 0x3FE000
+
 ifneq (,$(findstring -DDEBUG,$(OPTS)))
 $(warning Debug is enabled!)
 FLASH_WRITE_FLAGS += --verify
@@ -143,7 +147,7 @@ burn_cutecom:
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
 	-cutecom &
 burnitall :	
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2) 0x3FC000 esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin $(MFS_PAGE_OFFSET) web/page.mpfs)||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2) $(MFS_PAGE_OFFSET) web/page.mpfs $(BLANK_DATA_PLACE1) $(SDK)/bin/blank.bin $(INIT_DATA_PLACE) esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin $(BLANK_DATA_PLACE2) $(SDK)/bin/blank.bin)||(true)
 
 else ifeq ($(CHIP), 8266)
 
@@ -156,7 +160,7 @@ burn_cutecom:
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
 	-cutecom &
 burnitall :
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2) 0x3FC000 esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin $(MFS_PAGE_OFFSET) web/page.mpfs)||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2) $(BLANK_DATA_PLACE1) $(SDK)/bin/blank.bin $(INIT_DATA_PLACE) esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin $(BLANK_DATA_PLACE2) $(SDK)/bin/blank.bin $(MFS_PAGE_OFFSET) web/page.mpfs)||(true)
 else
 	$(error Error: Unknown chip '$(CHIP)')
 endif
@@ -191,7 +195,7 @@ $(BIN_TARGET): $(FW_FILE1) $(FW_FILE2)
 	zip $@ $(FW_FILE1) $(FW_FILE2) web/execute_reflash web/mfsmaker web/pushtodev web/page.mpfs
 
 wipechip :
-	dd if=/dev/zero of=/tmp/zeroes bs=1M count=1
+	dd if=/dev/zero of=/tmp/zeroes bs=16M count=1
 	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) write_flash 0x0 /tmp/zeroes)||(true)
 
 getips :
@@ -206,10 +210,10 @@ dumprom :
 	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) read_flash 0 1048576 dump.bin)||(true)
 
 initdefault :
-	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash 0x3FC000 esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin
+	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash $(INIT_DATA_PLACE) esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin
 
 init3v3 :
-	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash 0x3FC000 esp82xx/data/esp_init_data_adc33.bin
+	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash $(INIT_DATA_PLACE) esp82xx/data/esp_init_data_adc33.bin
 
 erase:
 	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) erase_flash

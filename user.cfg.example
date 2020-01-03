@@ -14,6 +14,7 @@ ESP_DEFAULT  = $(HOME)/esp8266/esp-open-sdk
 ESP_GCC_VERS = 4.8.5
 
 #FWBURNFLAGS  = -b 1000000  #uncomment if your programmer supports higher speeds.
+#INIT_DATA_PLACE = 0x1FC000 #uncomment if you're on a 2mbit or so chip.
 
 OPTS += -DICACHE_FLASH
 OPTS += -DUSE_OPTIMIZE_PRINTF
