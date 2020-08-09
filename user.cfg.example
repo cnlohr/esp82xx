@@ -32,6 +32,8 @@ OPTS += -DSOFTAP_CHANNEL=11
 #symbols for some internal libgcc functions.
 #STRIPPED_LIBGCC=YES
 
+#If you want to use the official SDK from espressif you can set this.
+#USE_SYSTEM_NONOS_SDK=YES
 
 PAGE_TITLE = esp82xx-basic
 PAGE_SCRIPTS = $(wildcard page/*.js) # include all javascrpts in ./web/page/

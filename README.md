@@ -29,7 +29,7 @@ Make changes in the `dev` branch!
 
 ## List of projects using esp82xx
 
- - [esp82XX-basic](https://github.com/con-f-use/esp82XX-basic)
+ - [esp82XX-basic](https://github.com/con-f-use/esp82XX-basic) (or the one in cnlohr's account (should be up to date) [esp82XX-basic cnlohr](https://github.com/con-f-use/esp82XX-cnlohr)
  - [Colorchord](https://github.com/cnlohr/colorchord)
  - [MAGFest Swag](https://youtu.be/DbjlStyMmaY?t=8m) [Badges 2017](https://github.com/cnlohr/swadges2017)
  - [esp8266ws2812i2c](https://github.com/cnlohr/esp8266ws2812i2s)
@@ -63,6 +63,59 @@ It will take some time and GBs of disk space to build the toolchain.
 Some versions of the SDK are somewhat problematic, e.g. with SDK versions greater than 1.5.2, Espressif changed the IRAM management, so some projects began to hit size restrictions and would not compile.
 Also some SDKs use different initial data (the flash has to have some SDK-related settings stored that are not userspace and aren't flashed along with the firmware).
 For that reason, the Makefile is set up to use a [customized version](https://github.com/cnlohr/esp_nonos_sdk) of the SDK and ships with proven initial data.
+
+#### Alternate (Manual) SDK Linux Setup
+
+Prerequisites:
+```
+sudo apt-get update
+sudo apt-get install -y make unrar autoconf automake libtool gcc g++ gperf flex bison texinfo-doc-nonfree install-info info texinfo gawk ncurses-dev libexpat-dev python-dev python python-serial sed git unzip bash help2man wget bzip2 libtool-bin
+mkdir ~/esp8266
+```
+
+esptool:
+
+```
+cd ~/esp8366
+git clone --recursive https://github.com/igrr/esptool-ck.git || exit 1
+cd esptool-ck
+make
+cd ..
+```
+
+pfalcon's SDK:
+
+```
+cd ~/esp8266
+
+git clone --recursive https://github.com/pfalcon/esp-open-sdk.git
+cd esp-open-sdk
+
+# For legacy projects, you will need SDK 1.5.2, from before espressif filled the iram
+#sed -i 's/^\(\s*VENDOR_SDK\s*=\s*\).*$/\1 1.5.2/' Makefile
+#git checkout e32ff685 # Old version of sdk (v1.5.2) before espressif filled the iram
+
+make STANDALONE=y 
+find . -name "c_types.h" -exec cp "{}" "{}.patched" \;
+
+# Line below fixes a bug, when e32ff685 or other old versions are used
+#find -type f -name 'c_types.h.orig' -print0 | while read -d $'\0' f; do cp "$f" "${f%.orig}"; done
+```
+
+You may want to manually add the SDK path to your bashrc.  Copy out the note from makefile and
+paste it into your .bashrc.
+
+```
+nano ~/.bashrc
+```
+
+OPTIONAL: Install a system toolchain copy of the ESP NONOS SDK
+
+```
+cd ~/esp8266
+git clone https://github.com/espressif/ESP8266_NONOS_SDK
+```
+
 
 #### Specify SDK
 
