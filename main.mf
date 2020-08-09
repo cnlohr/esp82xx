@@ -46,6 +46,11 @@ FW_FILE1 = image.elf-0x00000.bin
 FW_FILE2 = image.elf-0x10000.bin
 TARGET = image.elf
 
+ifneq ("$(wildcard $(esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin))","")
+	INIT_DATA_ROM?=esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin
+else
+	INIT_DATA_ROM?=esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default.bin
+endif
 
 SRCS +=  esp82xx/fwsrc/uart.c \
 	esp82xx/fwsrc/esp82xxutil.c \
@@ -147,7 +152,7 @@ burn_cutecom:
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
 	-cutecom &
 burnitall :	
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2) $(MFS_PAGE_OFFSET) web/page.mpfs $(BLANK_DATA_PLACE1) $(SDK)/bin/blank.bin $(INIT_DATA_PLACE) esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin $(BLANK_DATA_PLACE2) $(SDK)/bin/blank.bin)||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fs 8m -fm dout $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2) $(MFS_PAGE_OFFSET) web/page.mpfs $(BLANK_DATA_PLACE1) $(SDK)/bin/blank.bin $(INIT_DATA_PLACE) $(INIT_DEFAULT_ROM) $(BLANK_DATA_PLACE2) $(SDK)/bin/blank.bin)||(true)
 
 else ifeq ($(CHIP), 8266)
 
@@ -160,7 +165,7 @@ burn_cutecom:
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
 	-cutecom &
 burnitall :
-	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2) $(BLANK_DATA_PLACE1) $(SDK)/bin/blank.bin $(INIT_DATA_PLACE) esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin $(BLANK_DATA_PLACE2) $(SDK)/bin/blank.bin $(MFS_PAGE_OFFSET) web/page.mpfs)||(true)
+	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2) $(BLANK_DATA_PLACE1) $(SDK)/bin/blank.bin $(INIT_DATA_PLACE) $(INIT_DEFAULT_ROM) $(BLANK_DATA_PLACE2) $(SDK)/bin/blank.bin $(MFS_PAGE_OFFSET) web/page.mpfs)||(true)
 else
 	$(error Error: Unknown chip '$(CHIP)')
 endif
@@ -210,7 +215,7 @@ dumprom :
 	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) read_flash 0 1048576 dump.bin)||(true)
 
 initdefault :
-	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash $(INIT_DATA_PLACE) esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin
+	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash $(INIT_DATA_PLACE) $(INIT_DATA_ROM)
 
 init3v3 :
 	$(ESPTOOL_PY) $(BURNFLAGS) --port $(PORT) write_flash $(INIT_DATA_PLACE) esp82xx/data/esp_init_data_adc33.bin

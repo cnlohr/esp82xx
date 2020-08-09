@@ -20,6 +20,8 @@
  * Partition Map Data
  *============================================================================*/
 
+#ifdef ESP_SDK_VERSION_NUMBER && ESP_SDK_VERSION_NUMBER > 0x020000
+
 #define SYSTEM_PARTITION_OTA_SIZE_OPT2                 0x6A000
 #define SYSTEM_PARTITION_OTA_2_ADDR_OPT2               0x81000
 #define SYSTEM_PARTITION_RF_CAL_ADDR_OPT2              0xfb000
@@ -74,6 +76,8 @@ static const partition_item_t partition_table_opt4[] =
     { SYSTEM_PARTITION_PHY_DATA,         SYSTEM_PARTITION_PHY_DATA_ADDR_OPT4,         0x1000},
     { SYSTEM_PARTITION_SYSTEM_PARAMETER, SYSTEM_PARTITION_SYSTEM_PARAMETER_ADDR_OPT4, 0x3000},
 };
+
+#endif
 
 /*==============================================================================
  * Process Defines
