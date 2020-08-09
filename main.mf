@@ -46,11 +46,7 @@ FW_FILE1 = image.elf-0x00000.bin
 FW_FILE2 = image.elf-0x10000.bin
 TARGET = image.elf
 
-ifneq ("$(wildcard $(esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin))","")
-	INIT_DATA_ROM?=esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default_v08.bin
-else
-	INIT_DATA_ROM?=esp82xx/toolchain/esp_nonos_sdk/bin/esp_init_data_default.bin
-endif
+
 
 SRCS +=  esp82xx/fwsrc/uart.c \
 	esp82xx/fwsrc/esp82xxutil.c \

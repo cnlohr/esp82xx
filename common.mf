@@ -21,8 +21,21 @@ OBJCOPY      = $(PREFIX)objcopy
 LD           = $(PREFIX)ld
 AR           = $(PREFIX)ar
 CP           = cp
-#LINKERSCRIPT ?= esp82xx/toolchain/ld/linkerscript.ld
-LINKERSCRIPT ?= $(SDK)/ld/eagle.app.v6.ld
+
+
+INIT_DATA_ROM?=$(SDK)/bin/esp_init_data_default_v08.bin
+
+ifneq ("$(wildcard $($(INIT_DATA_ROM)))","")
+	INIT_DATA_ROM?=$(INIT_DATA_ROM)
+else
+	INIT_DATA_ROM?=$(SDK)/bin/esp_init_data_default.bin
+endif
+
+ifneq ("$(wildcard $($(SDK)/ld/linkerscript.ld))","")
+	LINKERSCRIPT?=$(SDK)/ld/linkerscript.ld
+else
+	LINKERSCRIPT?=$(SDK)/ld/eagle.app.v6.ld
+endif
 
 SLOWTICK_MS ?= 50
 

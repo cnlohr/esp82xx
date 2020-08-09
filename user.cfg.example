@@ -13,7 +13,13 @@ MFS_PAGE_OFFSET  = 524288
 ESP_DEFAULT  = $(HOME)/esp8266/esp-open-sdk
 ESP_GCC_VERS = 4.8.5
 
+#If you want to override and use a new SDK instead of the custom one.
+#This will let you  use things more modern than the 1.5.2 that was originally
+#from CNLohr.
+#SDK = $(HOME)/esp8266/ESP8266_NONOS_SDK
+
 #FWBURNFLAGS  = -b 1000000  #uncomment if your programmer supports higher speeds.
+#FWBURNFLAGS  = -b 921600  #Some programmers don't support 1Mbaud
 #INIT_DATA_PLACE = 0x1FC000 #uncomment if you're on a 2mbit or so chip.
 
 OPTS += -DICACHE_FLASH
