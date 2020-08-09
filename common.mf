@@ -12,13 +12,6 @@ GCC_FOLDER = $(ESP_ROOT)/xtensa-lx106-elf
 ESPTOOL_PY = $(ESP_ROOT)/esptool/esptool.py
 SDK       ?= $(PWD)/esp82xx/toolchain/esp_nonos_sdk
 
-
-
-ifeq ($(strip $(USE_SYSTEM_NONOS_SDK)),YES)
-	SDK       := $(ESP_ROOT)/../ESP8266_NONOS_SDK
-endif
-
-
 XTLIB        = $(SDK)/lib
 XTGCCLIB     = $(GCC_FOLDER)/lib/gcc/xtensa-lx106-elf/$(ESP_GCC_VERS)/libgcc.a
 FOLDERPREFIX = $(GCC_FOLDER)/bin

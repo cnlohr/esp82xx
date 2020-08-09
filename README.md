@@ -109,13 +109,6 @@ paste it into your .bashrc.
 nano ~/.bashrc
 ```
 
-OPTIONAL: Install a system toolchain copy of the ESP NONOS SDK
-
-```
-cd ~/esp8266
-git clone https://github.com/espressif/ESP8266_NONOS_SDK
-```
-
 
 #### Specify SDK
 
