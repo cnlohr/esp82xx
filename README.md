@@ -73,8 +73,15 @@ wget https://github.com/cnlohr/esp82xx_bin_toolchain/raw/master/esp-open-sdk-x86
 tar xJvf esp-open-sdk-x86_64-20200810.tar.xz
 ```
 
+Several esp82xx projects use the offical Espressif nonos SDK instead of the bundled one here.  You should probably install that to your home folder using the following commands:
+
+```
+cd ~/esp8266
+git clone https://github.com/espressif/ESP8266_NONOS_SDK --recurse-submodules
+```
+
 See Appendix A and B for alternate options (if you are on non-64-bit x86 systems)
-#
+
 Some versions of the SDK are somewhat problematic, e.g. with SDK versions greater than 1.5.2, Espressif changed the IRAM management, so some projects began to hit size restrictions and would not compile.
 Also some SDKs use different initial data (the flash has to have some SDK-related settings stored that are not userspace and aren't flashed along with the firmware).
 For that reason, the Makefile is set up to use a [customized version](https://github.com/cnlohr/esp_nonos_sdk) of the SDK and ships with proven initial data.
