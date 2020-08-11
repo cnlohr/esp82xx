@@ -58,8 +58,6 @@ You will need the following:
 
 This will install the SDK to ~/esp8266 - the default location for the ESP8266 SDK.  This only works on 64-bit x86 systems, and has only been verified in Linux Mint and Ubuntu.  Installation is about 18MB and requires about 90 MB of disk space.
 
-**DO NOT DO THIS IT DOES NOT CURRENTLY WORK SEE APPENDIX A**
-
 ```
 mkdir -p ~/esp8266
 cd ~/esp8266
