@@ -33,7 +33,9 @@
 
 extern const char * enctypes[6];// = { "open", "wep", "wpa", "wpa2", "wpa_wpa2", 0 };
 
+#ifndef DONT_OVERRIDE_PRINTF
 #define printf( ... ) { char generic_print_buffer[384]; ets_sprintf( generic_print_buffer, __VA_ARGS__ );  uart0_sendStr( generic_print_buffer ); }
+#endif
 
 char ICACHE_FLASH_ATTR tohex1( uint8_t i );
 int8_t ICACHE_FLASH_ATTR fromhex1( char c ); //returns -1 if not hex char.
