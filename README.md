@@ -56,70 +56,22 @@ You will need the following:
 
 #### Cheat: Get cnlohr's precompiled SDK.
 
+This will install the SDK to ~/esp8266 - the default location for the ESP8266 SDK.  This only works on 64-bit x86 systems, and has only been verified in Linux Mint and Ubuntu.  Installation is about 18MB and requires about 90 MB of disk space.
+
+**DO NOT DO THIS IT DOES NOT CURRENTLY WORK SEE APPENDIX A**
+
 ```
-mkdir -P ~/esp8266
+mkdir -p ~/esp8266
 cd ~/esp8266
 wget https://github.com/cnlohr/esp82xx_bin_toolchain/raw/master/esp-open-sdk-20200810.tar.xz
 tar xJvf esp-open-sdk-20200810.tar.xz
 ```
 
-#### Alternate: Installing the pfalcon SDK
-
-We recommend the excellent [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk) by @pfalcon.
-It downloads and installs the Espressif toolchain.
-Here is a shell script to [download and build](https://gist.github.com/con-f-use/d086ca941c2c80fbde6d8996b8a50761) a version known to work.
-You should read and understand the script, before running it.
-It will take some time and GBs of disk space to build the toolchain.
-
+See Appendix A and B for alternate options (if you are on non-64-bit x86 systems)
+#
 Some versions of the SDK are somewhat problematic, e.g. with SDK versions greater than 1.5.2, Espressif changed the IRAM management, so some projects began to hit size restrictions and would not compile.
 Also some SDKs use different initial data (the flash has to have some SDK-related settings stored that are not userspace and aren't flashed along with the firmware).
 For that reason, the Makefile is set up to use a [customized version](https://github.com/cnlohr/esp_nonos_sdk) of the SDK and ships with proven initial data.
-
-#### Alternate (Manual) SDK Linux Setup
-
-Prerequisites:
-```
-sudo apt-get update
-sudo apt-get install -y make unrar autoconf automake libtool gcc g++ gperf flex bison texinfo-doc-nonfree install-info info texinfo gawk ncurses-dev libexpat-dev python-dev python python-serial sed git unzip bash help2man wget bzip2 libtool-bin
-mkdir ~/esp8266
-```
-
-esptool:
-
-```
-cd ~/esp8366
-git clone --recursive https://github.com/igrr/esptool-ck.git || exit 1
-cd esptool-ck
-make
-cd ..
-```
-
-pfalcon's SDK:
-
-```
-cd ~/esp8266
-
-git clone --recursive https://github.com/pfalcon/esp-open-sdk.git
-cd esp-open-sdk
-
-# For legacy projects, you will need SDK 1.5.2, from before espressif filled the iram
-#sed -i 's/^\(\s*VENDOR_SDK\s*=\s*\).*$/\1 1.5.2/' Makefile
-#git checkout e32ff685 # Old version of sdk (v1.5.2) before espressif filled the iram
-
-make STANDALONE=y 
-find . -name "c_types.h" -exec cp "{}" "{}.patched" \;
-
-# Line below fixes a bug, when e32ff685 or other old versions are used
-#find -type f -name 'c_types.h.orig' -print0 | while read -d $'\0' f; do cp "$f" "${f%.orig}"; done
-```
-
-You may want to manually add the SDK path to your bashrc.  Copy out the note from makefile and
-paste it into your .bashrc.
-
-```
-nano ~/.bashrc
-```
-
 
 #### Specify SDK
 
@@ -421,3 +373,59 @@ To make the zip file invoke `make projectname-version-binaries.tgz` (Tab-autocom
 
  - Include libraries for usb, ws2812s and ethernet
  - Expand the "Requirements" section
+
+# Appendices
+
+## Appendix A: Installing the pfalcon SDK
+
+We recommend the excellent [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk) by @pfalcon.
+It downloads and installs the Espressif toolchain.
+Here is a shell script to [download and build](https://gist.github.com/con-f-use/d086ca941c2c80fbde6d8996b8a50761) a version known to work.
+You should read and understand the script, before running it.
+It will take some time and GBs of disk space to build the toolchain.
+
+## Appendix B: Alternate (Manual) pfalcon SDK Linux Setup
+
+Prerequisites:
+```
+sudo apt-get update
+sudo apt-get install -y make unrar autoconf automake libtool gcc g++ gperf flex bison texinfo-doc-nonfree install-info info texinfo gawk ncurses-dev libexpat-dev python-dev python python-serial sed git unzip bash help2man wget bzip2 libtool-bin
+mkdir ~/esp8266
+```
+
+esptool:
+
+```
+cd ~/esp8366
+git clone --recursive https://github.com/igrr/esptool-ck.git || exit 1
+cd esptool-ck
+make
+cd ..
+```
+
+pfalcon's SDK:
+
+```
+cd ~/esp8266
+
+git clone --recursive https://github.com/pfalcon/esp-open-sdk.git
+cd esp-open-sdk
+
+# For legacy projects, you will need SDK 1.5.2, from before espressif filled the iram
+#sed -i 's/^\(\s*VENDOR_SDK\s*=\s*\).*$/\1 1.5.2/' Makefile
+#git checkout e32ff685 # Old version of sdk (v1.5.2) before espressif filled the iram
+
+make STANDALONE=y 
+find . -name "c_types.h" -exec cp "{}" "{}.patched" \;
+
+# Line below fixes a bug, when e32ff685 or other old versions are used
+#find -type f -name 'c_types.h.orig' -print0 | while read -d $'\0' f; do cp "$f" "${f%.orig}"; done
+```
+
+You may want to manually add the SDK path to your bashrc.  Copy out the note from makefile and
+paste it into your .bashrc.
+
+```
+nano ~/.bashrc
+```
+
