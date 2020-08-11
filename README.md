@@ -63,8 +63,8 @@ This will install the SDK to ~/esp8266 - the default location for the ESP8266 SD
 ```
 mkdir -p ~/esp8266
 cd ~/esp8266
-wget https://github.com/cnlohr/esp82xx_bin_toolchain/raw/master/esp-open-sdk-20200810.tar.xz
-tar xJvf esp-open-sdk-20200810.tar.xz
+wget https://github.com/cnlohr/esp82xx_bin_toolchain/raw/master/esp-open-sdk-x86_64-20200810.tar.xz
+tar xJvf esp-open-sdk-x86_64-20200810.tar.xz
 ```
 
 See Appendix A and B for alternate options (if you are on non-64-bit x86 systems)
