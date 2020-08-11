@@ -20,7 +20,15 @@ ESP_GCC_VERS = 4.8.5
 
 #FWBURNFLAGS  = -b 1000000  #uncomment if your programmer supports higher speeds.
 #FWBURNFLAGS  = -b 921600  #Some programmers don't support 1Mbaud
+
 #INIT_DATA_PLACE = 0x1FC000 #uncomment if you're on a 2mbit or so chip.
+#    0x7c000 for 512 kB
+#    0xfc000 for 1 MB
+#    0x1fc000 for 2 MB
+#    0x3fc000 for 4 MB
+#    0x7fc000 for 8 MB
+#    0xffc000 for 16 MB
+
 
 OPTS += -DICACHE_FLASH
 OPTS += -DUSE_OPTIMIZE_PRINTF
@@ -36,7 +44,7 @@ OPTS += -DSOFTAP_CHANNEL=11
 
 #If you need an extra 3kB of IRAM, you can force esp82xx to use the ROM
 #symbols for some internal libgcc functions.
-#STRIPPED_LIBGCC=YES
+STRIPPED_LIBGCC=YES
 
 
 PAGE_TITLE = esp82xx-basic
