@@ -54,6 +54,17 @@ You will need the following:
  - GNU Compiler Collection and build essentials
  - Possible more
 
+#### Cheat: Get cnlohr's precompiled SDK.
+
+```
+mkdir -P ~/esp8266
+cd ~/esp8266
+wget https://github.com/cnlohr/esp82xx_bin_toolchain/raw/master/esp-open-sdk-20200810.tar.xz
+tar xJvf esp-open-sdk-20200810.tar.xz
+```
+
+#### Alternate: Installing the pfalcon SDK
+
 We recommend the excellent [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk) by @pfalcon.
 It downloads and installs the Espressif toolchain.
 Here is a shell script to [download and build](https://gist.github.com/con-f-use/d086ca941c2c80fbde6d8996b8a50761) a version known to work.
