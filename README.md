@@ -54,7 +54,13 @@ You will need the following:
  - GNU Compiler Collection and build essentials
  - Possible more
 
-#### Cheat: Get cnlohr's precompiled SDK.
+### Install the Prerequisites and SDK.
+
+Prerequisites (Debian, Mint, Ubuntu):
+```
+sudo apt-get update
+sudo apt-get install -y make gcc g++ gperf install-info gawk libexpat-dev python-dev python python-serial sed git unzip bash wget bzip2 libtool-bin
+```
 
 This will install the SDK to ~/esp8266 - the default location for the ESP8266 SDK.  This only works on 64-bit x86 systems, and has only been verified in Linux Mint and Ubuntu.  Installation is about 18MB and requires about 90 MB of disk space.
 
@@ -384,11 +390,11 @@ It will take some time and GBs of disk space to build the toolchain.
 
 ## Appendix B: Alternate (Manual) pfalcon SDK Linux Setup
 
-Prerequisites:
+
+Prerequisites (Debian, Mint, Ubuntu):
 ```
 sudo apt-get update
 sudo apt-get install -y make unrar autoconf automake libtool gcc g++ gperf flex bison texinfo-doc-nonfree install-info info texinfo gawk ncurses-dev libexpat-dev python-dev python python-serial sed git unzip bash help2man wget bzip2 libtool-bin
-mkdir ~/esp8266
 ```
 
 esptool:
