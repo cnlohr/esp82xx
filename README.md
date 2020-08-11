@@ -32,8 +32,10 @@ Make changes in the `dev` branch!
  - [esp82XX-basic](https://github.com/con-f-use/esp82XX-basic) (or the one in cnlohr's account (should be up to date) [esp82XX-basic cnlohr](https://github.com/con-f-use/esp82XX-cnlohr)
  - [Colorchord](https://github.com/cnlohr/colorchord)
  - [MAGFest Swag](https://youtu.be/DbjlStyMmaY?t=8m) [Badges 2017](https://github.com/cnlohr/swadges2017)
- - [esp8266ws2812i2c](https://github.com/cnlohr/esp8266ws2812i2s)
+ - [esp8266ws2812i2s](https://github.com/cnlohr/esp8266ws2812i2s)
  - [espusb](https://github.com/cnlohr/espusb)
+ - [channel3 NTSC Broadcasting](https://github.com/cnlohr/channel3/)
+ - [Minecraft on an ESP8266 via avrcraft](https://github.com/cnlohr/avrcraft)
  - Migration of others in progress
 
 ## Usage
