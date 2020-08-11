@@ -378,6 +378,40 @@ To make the zip file invoke `make projectname-version-binaries.tgz` (Tab-autocom
  - Include libraries for usb, ws2812s and ethernet
  - Expand the "Requirements" section
 
+# Troubleshooting
+
+
+If you see something like this:
+
+```
+rf_cal[0] !=0x05,is 0xE9
+
+ ets Jan  8 2013,rst cause:2, boot mode:(3,6)
+
+load 0x40100000, len 25936, room 16 
+tail 0
+chksum 0x20
+load 0x3ffe8000, len 1272, room 8 
+tail 0
+chksum 0x9b
+load 0x3ffe8500, len 1212, room 8 
+tail 4
+chksum 0x8c
+csum 0x8c
+```
+You may not be loading your parititon tables properly.  #1 check user.cfg to make sure you have your partition burning location set correctly. 
+
+Additionally, make sure you are loading the partition tables in your user_main.
+
+```
+void user_pre_init(void)
+{
+	//You must load the partition table so the NONOS SDK can find stuff.
+	LoadDefaultPartitionMap();
+}
+```
+
+
 # Appendices
 
 ## Appendix A: Installing the pfalcon SDK
