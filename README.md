@@ -111,18 +111,18 @@ For that reason, the Makefile is set up to use a [customized version](https://gi
 
 #### Specify SDK
 
-There are many ways to [let Make know where your SDK is](https://github.com/cnlohr/esp82xx/issues/19#issuecomment-241756095) located.
+If your SDK is not installed to `~/esp8266/esp-open-sdk`, then there are many ways to [let Make know where your SDK is](https://github.com/cnlohr/esp82xx/issues/19#issuecomment-241756095) located.
 You can edit `DEFAULT_SDK` in `./user.cfg` to reflect your specific SDK path or **even better** define a shell variable.
 The latter is done with
 
     # Add this in ~/.bashrc or similar
-    export ESP_ROOT=/path/to/sdk
+    export ESP_ROOT=/path/to/sdk/where/esp-open-sdk
 
 in your `.bashrc`, `.profile` or whatever is used by your shell. This way, the change will be persistent, even if you start many new esp82xx projects.
 
 You can also pass the location as an argument to make:
 
-    make all ESP_ROOT=path/to/sdk
+    make all ESP_ROOT=/path/to/sdk/where/esp-open-sdk
 
 ### Start a new Project
 
