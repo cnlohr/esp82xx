@@ -58,12 +58,19 @@ You will need the following:
 
 ### Install the Prerequisites and SDK.
 
-Prerequisites (Debian, Mint, Ubuntu):
+#### Prerequisites (Windows (WSL))
+Install WSL 1 using these instructions: https://docs.microsoft.com/en-us/windows/wsl/install-win10
+Reboot.
+Install Ubuntu 20.04: https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71?rtc=1
+Proceed to next install.
+
+#### Prerequisites (Debian, Mint, Ubuntu):
 ```
 sudo apt-get update
 sudo apt-get install -y make gcc g++ gperf install-info gawk libexpat-dev python-dev python python-serial sed git unzip bash wget bzip2 libtool-bin
 ```
 
+#### Install
 This will install the SDK to ~/esp8266 - the default location for the ESP8266 SDK.  This only works on 64-bit x86 systems, and has only been verified in Linux Mint and Ubuntu.  Installation is about 18MB and requires about 90 MB of disk space.
 
 ```
