@@ -38,7 +38,7 @@ Make changes in the `dev` branch!
  - [Minecraft on an ESP8266 via avrcraft](https://github.com/cnlohr/avrcraft)
  - Migration of others in progress
 
-## Usage
+## Usage / Install
 
 ### Requirements
 
