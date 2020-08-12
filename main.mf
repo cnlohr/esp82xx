@@ -127,7 +127,7 @@ esp82xx/libgcc_stripped.a :
 
 
 $(FW_FILE1) $(FW_FILE2) : $(TARGET)
-	PATH=$(PATH):$(FOLDERPREFIX) $(ESPTOOL_PY) elf2image $(TARGET)
+	PATH=$(FOLDERPREFIX):$$PATH $(ESPTOOL_PY) elf2image $(TARGET)
 	@#no need to set things like dout, and memory size.  This data is copied from the ESP back to itself on write.
 
 $(TARGET) : $(SRCS) Makefile $(SDK_DEP) $(XTGCCLIB)
