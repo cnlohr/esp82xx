@@ -32,8 +32,10 @@ Make changes in the `dev` branch!
  - [esp82XX-basic](https://github.com/con-f-use/esp82XX-basic) (or the one in cnlohr's account (should be up to date) [esp82XX-basic cnlohr](https://github.com/con-f-use/esp82XX-cnlohr)
  - [Colorchord](https://github.com/cnlohr/colorchord)
  - [MAGFest Swag](https://youtu.be/DbjlStyMmaY?t=8m) [Badges 2017](https://github.com/cnlohr/swadges2017)
- - [esp8266ws2812i2c](https://github.com/cnlohr/esp8266ws2812i2s)
+ - [esp8266ws2812i2s](https://github.com/cnlohr/esp8266ws2812i2s)
  - [espusb](https://github.com/cnlohr/espusb)
+ - [channel3 NTSC Broadcasting](https://github.com/cnlohr/channel3/)
+ - [Minecraft on an ESP8266 via avrcraft](https://github.com/cnlohr/avrcraft)
  - Migration of others in progress
 
 ## Usage
@@ -56,12 +58,28 @@ You will need the following:
 
 ### Install the Prerequisites and SDK.
 
-Prerequisites (Debian, Mint, Ubuntu):
+#### Prerequisites (Windows (WSL))
+ * Install WSL 1 using these instructions: https://docs.microsoft.com/en-us/windows/wsl/install-win10
+ * Reboot.
+ * Install Ubuntu 20.04: https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71?rtc=1
+ * Launch Ubuntu 20.04
+ * Proceed with normal prerequisites and project.
+
+#### Prerequisites (Debian, Mint, Ubuntu):
 ```
 sudo apt-get update
 sudo apt-get install -y make gcc g++ gperf install-info gawk libexpat-dev python-dev python python-serial sed git unzip bash wget bzip2 libtool-bin
 ```
 
+Note: Some platforms do not have python-serial.  If they don't have it, do this:
+```
+curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
+sudo python2 get-pip.py
+pip install pyserial
+```
+
+
+#### Install
 This will install the SDK to ~/esp8266 - the default location for the ESP8266 SDK.  This only works on 64-bit x86 systems, and has only been verified in Linux Mint and Ubuntu.  Installation is about 18MB and requires about 90 MB of disk space.
 
 ```
@@ -71,8 +89,22 @@ wget https://github.com/cnlohr/esp82xx_bin_toolchain/raw/master/esp-open-sdk-x86
 tar xJvf esp-open-sdk-x86_64-20200810.tar.xz
 ```
 
+Several esp82xx projects use the offical Espressif nonos SDK instead of the bundled one here.  You should probably install that to your home folder using the following commands:
+
+```
+cd ~/esp8266
+git clone https://github.com/espressif/ESP8266_NONOS_SDK --recurse-submodules
+```
+
+Optional: Add your user to the dialout group:
+```
+sudo usermod -aG dialout cnlohr
+```
+
+Caveat: On Windows Subsystem for Linux, you will need to find your serial port.  You will need to alter `PORT=` in user.cfg in the tool you are building.
+
 See Appendix A and B for alternate options (if you are on non-64-bit x86 systems)
-#
+
 Some versions of the SDK are somewhat problematic, e.g. with SDK versions greater than 1.5.2, Espressif changed the IRAM management, so some projects began to hit size restrictions and would not compile.
 Also some SDKs use different initial data (the flash has to have some SDK-related settings stored that are not userspace and aren't flashed along with the firmware).
 For that reason, the Makefile is set up to use a [customized version](https://github.com/cnlohr/esp_nonos_sdk) of the SDK and ships with proven initial data.
