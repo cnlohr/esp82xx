@@ -64,7 +64,7 @@ You will need the following:
  * Install Ubuntu 20.04: https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71?rtc=1
  * Launch Ubuntu 20.04
  * Proceed with normal prerequisites and project.
- * Uninstall Python 3 ('sudo apt purge python3')
+ * Uninstall Python 3 (`sudo apt purge python3`)
 
 #### Prerequisites (Debian, Mint, Ubuntu):
 ```
