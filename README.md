@@ -64,6 +64,7 @@ You will need the following:
  * Install Ubuntu 20.04: https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71?rtc=1
  * Launch Ubuntu 20.04
  * Proceed with normal prerequisites and project.
+ * Uninstall Python 3 ('sudo apt purge python3')
 
 #### Prerequisites (Debian, Mint, Ubuntu):
 ```
@@ -74,7 +75,7 @@ sudo apt-get install -y make gcc g++ gperf install-info gawk libexpat-dev python
 Note: Some platforms do not have python-serial.  If they don't have it, do this:
 ```
 curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
-sudo python3 get-pip.py
+sudo python2 get-pip.py
 pip install pyserial
 ```
 
