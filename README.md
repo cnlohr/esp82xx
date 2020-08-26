@@ -74,7 +74,7 @@ sudo apt-get install -y make gcc g++ gperf install-info gawk libexpat-dev python
 Note: Some platforms do not have python-serial.  If they don't have it, do this:
 ```
 curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
-sudo python2 get-pip.py
+sudo python3 get-pip.py
 pip install pyserial
 ```
 
