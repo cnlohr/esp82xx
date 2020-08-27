@@ -64,7 +64,11 @@ You will need the following:
  * Install Ubuntu 20.04: https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71?rtc=1
  * Launch Ubuntu 20.04
  * Proceed with normal prerequisites and project.
- * Uninstall Python 3 (`sudo apt purge python3`)
+ * Install Python 2 and make separately
+ ```
+ sudo apt update
+ sudo apt install python2 make
+ ```
 
 #### Prerequisites (Debian, Mint, Ubuntu):
 ```
