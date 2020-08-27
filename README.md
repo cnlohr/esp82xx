@@ -67,7 +67,7 @@ You will need the following:
  * Install Python 2 and make separately
  ```
  sudo apt update
- sudo apt install python2 make
+ sudo apt install python make
  ```
 
 #### Prerequisites (Debian, Mint, Ubuntu):
