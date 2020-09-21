@@ -9,7 +9,7 @@
 ###############################################################################
 
 GCC_FOLDER = $(ESP_ROOT)/xtensa-lx106-elf
-ESPTOOL_PY = $(ESP_ROOT)/esptool/esptool.py
+ESPTOOL_PY = python2 $(ESP_ROOT)/esptool/esptool.py
 SDK       ?= $(PWD)/esp82xx/toolchain/esp_nonos_sdk
 
 XTLIB        = $(SDK)/lib
