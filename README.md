@@ -73,15 +73,16 @@ You will need the following:
 #### Prerequisites (Debian, Mint, Ubuntu):
 ```
 sudo apt-get update
-sudo apt-get install -y make gcc g++ gperf install-info gawk libexpat-dev python-dev python python-serial sed git unzip bash wget bzip2 libtool-bin
+sudo apt-get install -y make gcc g++ gperf install-info gawk libexpat-dev python2-dev python2 python2-serial sed git unzip bash wget bzip2 libtool-bin
 ```
 
-Note: Some platforms do not have python-serial.  If they don't have it, do this:
+Note: Some platforms do not have python-serial, or any version of Python 2 for that matter (since it has reached its end of life on Jan 1, 2020 and all tooling and hosting is dropping support for it). If they don't have pip, but do still have python 2, do this:
 ```
-curl https://bootstrap.pypa.io/get-pip.py --output get-pip.py
+curl  https://github.com/pypa/get-pip/raw/5f38681f7f5872e4032860b54e9cc11cf0374932/get-pip.py --output get-pip.py
 sudo python2 get-pip.py
 pip install pyserial
 ```
+Otherwise, you have to use a distribution that has Python 2 packaged, compile it and the missing dependencies yourself, from source, or wait until the tools used here are ported to Python 3.
 
 
 #### Install
