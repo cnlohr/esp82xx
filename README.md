@@ -164,10 +164,19 @@ The file  `user.cfg` specifies the most important configuration variables.
 
 If you did everything correctly, flashing your esp should work.
 Just connect it to an USB to serial adapter that uses 3.3V (**you will fry your ESP with voltages higher than 3.3 V**) and place it in programming mode.
+
+For the first run from a factory or unknown source of an ESP, you should run the following command to completely wipe it and give it new data:
+
+```
+    make burnitall
+```
+
 Then you can run
 
+```
     make burn
     make burnweb  # programming mode here too
+```
 
 and your ESP is good to go.
 It should create its own WiFi Access Point called `ESPXXXX` or similar, where `XXXX` is some arbitrary code.
