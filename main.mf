@@ -1,45 +1,46 @@
 define USAGE
 Usage: make [command] [VARIABLES]
 
-all......... Build the binaries
-clean....... Clean the binaries
-purge....... Clean the binaries and web stuff
-debug....... Build a .map and .lst file.  Useful for seeing what's going on
-             behind the scenes.
-burn ....... Write firmware to chip using a regular serial port
-burn_cutecom Write firmware to chip using a regular serial port, killing and
-             starting cutecom, a serial terminal
-build_burn . Build the binaries then execute burn_cutecom
-burnweb .... Write data for the Web-GUI to chip using a regular serial
-             port
-netburn .... Same as 'burn' but transfer firmware over the network rather
-             than the serial port (if supported by the existing firmware
-             on the chip)
-netweb ..... Same as 'burnweb' but transfer data over network if supported
-             by firmware currently on the chip
-getips ..... Get a list with IPs of esp82xxs connected to your network
-project .... Make the current working direcotry an esp82xx project
-gitproject . Same as 'make project' but also initialiezes the current folder
-             as git repository and pushes it to GIT_ORIGIN.
-             Example:
-                 make gitproject GIT_ORIGIN=https://github.com/USER/YREPO.git
-cleanproject Remove the use* and web folders
-usbburn .... Burn via PRE-RELEASE USB loader (will probably change)
-usbweb ..... Burn webpage by PRE-RELEASE USB loader (will probably change)
-initdefault  Burn default initial data to ROM (may be needed after erase)
-init3v3 .... Burn default values to rom but for use with system_get_vdd33
-erase ...... Totally erase chip.
-wipechip.... Write zeros to the chip
-getips ..... Detect pssible IPs for ESP82XX modules, needs nmap, takes time
-burnitall .. initdefault + burnweb + burn as a single run.
-dumprom .... read the rom from the chip
-bump_submodule . Update the git submodules
+all .......... Build the binaries
+clean ........ Clean the binaries
+purge ........ Clean the binaries and web stuff
+debug ........ Build a .map and .lst file.  Useful for seeing what's going on
+               behind the scenes.
+burn ......... Write firmware to chip using a regular serial port
+burn_cutecom . Write firmware to chip using a regular serial port, killing and
+               starting cutecom, a serial terminal
+build_burn ... Build the binaries then execute burn_cutecom
+burnweb ...... Write data for the Web-GUI to chip using a regular serial
+               port
+netburn ...... Same as 'burn' but transfer firmware over the network rather
+               than the serial port (if supported by the existing firmware
+               on the chip)
+netweb ....... Same as 'burnweb' but transfer data over network if supported
+               by firmware currently on the chip
+project ...... Make the current working direcotry an esp82xx project
+gitproject ... Same as 'make project' but also initialiezes the current folder
+               as git repository and pushes it to GIT_ORIGIN.
+               Example:
+                   make gitproject GIT_ORIGIN=https://github.com/USER/YREPO.git
+cleanproject . Remove the use* and web folders
+usbburn ...... Burn via PRE-RELEASE USB loader (will probably change)
+usbweb ....... Burn webpage by PRE-RELEASE USB loader (will probably change)
+initdefault .. Burn default initial data to ROM (may be needed after erase)
+init3v3 ...... Burn default values to rom but for use with system_get_vdd33
+erase ........ Totally erase chip.
+wipechip...... Write zeros to the chip
+getips ....... Detect pssible IPs for ESP82XX modules, needs nmap, takes time
+burnitall .... initdefault + burnweb + burn as a single run.
+dumprom ...... read the rom from the chip
+bump_submodule Update the git submodules
+build_dir .... Create a directory named build/ with all release binaries/web stuff
+zip_build .... Create a zipfile from build_dir/ ready for release
 
 
 More commands: all, clean, purge, dumprom, cleanproject
 endef
 
-.PHONY : all clean purge netburn burnweb burn $(BIN_TARGET) netweb getips help project gitproject cleanproject build_burn burn_cutecom webmpfs
+.PHONY : 	all clean purge netburn burnweb burn netweb getips help project gitproject cleanproject build_burn burn_cutecom $(BIN_TARGET) webmpfs build_dir zip_build version.txt
 
 
 FW_FILE1 = image.elf-0x00000.bin
@@ -130,6 +131,13 @@ $(FW_FILE1) $(FW_FILE2) : $(TARGET)
 	PATH=$(FOLDERPREFIX):$$PATH $(ESPTOOL_PY) elf2image $(TARGET)
 	@#no need to set things like dout, and memory size.  This data is copied from the ESP back to itself on write.
 
+version.txt :
+	@echo VERSION=$(VERSION) > version.txt
+	@echo BUILD_DATE=$(BUILD_DATE) >> version.txt
+	@echo PROJECT_NAME=$(PROJECT_NAME) >> version.txt
+	@echo PROJECT_URL=$(PROJECT_URL) >> version.txt
+	@echo VERSSTR=$(VERSSTR) >> version.txt
+
 $(TARGET) : $(SRCS) Makefile $(SDK_DEP) $(XTGCCLIB)
 	$(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
 
@@ -140,11 +148,11 @@ debug : $(TARGET)
 
 ifeq ($(CHIP), 8285)
 burn : $(FW_FILE1) $(FW_FILE2)
-	$(info NOTICE: Currently burning for ESP8285.  If you are on a '66 reconfigure CHIP.)
+	$(info NOTICE: Currently burning for ESP8285.  If you are on an esp8266 reconfigure CHIP.)
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
 burn_cutecom:
 	-killall cutecom
-	$(info NOTICE: Currently burning for ESP8285.  If you are on a '66 reconfigure CHIP.)
+	$(info NOTICE: Currently burning for ESP8285.  If you are on an esp8266 reconfigure CHIP.)
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash $(FLASH_WRITE_FLAGS) -fs 8m -fm dout 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
 	-cutecom &
 burnitall : $(FW_FILE1) $(FW_FILE2) $(SDK)/bin/blank.bin $(INIT_DATA_ROM) webmpfs
@@ -153,11 +161,11 @@ burnitall : $(FW_FILE1) $(FW_FILE2) $(SDK)/bin/blank.bin $(INIT_DATA_ROM) webmpf
 else ifeq ($(CHIP), 8266)
 
 burn : $(FW_FILE1) $(FW_FILE2)
-	$(info NOTICE: Currently burning for ESP8266.  If you are on an '85 reconfigure CHIP.)
+	$(info NOTICE: Currently burning for ESP8266.  If you are on an esp8285 reconfigure CHIP.)
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
 burn_cutecom:
 	-killall cutecom
-	$(info NOTICE: Currently burning for ESP8266.  If you are on an '85 reconfigure CHIP.)
+	$(info NOTICE: Currently burning for ESP8266.  If you are on an esp8285 reconfigure CHIP.)
 	($(ESPTOOL_PY) $(FWBURNFLAGS) --port $(PORT) write_flash -fm dio $(FLASH_WRITE_FLAGS) 0x00000 $(FW_FILE1) 0x10000 $(FW_FILE2))||(true)
 	-cutecom &
 burnitall : $(FW_FILE1) $(FW_FILE2) $(SDK)/bin/blank.bin $(INIT_DATA_ROM) webmpfs
@@ -189,13 +197,19 @@ usbburn : $(FW_FILE1) $(FW_FILE2)
 usbweb : $(FW_FILE1) $(FW_FILE2)
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) usbpush
 
-$(BIN_TARGET): $(FW_FILE1) $(FW_FILE2)
+# files to put in the build/ dir and/or in the final .zip for release
+BUILD_FILES=$(FW_FILE1) $(FW_FILE2) web/execute_reflash web/mfsmaker web/pushtodev web/page.mpfs version.txt
+
+build_dir : $(FW_FILE1) $(FW_FILE2) version.txt webmpfs
 	@cd web \
-	 && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) page.mpfs \
 	 && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) execute_reflash \
 	 && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) pushtodev \
 	 && cd ..
-	zip $@ $(FW_FILE1) $(FW_FILE2) web/execute_reflash web/mfsmaker web/pushtodev web/page.mpfs
+	@mkdir -p ./build/
+	@cp -rf --parents ${BUILD_FILES} ./build/
+
+zip_build : build_dir
+	zip -qr - ./build/ > $(BIN_TARGET)
 
 wipechip :
 	dd if=/dev/zero of=/tmp/zeroes bs=16M count=1
@@ -207,7 +221,7 @@ getips :
 	sudo nmap -sP 192.168.0.0/24 | grep -iP "espressif|esp" -B2 | grep -oP "(\d{1,3}\.){3,3}\d\d{1,3}"
 
 clean :
-	$(RM) $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(SRCS))) $(TARGET) image.map image.lst $(CLEAN_EXTRA)
+	$(RM) $(patsubst %.S,%.o,$(patsubst %.c,%.o,$(SRCS))) $(TARGET) image.map image.lst $(CLEAN_EXTRA) version.txt output.map esp82xx/libgcc_stripped.a
 
 dumprom :
 	($(ESPTOOL_PY) $(FWBURNFLAGS)  --port $(PORT) read_flash 0 1048576 dump.bin)||(true)
@@ -223,7 +237,8 @@ erase:
 
 purge : clean
 	@cd web && $(MAKE) $(MFLAGS) $(MAKEOVERRIDES) clean
-	$(RM) $(FW_FILE1) $(FW_FILE2) $(BIN_TARGET)
+	$(RM) $(FW_FILE1) $(FW_FILE2) $(BIN_TARGET) ./*-binaries.zip
+	$(RM) -rf ./build/
 
 bump_submodule :
 	cd esp82xx; git pull origin master; git submodule update --init --recursive; cd ..

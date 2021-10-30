@@ -1,3 +1,6 @@
+# by default, project name is set from the name of the root directory. override it here if you like
+# PROJECT_NAME=TheCoolestProjectYet
+
 include user.cfg
 -include esp82xx/common.mf
 -include esp82xx/main.mf
