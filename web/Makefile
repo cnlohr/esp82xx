@@ -34,4 +34,5 @@ usbpush : pushtodev page.mpfs
 	./pushtodev USB $(MFS_PAGE_OFFSET) page.mpfs
 
 clean :
-	$(RM) mfsmaker page.mpfs pushtodev execute_reflash tmp/*
+	$(RM) mfsmaker page.mpfs pushtodev execute_reflash
+	$(RM) -r tmp/
