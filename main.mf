@@ -137,6 +137,7 @@ version.txt :
 	@echo PROJECT_NAME=$(PROJECT_NAME) >> version.txt
 	@echo PROJECT_URL=$(PROJECT_URL) >> version.txt
 	@echo VERSSTR=$(VERSSTR) >> version.txt
+	@echo IS_CI_BUILD=$(IS_CI_BUILD) >> version.txt
 
 $(TARGET) : $(SRCS) Makefile $(SDK_DEP) $(XTGCCLIB)
 	$(CC) $(CFLAGS) $(SRCS) -flto $(LINKFLAGS) -o $@
