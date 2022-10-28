@@ -292,6 +292,9 @@ int ICACHE_FLASH_ATTR MakePinGPIO( int nr )
 /*==============================================================================
  * Partition Map Data
  *============================================================================*/
+#include <version.h>
+
+#if ESP_SDK_VERSION_NUMBER > 0x020000
 
 #define SYSTEM_PARTITION_OTA_SIZE_OPT2                 0x6A000
 #define SYSTEM_PARTITION_OTA_2_ADDR_OPT2               0x81000
@@ -382,3 +385,5 @@ void ICACHE_FLASH_ATTR LoadDefaultPartitionMap(void)
         while(1);
     }
 }
+
+#endif

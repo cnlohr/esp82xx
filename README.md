@@ -29,14 +29,16 @@ Make changes in the `dev` branch!
 
 ## List of projects using esp82xx
 
- - [esp82XX-basic](https://github.com/con-f-use/esp82XX-basic)
+ - [esp82XX-basic](https://github.com/con-f-use/esp82XX-basic) (or the one in cnlohr's account (should be up to date) [esp82XX-basic cnlohr](https://github.com/con-f-use/esp82XX-cnlohr)
  - [Colorchord](https://github.com/cnlohr/colorchord)
  - [MAGFest Swag](https://youtu.be/DbjlStyMmaY?t=8m) [Badges 2017](https://github.com/cnlohr/swadges2017)
- - [esp8266ws2812i2c](https://github.com/cnlohr/esp8266ws2812i2s)
+ - [esp8266ws2812i2s](https://github.com/cnlohr/esp8266ws2812i2s)
  - [espusb](https://github.com/cnlohr/espusb)
+ - [channel3 NTSC Broadcasting](https://github.com/cnlohr/channel3/)
+ - [Minecraft on an ESP8266 via avrcraft](https://github.com/cnlohr/avrcraft)
  - Migration of others in progress
 
-## Usage
+## Usage / Install
 
 ### Requirements
 
@@ -54,11 +56,60 @@ You will need the following:
  - GNU Compiler Collection and build essentials
  - Possible more
 
-We recommend the excellent [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk) by @pfalcon.
-It downloads and installs the Espressif toolchain.
-Here is a shell script to [download and build](https://gist.github.com/con-f-use/d086ca941c2c80fbde6d8996b8a50761) a version known to work.
-You should read and understand the script, before running it.
-It will take some time and GBs of disk space to build the toolchain.
+### Install the Prerequisites and SDK.
+
+#### Prerequisites (Windows (WSL))
+ * Install WSL 1 using these instructions: https://docs.microsoft.com/en-us/windows/wsl/install-win10
+ * Reboot.
+ * Install Ubuntu 20.04: https://www.microsoft.com/en-us/p/ubuntu-2004-lts/9n6svws3rx71?rtc=1
+ * Launch Ubuntu 20.04
+ * Install Python 2 and make separately
+ ```
+ sudo apt update
+ sudo apt install python make
+ ```
+ * Proceed with normal prerequisites and project.
+
+#### Prerequisites (Debian, Mint, Ubuntu):
+```
+sudo apt-get update
+sudo apt-get install -y make gcc g++ gperf install-info gawk libexpat-dev python2-dev python2 python2-serial sed git unzip bash wget bzip2 libtool-bin
+```
+
+Note: Some platforms do not have python-serial, or any version of Python 2 for that matter (since it has reached its end of life on Jan 1, 2020 and all tooling and hosting is dropping support for it). If they don't have pip, but do still have python 2, do this:
+```
+curl  https://github.com/pypa/get-pip/raw/5f38681f7f5872e4032860b54e9cc11cf0374932/get-pip.py --output get-pip.py
+sudo python2 get-pip.py
+pip install pyserial
+```
+Otherwise, you have to use a distribution that has Python 2 packaged, compile it and the missing dependencies yourself, from source, or wait until the tools used here are ported to Python 3.
+
+
+#### Install
+This will install the SDK to ~/esp8266 - the default location for the ESP8266 SDK.  This only works on 64-bit x86 systems, and has only been verified in Linux Mint and Ubuntu.  Installation is about 18MB and requires about 90 MB of disk space.
+
+```
+mkdir -p ~/esp8266
+cd ~/esp8266
+wget https://github.com/cnlohr/esp82xx_bin_toolchain/raw/master/esp-open-sdk-x86_64-20200810.tar.xz
+tar xJvf esp-open-sdk-x86_64-20200810.tar.xz
+```
+
+Several esp82xx projects use the offical Espressif nonos SDK instead of the bundled one here.  You should probably install that to your home folder using the following commands:
+
+```
+cd ~/esp8266
+git clone https://github.com/espressif/ESP8266_NONOS_SDK --recurse-submodules
+```
+
+Optional: Add your user to the dialout group:
+```
+sudo usermod -aG dialout cnlohr
+```
+
+Caveat: On Windows Subsystem for Linux, you will need to find your serial port.  You will need to alter `PORT=` in user.cfg in the tool you are building.
+
+See Appendix A and B for alternate options (if you are on non-64-bit x86 systems)
 
 Some versions of the SDK are somewhat problematic, e.g. with SDK versions greater than 1.5.2, Espressif changed the IRAM management, so some projects began to hit size restrictions and would not compile.
 Also some SDKs use different initial data (the flash has to have some SDK-related settings stored that are not userspace and aren't flashed along with the firmware).
@@ -66,18 +117,18 @@ For that reason, the Makefile is set up to use a [customized version](https://gi
 
 #### Specify SDK
 
-There are many ways to [let Make know where your SDK is](https://github.com/cnlohr/esp82xx/issues/19#issuecomment-241756095) located.
+If your SDK is not installed to `~/esp8266/esp-open-sdk`, then there are many ways to [let Make know where your SDK is](https://github.com/cnlohr/esp82xx/issues/19#issuecomment-241756095) located.
 You can edit `DEFAULT_SDK` in `./user.cfg` to reflect your specific SDK path or **even better** define a shell variable.
 The latter is done with
 
     # Add this in ~/.bashrc or similar
-    export ESP_ROOT=/path/to/sdk
+    export ESP_ROOT=/path/to/sdk/where/esp-open-sdk
 
 in your `.bashrc`, `.profile` or whatever is used by your shell. This way, the change will be persistent, even if you start many new esp82xx projects.
 
 You can also pass the location as an argument to make:
 
-    make all ESP_ROOT=path/to/sdk
+    make all ESP_ROOT=/path/to/sdk/where/esp-open-sdk
 
 ### Start a new Project
 
@@ -113,10 +164,19 @@ The file  `user.cfg` specifies the most important configuration variables.
 
 If you did everything correctly, flashing your esp should work.
 Just connect it to an USB to serial adapter that uses 3.3V (**you will fry your ESP with voltages higher than 3.3 V**) and place it in programming mode.
+
+For the first run from a factory or unknown source of an ESP, you should run the following command to completely wipe it and give it new data:
+
+```
+    make burnitall
+```
+
 Then you can run
 
+```
     make burn
     make burnweb  # programming mode here too
+```
 
 and your ESP is good to go.
 It should create its own WiFi Access Point called `ESPXXXX` or similar, where `XXXX` is some arbitrary code.
@@ -364,3 +424,93 @@ To make the zip file invoke `make projectname-version-binaries.tgz` (Tab-autocom
 
  - Include libraries for usb, ws2812s and ethernet
  - Expand the "Requirements" section
+
+# Troubleshooting
+
+
+If you see something like this:
+
+```
+rf_cal[0] !=0x05,is 0xE9
+
+ ets Jan  8 2013,rst cause:2, boot mode:(3,6)
+
+load 0x40100000, len 25936, room 16 
+tail 0
+chksum 0x20
+load 0x3ffe8000, len 1272, room 8 
+tail 0
+chksum 0x9b
+load 0x3ffe8500, len 1212, room 8 
+tail 4
+chksum 0x8c
+csum 0x8c
+```
+You may not be loading your parititon tables properly.  #1 check user.cfg to make sure you have your partition burning location set correctly. 
+
+Additionally, make sure you are loading the partition tables in your user_main.
+
+```
+void user_pre_init(void)
+{
+	//You must load the partition table so the NONOS SDK can find stuff.
+	LoadDefaultPartitionMap();
+}
+```
+
+
+# Appendices
+
+## Appendix A: Installing the pfalcon SDK
+
+We recommend the excellent [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk) by @pfalcon.
+It downloads and installs the Espressif toolchain.
+Here is a shell script to [download and build](https://gist.github.com/con-f-use/d086ca941c2c80fbde6d8996b8a50761) a version known to work.
+You should read and understand the script, before running it.
+It will take some time and GBs of disk space to build the toolchain.
+
+## Appendix B: Alternate (Manual) pfalcon SDK Linux Setup
+
+
+Prerequisites (Debian, Mint, Ubuntu):
+```
+sudo apt-get update
+sudo apt-get install -y make unrar autoconf automake libtool gcc g++ gperf flex bison texinfo-doc-nonfree install-info info texinfo gawk ncurses-dev libexpat-dev python-dev python python-serial sed git unzip bash help2man wget bzip2 libtool-bin
+```
+
+esptool:
+
+```
+cd ~/esp8366
+git clone --recursive https://github.com/igrr/esptool-ck.git || exit 1
+cd esptool-ck
+make
+cd ..
+```
+
+pfalcon's SDK:
+
+```
+cd ~/esp8266
+
+git clone --recursive https://github.com/pfalcon/esp-open-sdk.git
+cd esp-open-sdk
+
+# For legacy projects, you will need SDK 1.5.2, from before espressif filled the iram
+#sed -i 's/^\(\s*VENDOR_SDK\s*=\s*\).*$/\1 1.5.2/' Makefile
+#git checkout e32ff685 # Old version of sdk (v1.5.2) before espressif filled the iram
+
+make STANDALONE=y 
+find . -name "c_types.h" -exec cp "{}" "{}.patched" \;
+
+# Line below fixes a bug, when e32ff685 or other old versions are used
+#find -type f -name 'c_types.h.orig' -print0 | while read -d $'\0' f; do cp "$f" "${f%.orig}"; done
+```
+
+You may want to manually add the SDK path to your bashrc.  Copy out the note from makefile and
+paste it into your .bashrc.
+
+```
+nano ~/.bashrc
+```
+

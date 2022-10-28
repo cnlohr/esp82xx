@@ -6,9 +6,9 @@ var output;
 var websocket;
 var commsup = 0;
 
-var mpfs_start_at = 65536; //1048576; NOTE: If you select 1048576, it will override the 65536 sector, but has much more room.
+var mpfs_start_at = 524288; //1048576; NOTE: If you select 1048576, it will override the 65536 sector, but has much more room.
 var flash_scratchpad_at = 524288;
-var flash_blocksize = 65536;
+var flash_blocksize = 655360;
 var flash_sendsize = 256;
 //Push objects that have:
 // .request
@@ -103,7 +103,7 @@ function init()
 		<input type=submit onclick=\"ShowHideEvent( 'SystemReflash' );\" value=\"System Reflash\"></td><td>\
 		<div id=SystemReflash class=\"collapsible\">\
 		<div id=InnerSystemReflash class=\"dragandrophandler\">\
-		<input id=\"dragndropersystem\" type=\"file\" multiple> <div id=innersystemflashtext>Drop or browse for system (0x000.. 0x400...) or web (.mpfs) reflash files.</div>\
+		<input id=\"dragndropersystem\" type=\"file\" multiple> <div id=innersystemflashtext>Drop or browse for system (0x000.. 0x100...) or web (.mpfs) reflash files.</div>\
 		</div></div></td></tr>"
 	);
 
@@ -666,7 +666,7 @@ function SystemPushImageProgress( is_ok, comment, pushop )
 
 			reader.onload = function(e) {
 				$("#innersystemflashtext").html( "Pusing second half..." );
-				PushImageTo( e.target.result, flash_scratchpad_at + 0x40000, SystemPushImageProgress, pushop.ctx );
+				PushImageTo( e.target.result, flash_scratchpad_at + 0x10000, SystemPushImageProgress, pushop.ctx );
 			}
 
 			reader.readAsArrayBuffer( pushop.ctx.file2 );
@@ -680,7 +680,7 @@ function SystemPushImageProgress( is_ok, comment, pushop )
 
 			$("#innersystemflashtext").html( "Issuing reflash.  Do not expect a response." );
 
-			var stf = "FM" + flash_scratchpad_at + "\t0\t" + f1s + "\t" + f1m + "\t" + (flash_scratchpad_at+0x40000) + "\t" + 0x40000 + "\t" + f2s + "\t" + f2m + "\n";
+			var stf = "FM" + flash_scratchpad_at + "\t0\t" + f1s + "\t" + f1m + "\t" + (flash_scratchpad_at+0x10000) + "\t" + 0x10000 + "\t" + f2s + "\t" + f2m + "\n";
 			var fun = function( fsrd, flashresponse ) { $("#innerflashtext").html( (flashresponse[0] == '!')?"Flashing failed.":"Flash success." ) };
 			QueueOperation( stf, fun);
 		}
@@ -714,7 +714,7 @@ function DragDropSystemFiles( file )
 		var fn = file[0].name;
 		if( fn.substr( fn.length - 5 ) != ".mpfs" )
 		{
-			$("#innersystemflashtext").html( "Web files are .mfps files." );
+			$("#innersystemflashtext").html( "Web files are .mpfs files." );
 			return;
 		}
 
@@ -737,7 +737,7 @@ function DragDropSystemFiles( file )
 		{
 			console.log( "Found: " + file[i].name );
 			if( file[i].name.substr( 0, 17 ) == "image.elf-0x00000" ) file1 = file[i];
-			if( file[i].name.substr( 0, 17 ) == "image.elf-0x40000" ) file2 = file[i];
+			if( file[i].name.substr( 0, 17 ) == "image.elf-0x10000" ) file2 = file[i];
 		}
 
 		if( !file1 )
@@ -747,7 +747,7 @@ function DragDropSystemFiles( file )
 
 		if( !file2 )
 		{
-			$("#innersystemflashtext").html( "Could not find a image.elf-0x40000... file." ); return;
+			$("#innersystemflashtext").html( "Could not find a image.elf-0x10000... file." ); return;
 		}
 
 		if(  file1.size > 65536 )
@@ -757,7 +757,7 @@ function DragDropSystemFiles( file )
 
 		if(  file2.size > 262144 )
 		{
-			$("#innersystemflashtext").html( "0x40000 needs to fit in 256kB.  Too big." ); return;
+			$("#innersystemflashtext").html( "0x10000 needs to fit in 256kB.  Too big." ); return;
 		}
 
 		//Files check out.  Start pushing.
@@ -825,7 +825,7 @@ function ContinueSystemFlash( fsrd, flashresponse, pushop )
 
 	if( ( pushop.place % flash_blocksize ) == 0 && flashresponse[1] != 'B' )
 	{
-		QueueOperation( "FB" + ((pushop.place+pushop.base_address)/flash_blocksize),  function( x, y ) { ContinueSystemFlash( x, y, pushop ); } );
+		QueueOperation( "FB" + Math.floor((pushop.place+pushop.base_address)/flash_blocksize),  function( x, y ) { ContinueSystemFlash( x, y, pushop ); } );
 	}
 	else  	//Done erasing the next block, or coming off a write we don't need to erase?
 	{

@@ -33,7 +33,9 @@
 
 extern const char * enctypes[6];// = { "open", "wep", "wpa", "wpa2", "wpa_wpa2", 0 };
 
+#ifndef DONT_OVERRIDE_PRINTF
 #define printf( ... ) { char generic_print_buffer[384]; ets_sprintf( generic_print_buffer, __VA_ARGS__ );  uart0_sendStr( generic_print_buffer ); }
+#endif
 
 char ICACHE_FLASH_ATTR tohex1( uint8_t i );
 int8_t ICACHE_FLASH_ATTR fromhex1( char c ); //returns -1 if not hex char.
@@ -86,13 +88,16 @@ uint32_t ICACHE_FLASH_ATTR GetCurrentIP(void );
 
 #endif
 
-#define PIN_OUT       ( *((uint32_t*)0x60000300) )
-#define PIN_OUT_SET   ( *((uint32_t*)0x60000304) )
-#define PIN_OUT_CLEAR ( *((uint32_t*)0x60000308) )
-#define PIN_DIR       ( *((uint32_t*)0x6000030C) )
-#define PIN_DIR_OUTPUT ( *((uint32_t*)0x60000310) )
-#define PIN_DIR_INPUT ( *((uint32_t*)0x60000314) )
-#define PIN_IN        ( *((volatile uint32_t*)0x60000318) )
+#define HW_WDT_DISABLE  { *((volatile uint32_t*) 0x60000900) &= ~(1); } // Hardware WDT OFF
+#define HW_WDT_ENABLE   { *((volatile uint32_t*) 0x60000900) |= 1; } // Hardware WDT ON
+
+#define PIN_OUT        ( *((volatile uint32_t*)0x60000300) )
+#define PIN_OUT_SET    ( *((volatile uint32_t*)0x60000304) )
+#define PIN_OUT_CLEAR  ( *((volatile uint32_t*)0x60000308) )
+#define PIN_DIR        ( *((volatile uint32_t*)0x6000030C) )
+#define PIN_DIR_OUTPUT ( *((volatile uint32_t*)0x60000310) )
+#define PIN_DIR_INPUT  ( *((volatile uint32_t*)0x60000314) )
+#define PIN_IN         ( *((volatile uint32_t*)0x60000318) )
 #define _BV(x) ((1)<<(x))
 int ICACHE_FLASH_ATTR MakePinGPIO( int pinno ); //returns 0 if OK. Returns nonzero if not.
 
