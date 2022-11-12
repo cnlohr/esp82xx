@@ -6,8 +6,8 @@
 
 #include <c_types.h>
 
-void Cache_Read_Disable(); //Can't seem to operate...
-void Cache_Read_Enable();
+void Cache_Read_Disable(void); //Can't seem to operate...
+void Cache_Read_Enable(void);
 
 //PROVIDE ( Cache_Read_Disable = 0x400047f0 );
 //PROVIDE ( Cache_Read_Enable = 0x40004678 );
@@ -50,7 +50,7 @@ void SPIEraseBlock(uint16 blk);
 void SPIWrite(uint32 des_addr, uint32_t *src_addr, uint32_t size);
 void SPIRead(uint32 src_addr, uint32_t *des_addr, uint16_t size);
 void SPILock( uint16_t sec ); //??? I don't use this?
-void SPIUnlock( ); //??? I don't use this? -> Seems to crash.
+void SPIUnlock(void ); //??? I don't use this? -> Seems to crash.
 
 #ifdef NOSDK
 typedef struct{
@@ -95,7 +95,7 @@ extern SpiFlashChip * flashchip; //don't forget: flashchip->chip_size = 0x010000
 */
 
 
-void software_reset();
+void software_reset(void);
 
 
 

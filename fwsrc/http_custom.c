@@ -11,7 +11,7 @@
 
 int (*custom_http_cb_start)( struct HTTPConnection * hc ); //If set, means custom callback present.  If you use, will need to set ->rcb and ->bytesleft.  Return 0 if intercepted, 1 if not.
 
-static ICACHE_FLASH_ATTR void huge()
+static ICACHE_FLASH_ATTR void huge(void)
 {
 	uint8_t i = 0;
 
@@ -26,24 +26,24 @@ static ICACHE_FLASH_ATTR void huge()
 }
 
 
-static ICACHE_FLASH_ATTR void echo()
+static ICACHE_FLASH_ATTR void echo(void)
 {
 	char mydat[128];
-	int len = URLDecode( mydat, 128, curhttp->pathbuffer+8 );
+	int len = URLDecode( mydat, 128, (char*)&curhttp->pathbuffer[8] );
 
 	START_PACK;
-	PushBlob( mydat, len );
+	PushBlob( (uint8_t*)mydat, len );
 	END_TCP_WRITE( curhttp->socket );
 
 	curhttp->state = HTTP_WAIT_CLOSE;
 }
 
-static ICACHE_FLASH_ATTR void issue()
+static ICACHE_FLASH_ATTR void issue(void)
 {
 	uint8_t  __attribute__ ((aligned (32))) buf[1300];
-	int len = URLDecode( buf, 1300, curhttp->pathbuffer+9 );
+	uint32_t len = URLDecode( (char*)buf, 1300, (char*)&curhttp->pathbuffer[9] );
 
-	int r = issue_command(buf, 1300, buf, len );
+	int r = issue_command((char*)buf, 1300, (char*)buf, len );
 	if( r > 0 )
 	{
 		START_PACK;
@@ -54,7 +54,7 @@ static ICACHE_FLASH_ATTR void issue()
 }
 
 
-void ICACHE_FLASH_ATTR HTTPCustomStart( )
+void ICACHE_FLASH_ATTR HTTPCustomStart(void )
 {
 	if( custom_http_cb_start && custom_http_cb_start( curhttp ) == 0 )
 	{
@@ -62,19 +62,19 @@ void ICACHE_FLASH_ATTR HTTPCustomStart( )
 	}
 	else if( ets_strncmp( (const char*)curhttp->pathbuffer, "/d/huge", 7 ) == 0 )
 	{
-		curhttp->rcb = (void(*)())&huge;
+		curhttp->rcb = (void(*)(void))&huge;
 		curhttp->bytesleft = 0xffffffff;
 	}
 	else
 	if( ets_strncmp( (const char*)curhttp->pathbuffer, "/d/echo?", 8 ) == 0 )
 	{
-		curhttp->rcb = (void(*)())&echo;
+		curhttp->rcb = (void(*)(void))&echo;
 		curhttp->bytesleft = 0xfffffffe;
 	}
 	else
 	if( ets_strncmp( (const char*)curhttp->pathbuffer, "/d/issue?", 9 ) == 0 )
 	{
-		curhttp->rcb = (void(*)())&issue;
+		curhttp->rcb = (void(*)(void))&issue;
 		curhttp->bytesleft = 0xfffffffe;
 	}
 	else
@@ -88,10 +88,10 @@ void ICACHE_FLASH_ATTR HTTPCustomStart( )
 
 
 
-void ICACHE_FLASH_ATTR HTTPCustomCallback( )
+void ICACHE_FLASH_ATTR HTTPCustomCallback(void )
 {
 	if( curhttp->rcb )
-		((void(*)())curhttp->rcb)();
+		((void(*)(void))curhttp->rcb)();
 	else
 		curhttp->isdone = 1;
 }
@@ -107,16 +107,16 @@ static void ICACHE_FLASH_ATTR WSEchoData(  int len )
 	{
 		cbo[i] = WSPOPMASK();
 	}
-	WebSocketSend( cbo, len );
+	WebSocketSend( (uint8_t*)cbo, len );
 }
 
 
-static void ICACHE_FLASH_ATTR WSEvalData( int len )
+static void ICACHE_FLASH_ATTR WSEvalData( int len __attribute__((unused)))
 {
 	char cbo[128];
 	int l = ets_sprintf( cbo, "output.innerHTML = %d; doSend('x' );", curhttp->bytessofar++ );
 
-	WebSocketSend( cbo, l );
+	WebSocketSend( (uint8_t*)cbo, l );
 }
 
 
@@ -130,7 +130,7 @@ static void ICACHE_FLASH_ATTR WSCommandData(  int len )
 		buf[i] = WSPOPMASK();
 	}
 
-	i = issue_command(buf, 1300, buf, len );
+	i = issue_command((char*)buf, 1300, (char*)buf, len );
 
 	if( i < 0 ) i = 0;
 
@@ -143,7 +143,7 @@ static void ICACHE_FLASH_ATTR WSCommandData(  int len )
 
 
 
-void ICACHE_FLASH_ATTR NewWebSocket()
+void ICACHE_FLASH_ATTR WebSocketNew(void)
 {
 	if( ets_strcmp( (const char*)curhttp->pathbuffer, "/d/ws/echo" ) == 0 )
 	{
@@ -169,11 +169,11 @@ void ICACHE_FLASH_ATTR NewWebSocket()
 
 
 
-void ICACHE_FLASH_ATTR WebSocketTick()
+void ICACHE_FLASH_ATTR WebSocketTick(void)
 {
 	if( curhttp->rcb )
 	{
-		((void(*)())curhttp->rcb)();
+		((void(*)(void))curhttp->rcb)();
 	}
 }
 

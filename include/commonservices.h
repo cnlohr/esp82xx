@@ -29,10 +29,10 @@ extern uint8_t printed_ip;
 int ICACHE_FLASH_ATTR issue_command(char * retdata, int retsize, char *pusrdata, unsigned short len);
 
 //Includes UDP Control + HTTP Interfaces
-void ICACHE_FLASH_ATTR CSPreInit();
+void ICACHE_FLASH_ATTR CSPreInit(void);
 void ICACHE_FLASH_ATTR CSInit( bool startServer );
 void ICACHE_FLASH_ATTR CSTick( int slowtick );
-void ICACHE_FLASH_ATTR CSConnectionChange();
+void ICACHE_FLASH_ATTR CSConnectionChange(void);
 
 void ICACHE_FLASH_ATTR CSSettingsLoad(int force_reinit);
 void ICACHE_FLASH_ATTR CSSettingsSave(bool criticalRequired);
@@ -52,8 +52,8 @@ extern struct CommonSettings SETTINGS;
 //Critical should not lock interrupts, just disable services that have problems
 //with double-interrupt faults.  I.e. turn off/on any really fast timer interrupts.
 //These generally only get called when doing serious operations like reflashing.
-void EnterCritical();
-void ExitCritical();
+void EnterCritical(void);
+void ExitCritical(void);
 
 //If we receive a command that's not F, E or W (Flash Echo Wifi)
 int ICACHE_FLASH_ATTR CustomCommand(char * buffer, int retsize, char *pusrdata, unsigned short len);
@@ -82,8 +82,6 @@ void ICACHE_FLASH_ATTR BrowseForService( const char * servicename );
 
 //Set the service name for this device.  No more than 10 chars allowed.
 void ICACHE_FLASH_ATTR SetServiceName( const char * myservice );
-
-char * ICACHE_FLASH_ATTR strcat( char * dest, char * src );
 
 #endif
 

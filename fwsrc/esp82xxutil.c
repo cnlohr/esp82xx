@@ -12,6 +12,8 @@ char * generic_ptr;
 char * parameters;
 uint8_t  paramcount;
 
+const char * ICACHE_FLASH_ATTR  my_strchr( const char * st, char c );
+
 int32 ICACHE_FLASH_ATTR safe_atoi( const char * in )
 {
 	int positive = 1; //1 if negative.
@@ -103,7 +105,7 @@ void ICACHE_FLASH_ATTR NixNewline( char * str )
 void ICACHE_FLASH_ATTR PushString( const char * buffer )
 {
 	char c;
-	while( c = *(buffer++) )
+	while( 0 != (c = *(buffer++)) )
 		PushByte( c );
 }
 
@@ -115,7 +117,7 @@ void ICACHE_FLASH_ATTR PushBlob( const uint8 * buffer, int len )
 }
 
 
-int8_t ICACHE_FLASH_ATTR TCPCanSend( struct espconn * conn, int size )
+int8_t ICACHE_FLASH_ATTR TCPCanSend( struct espconn * conn, int size __attribute__((unused)))
 {
 #ifdef SAFESEND
 	return TCPDoneSend( conn );
@@ -156,12 +158,12 @@ static const char encoding_table[] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
                                       'w', 'x', 'y', 'z', '0', '1', '2', '3',
                                       '4', '5', '6', '7', '8', '9', '+', '/'};
 
-static const int mod_table[] = {0, 2, 1};
+static const uint8_t mod_table[] = {0, 2, 1};
 
 void ICACHE_FLASH_ATTR my_base64_encode(const unsigned char *data, size_t input_length, uint8_t * encoded_data )
 {
 
-	int i, j;
+	uint32_t i, j;
     int output_length = 4 * ((input_length + 2) / 3);
 
     if( !encoded_data ) return;
@@ -196,12 +198,12 @@ void ICACHE_FLASH_ATTR SafeMD5Update( MD5_CTX * md5ctx, uint8_t*from, uint32_t s
 	while( size1 > 32 )
 	{
 		ets_memcpy( buffer, from, 32 );
-		MD5Update( md5ctx, buffer, 32 );
+		MD5Update( md5ctx, (unsigned char*)buffer, 32 );
 		size1-=32;
 		from+=32;
 	}
 	ets_memcpy( buffer, from, 32 );
-	MD5Update( md5ctx, buffer, size1 );
+	MD5Update( md5ctx, (unsigned char*)buffer, size1 );
 }
 
 char * ICACHE_FLASH_ATTR strdup( const char * src )
@@ -227,7 +229,7 @@ char * ICACHE_FLASH_ATTR strdupcaselower( const char * src )
 	return ret;
 }
 
-uint32_t ICACHE_FLASH_ATTR GetCurrentIP( )
+uint32_t ICACHE_FLASH_ATTR GetCurrentIP(void )
 {
 	struct ip_info sta_ip;
 	wifi_get_ip_info(STATION_IF, &sta_ip);
@@ -241,7 +243,7 @@ uint32_t ICACHE_FLASH_ATTR GetCurrentIP( )
 		return 0;
 }
 
-char * ParamCaptureAndAdvance( )
+char * ParamCaptureAndAdvance(void )
 {
 	if( parameters == 0 ) return 0;  //If the string to start with was null
 	if( *parameters == 0 ) return 0; //If we got to the end of the string.
@@ -256,7 +258,7 @@ char * ParamCaptureAndAdvance( )
 	return ret;
 }
 
-int32_t    ParamCaptureAndAdvanceInt( )
+int32_t    ParamCaptureAndAdvanceInt(void )
 {
 	char * r = ParamCaptureAndAdvance( );
 	if( !r )
@@ -354,14 +356,21 @@ static const partition_item_t partition_table_opt4[] =
  * system_partition_table_regist(). This tries to register a few different
  * partition maps. The ESP should be happy with one of them.
  */
-void ICACHE_FLASH_ATTR LoadDefaultPartitionMap()
+void ICACHE_FLASH_ATTR LoadDefaultPartitionMap(void)
 {
     if(system_partition_table_regist(
-                partition_table_opt2,
-                sizeof(partition_table_opt2) / sizeof(partition_table_opt2[0]),
-                SPI_FLASH_SIZE_MAP_OPT2))
+                    partition_table_opt2,
+                    sizeof(partition_table_opt2) / sizeof(partition_table_opt2[0]),
+                    SPI_FLASH_SIZE_MAP_OPT2))
     {
         os_printf("system_partition_table_regist 2 success!!\r\n");
+    }
+    else if(system_partition_table_regist(
+                    partition_table_opt3,
+                    sizeof(partition_table_opt3) / sizeof(partition_table_opt3[0]),
+                    SPI_FLASH_SIZE_MAP_OPT3))
+    {
+        os_printf("system_partition_table_regist 3 success!!\r\n");
     }
     else if(system_partition_table_regist(
                 partition_table_opt4,
@@ -369,13 +378,6 @@ void ICACHE_FLASH_ATTR LoadDefaultPartitionMap()
                 SPI_FLASH_SIZE_MAP_OPT4))
     {
         os_printf("system_partition_table_regist 4 success!!\r\n");
-    }
-    else if(system_partition_table_regist(
-                partition_table_opt3,
-                sizeof(partition_table_opt3) / sizeof(partition_table_opt3[0]),
-                SPI_FLASH_SIZE_MAP_OPT3))
-    {
-        os_printf("system_partition_table_regist 3 success!!\r\n");
     }
     else
     {

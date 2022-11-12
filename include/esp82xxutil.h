@@ -61,7 +61,7 @@ void ICACHE_FLASH_ATTR PushBlob( const uint8 * buffer, int len );
 //Utility functions for dealing with packets on the stack.
 #define START_PACK char generic_buffer[1500] __attribute__((aligned (32))); generic_ptr=generic_buffer;
 #define PACK_LENGTH (generic_ptr-&generic_buffer[0])
-#define END_TCP_WRITE( c ) if(generic_ptr!=generic_buffer) { int r = espconn_sent(c,generic_buffer,generic_ptr-generic_buffer);	}
+#define END_TCP_WRITE( c ) if(generic_ptr!=generic_buffer) { espconn_sent(c,(uint8_t*)generic_buffer,generic_ptr-generic_buffer);	}
 
 //As much as it pains me, we shouldn't be using the esp8266's base64_encode() function
 //as it does stuff with dynamic memory.
@@ -81,10 +81,10 @@ char * ICACHE_FLASH_ATTR strdupcaselower( const char * src );
 //WARNING: These functions are NOT threadsafe.
 extern char * parameters;
 extern uint8_t paramcount;
-char *  ICACHE_FLASH_ATTR ParamCaptureAndAdvance( ); //Increments intcount if good.
-int32_t ICACHE_FLASH_ATTR ParamCaptureAndAdvanceInt( ); //Do the same, but we're looking for an integer.
+char *  ICACHE_FLASH_ATTR ParamCaptureAndAdvance(void ); //Increments intcount if good.
+int32_t ICACHE_FLASH_ATTR ParamCaptureAndAdvanceInt(void ); //Do the same, but we're looking for an integer.
 
-uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
+uint32_t ICACHE_FLASH_ATTR GetCurrentIP(void );
 
 #endif
 
@@ -101,6 +101,6 @@ uint32_t ICACHE_FLASH_ATTR GetCurrentIP( );
 #define _BV(x) ((1)<<(x))
 int ICACHE_FLASH_ATTR MakePinGPIO( int pinno ); //returns 0 if OK. Returns nonzero if not.
 
-void ICACHE_FLASH_ATTR LoadDefaultPartitionMap();
+void ICACHE_FLASH_ATTR LoadDefaultPartitionMap(void);
 
 #endif

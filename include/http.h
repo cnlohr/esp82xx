@@ -19,12 +19,12 @@
 #define MAX_PATHLEN 80
 
 //You must provide:
-void ICACHE_FLASH_ATTR HTTPCustomStart( );
-void ICACHE_FLASH_ATTR HTTPCustomCallback( );  //called when we can send more data
+void ICACHE_FLASH_ATTR HTTPCustomStart(void );
+void ICACHE_FLASH_ATTR HTTPCustomCallback(void );  //called when we can send more data
 
 void ICACHE_FLASH_ATTR WebSocketData( int len );
-void ICACHE_FLASH_ATTR WebSocketTick( );
-void ICACHE_FLASH_ATTR WebSocketNew();
+void ICACHE_FLASH_ATTR WebSocketTick(void );
+void ICACHE_FLASH_ATTR WebSocketNew(void);
 
 extern struct HTTPConnection * curhttp;
 extern uint8 * curdata;
@@ -32,7 +32,7 @@ extern uint16  curlen;
 extern uint8   wsmask[4];
 extern uint8   wsmaskplace;
 
-uint8_t ICACHE_FLASH_ATTR WSPOPMASK();
+uint8_t ICACHE_FLASH_ATTR WSPOPMASK(void);
 #define HTTPPOP (*curdata++)
 
 #define HTTP_STATE_NONE        0
@@ -90,10 +90,11 @@ void ICACHE_FLASH_ATTR HTTPTick( uint8_t timedtick );
 int ICACHE_FLASH_ATTR URLDecode( char * decodeinto, int maxlen, const char * buf );
 
 void ICACHE_FLASH_ATTR WebSocketGotData( uint8_t c );
-void ICACHE_FLASH_ATTR WebSocketTickInternal();
+void ICACHE_FLASH_ATTR WebSocketTickInternal(void);
 
 void ICACHE_FLASH_ATTR WebSocketSend( uint8_t * data, int size );
 
+void ICACHE_FLASH_ATTR HTTPHandleInternalCallback( void);
 
 //Custom HTTP request callback - return 0 if accepted connection.
 extern int (*custom_http_cb_start)( struct HTTPConnection * hc );
